@@ -22,7 +22,7 @@ namespace Crawl
         }
 
 
-        public ~SqlDb()
+        ~SqlDb()
         {
             _conn.Close();
         }
