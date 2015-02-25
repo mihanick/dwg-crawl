@@ -20,6 +20,7 @@ namespace Crawl
         }
         //DEBUG: для целей дебага по умолчанию сообщения будут выводиться в командную строку:
 
+        [DebuggerStepThrough]
         /// <summary>
         /// Выводит строковое сообщение
         /// </summary>
@@ -54,6 +55,7 @@ namespace Crawl
             }
         }
 
+        [DebuggerStepThrough]
         /// <summary>
         /// Выводит форматированную строку - сообщение
         /// </summary>
