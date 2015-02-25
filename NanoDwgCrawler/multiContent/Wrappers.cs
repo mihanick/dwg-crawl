@@ -9,6 +9,11 @@ using Crawl;
 public class crawlAcDbLine
 {
     [DataMember]
+    string ClassName = "AcDbLine";
+    [DataMember]
+    string Color;
+    
+    [DataMember]
     public crawlPoint3d EndPoint { get; set; }
     [DataMember]
     public crawlPoint3d StartPoint { get; set; }
@@ -28,6 +33,7 @@ public class crawlAcDbLine
         this.Layer = line.Layer;
         this.Linetype = line.Linetype;
         this.LineWeight = line.LineWeight.ToString();
+        this.Color = line.Color.ToString();
 
         this.Length = line.Length;
     }
@@ -36,6 +42,11 @@ public class crawlAcDbLine
 [DataContract]
 public class crawlAcDbPolyline
 {
+    [DataMember]
+    string ClassName = "AcDbPolyline";
+    [DataMember]
+    string Color;
+
     [DataMember]
     double Length;
     [DataMember]
@@ -58,6 +69,7 @@ public class crawlAcDbPolyline
         this.Layer = polyline.Layer;
         this.Linetype = polyline.Linetype;
         this.LineWeight = polyline.LineWeight.ToString();
+        this.Color = polyline.Color.ToString();
 
         Vertixes = new List<crawlPoint3d>();
 
@@ -75,6 +87,7 @@ public class crawlAcDbPolyline
         this.Layer = polyline.Layer;
         this.Linetype = polyline.Linetype;
         this.LineWeight = polyline.LineWeight.ToString();
+        this.Color = polyline.Color.ToString();
 
         Vertixes = new List<crawlPoint3d>();
 
@@ -96,6 +109,7 @@ public class crawlAcDbPolyline
         this.Layer = polyline.Layer;
         this.Linetype = polyline.Linetype;
         this.LineWeight = polyline.LineWeight.ToString();
+        this.Color = polyline.Color.ToString();
 
         Vertixes = new List<crawlPoint3d>();
 
@@ -114,6 +128,11 @@ public class crawlAcDbPolyline
 public class crawlAcDbText
 {
     [DataMember]
+    string ClassName = "AcDbText";
+    [DataMember]
+    string Color;
+
+    [DataMember]
     public crawlPoint3d Position { get; set; }
     [DataMember]
     public string TextString;
@@ -131,6 +150,7 @@ public class crawlAcDbText
         this.Layer = text.Layer;
         this.Linetype = text.Linetype;
         this.LineWeight = text.LineWeight.ToString();
+        this.Color = text.Color.ToString();
 
         this.TextString = text.TextString;
     }
@@ -139,6 +159,11 @@ public class crawlAcDbText
 [DataContract]
 public class crawlAcDbMText
 {
+    [DataMember]
+    string ClassName = "AcDbMText";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d Position { get; set; }
     [DataMember]
@@ -156,6 +181,7 @@ public class crawlAcDbMText
         this.Layer = text.Layer;
         this.Linetype = text.Linetype;
         this.LineWeight = text.LineWeight.ToString();
+        this.Color = text.Color.ToString();
 
         this.TextString = text.Contents;
     }
@@ -164,6 +190,11 @@ public class crawlAcDbMText
 [DataContract]
 public class crawlAcDbAttributeDefinition
 {
+    [DataMember]
+    string ClassName = "AcDbAttributeDefinition";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d Position { get; set; }
     [DataMember]
@@ -190,6 +221,7 @@ public class crawlAcDbAttributeDefinition
         this.Layer = att.Layer;
         this.Linetype = att.Linetype;
         this.LineWeight = att.LineWeight.ToString();
+        this.Color = att.Color.ToString();
 
         this.Prompt = att.Prompt;
         this.Tag = att.Tag;
@@ -201,6 +233,10 @@ public class crawlAcDbAttributeDefinition
 [DataContract]
 public class crawlPoint3d
 {
+    [DataMember]
+    string ClassName = "Point3D";
+
+
     [DataMember]
     public double X;
     [DataMember]
@@ -233,6 +269,11 @@ public class crawlPoint3d
 public class crawlAcDbArc
 {
     [DataMember]
+    string ClassName = "AcDbArc";
+    [DataMember]
+    string Color;
+
+    [DataMember]
     public crawlPoint3d Center { get; set; }
     [DataMember]
     public crawlPoint3d StartPoint { get; set; }
@@ -262,6 +303,7 @@ public class crawlAcDbArc
         this.Layer = arc.Layer;
         this.Linetype = arc.Linetype;
         this.LineWeight = arc.LineWeight.ToString();
+        this.Color = arc.Color.ToString();
 
         this.Length = arc.Length;
         this.Thickness = arc.Thickness;
@@ -273,6 +315,10 @@ public class crawlAcDbArc
 [DataContract]
 public class crawlAcDbCircle
 {
+    [DataMember]
+    string ClassName = "AcDbCircle";
+    [DataMember]
+    string Color;
 
     [DataMember]
     public crawlPoint3d Center { get; set; }
@@ -304,6 +350,7 @@ public class crawlAcDbCircle
         this.Layer = circle.Layer;
         this.Linetype = circle.Linetype;
         this.LineWeight = circle.LineWeight.ToString();
+        this.Color = circle.Color.ToString();
 
         this.Radius = circle.Radius;
         this.Thickness = circle.Thickness;
@@ -313,6 +360,11 @@ public class crawlAcDbCircle
 [DataContract]
 public class crawlAcDbEllipse
 {
+    [DataMember]
+    string ClassName = "AcDbEllipse";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d Center { get; set; }
     [DataMember]
@@ -339,6 +391,7 @@ public class crawlAcDbEllipse
         this.Layer = ellipse.Layer;
         this.Linetype = ellipse.Linetype;
         this.LineWeight = ellipse.LineWeight.ToString();
+        this.Color = ellipse.Color.ToString();
 
     }
 }
@@ -346,6 +399,11 @@ public class crawlAcDbEllipse
 [DataContract]
 public class crawlAcDbRotatedDimension
 {
+    [DataMember]
+    string ClassName = "AcDbRotatedDimension";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d XLine1Point { get; set; }
     [DataMember]
@@ -377,6 +435,7 @@ public class crawlAcDbRotatedDimension
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
         this.LineWeight = dim.LineWeight.ToString();
+        this.Color = dim.Color.ToString();
 
         this.DimensionText = dim.DimensionText;
         this.DimensionStyleName = dim.DimensionStyleName;
@@ -386,6 +445,11 @@ public class crawlAcDbRotatedDimension
 [DataContract]
 public class crawlAcDbPoint3AngularDimension
 {
+    [DataMember]
+    string ClassName = "AcDbPoint3AngularDimension";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d XLine1Point { get; set; }
     [DataMember]
@@ -417,6 +481,7 @@ public class crawlAcDbPoint3AngularDimension
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
         this.LineWeight = dim.LineWeight.ToString();
+        this.Color = dim.Color.ToString();
 
         this.DimensionText = dim.DimensionText;
         this.DimensionStyleName = dim.DimensionStyleName;
@@ -426,6 +491,11 @@ public class crawlAcDbPoint3AngularDimension
 [DataContract]
 public class crawlAcDbLineAngularDimension2
 {
+    [DataMember]
+    string ClassName = "AcDbLineAngularDimension2";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d XLine1Start { get; set; }
     [DataMember]
@@ -463,6 +533,7 @@ public class crawlAcDbLineAngularDimension2
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
         this.LineWeight = dim.LineWeight.ToString();
+        this.Color = dim.Color.ToString();
 
         this.DimensionText = dim.DimensionText;
         this.DimensionStyleName = dim.DimensionStyleName;
@@ -472,6 +543,10 @@ public class crawlAcDbLineAngularDimension2
 [DataContract]
 public class crawlAcDbDiametricDimension
 {
+    [DataMember]
+    string ClassName = "AcDbDiametricDimension";
+    [DataMember]
+    string Color;
 
     [DataMember]
     public crawlPoint3d FarChordPoint { get; set; }
@@ -501,6 +576,7 @@ public class crawlAcDbDiametricDimension
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
         this.LineWeight = dim.LineWeight.ToString();
+        this.Color = dim.Color.ToString();
 
         this.DimensionText = dim.DimensionText;
         this.DimensionStyleName = dim.DimensionStyleName;
@@ -510,6 +586,11 @@ public class crawlAcDbDiametricDimension
 [DataContract]
 public class crawlAcDbArcDimension
 {
+    [DataMember]
+    string ClassName = "AcDbArcDimension";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d XLine1Point { get; set; }
     [DataMember]
@@ -541,6 +622,7 @@ public class crawlAcDbArcDimension
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
         this.LineWeight = dim.LineWeight.ToString();
+        this.Color = dim.Color.ToString();
 
         this.DimensionText = dim.DimensionText;
         this.DimensionStyleName = dim.DimensionStyleName;
@@ -550,6 +632,11 @@ public class crawlAcDbArcDimension
 [DataContract]
 public class crawlAcDbRadialDimension
 {
+    [DataMember]
+    string ClassName = "AcDbRadialDimension";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d Center { get; set; }
     [DataMember]
@@ -578,6 +665,7 @@ public class crawlAcDbRadialDimension
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
         this.LineWeight = dim.LineWeight.ToString();
+        this.Color = dim.Color.ToString();
 
         this.DimensionText = dim.DimensionText;
         this.DimensionStyleName = dim.DimensionStyleName;
@@ -587,6 +675,11 @@ public class crawlAcDbRadialDimension
 [DataContract]
 public class crawlAcDbHatch
 {
+    [DataMember]
+    string ClassName = "AcDbHatch";
+    [DataMember]
+    string Color;
+
     [DataMember]
     double Area;
     [DataMember]
@@ -607,6 +700,7 @@ public class crawlAcDbHatch
         this.Layer = hatch.Layer;
         this.Linetype = hatch.Linetype;
         this.LineWeight = hatch.LineWeight.ToString();
+        this.Color = hatch.Color.ToString();
 
         this.PatternName = hatch.PatternName;
 
@@ -670,6 +764,11 @@ public class crawlAcDbHatch
 public class crawlAcDbSpline
 {
     [DataMember]
+    string ClassName = "AcDbSpline";
+    [DataMember]
+    string Color;
+
+    [DataMember]
     string Layer;
     [DataMember]
     string Linetype;
@@ -688,6 +787,7 @@ public class crawlAcDbSpline
         this.Layer = spline.Layer;
         this.Linetype = spline.Linetype;
         this.LineWeight = spline.LineWeight.ToString();
+        this.Color = spline.Color.ToString();
 
         Vertixes = getSplinePoints(spline);
     }
@@ -728,6 +828,11 @@ public class crawlAcDbSpline
 public class crawlAcDbPoint
 {
     [DataMember]
+    string ClassName = "AcDbPoint";
+    [DataMember]
+    string Color;
+
+    [DataMember]
     public crawlPoint3d Position { get; set; }
 
     [DataMember]
@@ -744,12 +849,18 @@ public class crawlAcDbPoint
         this.Layer = pnt.Layer;
         this.Linetype = pnt.Linetype;
         this.LineWeight = pnt.LineWeight.ToString();
+        this.Color = pnt.Color.ToString();
     }
 }
 
 [DataContract]
 public class crawlAcDbBlockReference
 {
+    [DataMember]
+    string ClassName = "AcDbBlockReference";
+    [DataMember]
+    string Color;
+
     [DataMember]
     public crawlPoint3d Position { get; set; }
 
@@ -773,6 +884,7 @@ public class crawlAcDbBlockReference
         this.Layer = blk.Layer;
         this.Linetype = blk.Linetype;
         this.LineWeight = blk.LineWeight.ToString();
+        this.Color = blk.Color.ToString();
 
         this.Name = blk.Name;
 
@@ -790,6 +902,10 @@ public class crawlAcDbBlockReference
 [DataContract]
 public class crawlAcDbAttributeReference
 {
+    [DataMember]
+    string ClassName = "AcDbAttributeReference";
+    [DataMember]
+    string Color;
 
     [DataMember]
     string Tag;
@@ -800,6 +916,7 @@ public class crawlAcDbAttributeReference
     {
         this.Tag = attRef.Tag;
         this.TextString = attRef.TextString;
+        this.Color = attRef.Color.ToString();
     }
 }
 
@@ -807,21 +924,40 @@ public class crawlAcDbAttributeReference
 public class crawlAcDbProxyEntity
 {
     [DataMember]
+    string ClassName = "AcDbProxyEntity";
+    [DataMember]
+    string Color;
+
+    [DataMember]
     string Layer;
     [DataMember]
     string Linetype;
     [DataMember]
     string LineWeight;
 
-
-    public crawlAcDbProxyEntity(ProxyEntity blk)
+    public crawlAcDbProxyEntity(ProxyEntity prxy)
     {
-
-
-        this.Layer = blk.Layer;
-        this.Linetype = blk.Linetype;
-        this.LineWeight = blk.LineWeight.ToString();
-
+        this.Layer = prxy.Layer;
+        this.Linetype = prxy.Linetype;
+        this.LineWeight = prxy.LineWeight.ToString();
+        this.Color = prxy.Color.ToString();
     }
 }
 
+[DataContract]
+public class crawlAcDbBlockTableRecord
+{
+    [DataMember]
+    string ClassName = "AcDbBlockTableRecord";
+    [DataMember]
+    string Name;
+    [DataMember]
+    string FilePath;
+
+    public crawlAcDbBlockTableRecord(BlockTableRecord btr, string filePath)
+    {
+        this.Name = btr.Name;
+        this.FilePath = filePath;
+    }
+
+}

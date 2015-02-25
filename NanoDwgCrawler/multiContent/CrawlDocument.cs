@@ -19,29 +19,22 @@ namespace Crawl
         [DataMember]
         string Path;
         [DataMember]
-        int id;
+        string id;
 
         Document teighaDocument;
-
         public SqlDb sqlDB;
+        string docJson;
 
         public CrawlDocument(string dwgPath)
         {
             try
             {
-                sqlDB = new SqlDb();
-
                 this.Path = dwgPath;
+                this.id = Crawl.UtilityHash.HashFile(dwgPath);
 
-                Document aDoc = TeighaApp.DocumentManager.Open(dwgPath);
-                this.teighaDocument = aDoc;
-                this.id = teighaDocument.GetHashCode();
-
-                string docJson = jsonHelper.To<CrawlDocument>(this);
-
-                newDocument(aDoc, docJson, dwgPath);
-
-                aDoc.CloseAndDiscard();
+                this.teighaDocument = TeighaApp.DocumentManager.Open(dwgPath);;
+                this.docJson = jsonHelper.To<CrawlDocument>(this);
+                
             }
             catch
             {
@@ -49,15 +42,14 @@ namespace Crawl
             }
         }
 
-        private void newDocument(Document aDoc, string docJson, string dwgPath)
+        public void ScanDocument()
         {
-            int docHash = aDoc.GetHashCode();
 
-            this.sqlDB.InsertIntoFiles(dwgPath, docHash, docJson);
+            this.sqlDB.InsertIntoFiles(this.Path, docJson);
 
-            using (Transaction tr = aDoc.TransactionManager.StartTransaction())
+            using (Transaction tr = this.teighaDocument.TransactionManager.StartTransaction())
             {
-                PromptSelectionResult r = aDoc.Editor.SelectAll();
+                PromptSelectionResult r = this.teighaDocument.Editor.SelectAll();
 
                 foreach (SelectedObject obj in r.Value)
                 {
@@ -65,9 +57,18 @@ namespace Crawl
                     string objectJson = jsonGetObjectData(obj.ObjectId);
                     string objectClass = obj.ObjectId.ObjectClass.Name;
 
-                    this.sqlDB.SaveObjectData(objId, docHash, objectJson, objectClass);
+                    this.sqlDB.SaveObjectData(objId, objectJson, objectClass,Path);
+                }
+
+                List<ObjectId> blocks = GetBlocks(this.teighaDocument);
+                foreach (ObjectId btrId in blocks)
+                {
+                    BlockTableRecord btr = (BlockTableRecord)btrId.GetObject(OpenMode.ForRead);
+                    crawlAcDbBlockTableRecord cBtr = new crawlAcDbBlockTableRecord(btr,this.Path);
+                    newDocument(btrId, jsonHelper.To<crawlAcDbBlockTableRecord>(cBtr));
                 }
             }
+            this.teighaDocument.CloseAndDiscard();
         }
 
         private void newDocument(ObjectId objId, string docJson)
@@ -75,14 +76,11 @@ namespace Crawl
             //http://www.theswamp.org/index.php?topic=37860.0
             Document aDoc = Application.DocumentManager.GetDocument(objId.Database);
 
-            if (objId.ObjectClass.Name == "AcDbBlockReference")
+            if (objId.ObjectClass.Name == "AcDbBlockTableRecord")
             {
-                BlockReference blk = (BlockReference)objId.GetObject(OpenMode.ForRead);
-                BlockTableRecord btr = (BlockTableRecord)blk.BlockTableRecord.GetObject(OpenMode.ForRead);
+                BlockTableRecord btr = (BlockTableRecord)objId.GetObject(OpenMode.ForRead);
 
-                int docHash = btr.GetHashCode();
-
-                this.sqlDB.InsertIntoFiles("", docHash, docJson);
+                this.sqlDB.InsertIntoFiles("", docJson);
 
                 using (Transaction tr = aDoc.TransactionManager.StartTransaction())
                 {
@@ -91,7 +89,7 @@ namespace Crawl
                         string objectJson = jsonGetObjectData(obj);
                         string objectClass = obj.ObjectClass.Name;
 
-                        this.sqlDB.SaveObjectData(obj.ToString(), docHash, objectJson, objectClass);
+                        this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, Path);
                     }
                 }
             }
@@ -101,11 +99,15 @@ namespace Crawl
                 DBObjectCollection dbo = new DBObjectCollection();
                 ent.Explode(dbo);
 
-                throw new NotImplementedException();
+                foreach (ObjectId obj in dbo)
+                {
+                    string objectJson = jsonGetObjectData(obj);
+                    string objectClass = obj.ObjectClass.Name;
 
+                    this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, Path);
+                }
             }
         }
-
 
         private string jsonGetObjectData(ObjectId id_platf)
         {
@@ -114,7 +116,7 @@ namespace Crawl
             try
             {//Всякое может случиться
                 //Открываем переданный в функцию объект на чтение, преобразуем его к Entity
-                Entity ent = (Entity)id_platf.GetObject(OpenMode.ForWrite);
+                Entity ent = (Entity)id_platf.GetObject(OpenMode.ForRead);
 
                 //Далее последовательно проверяем класс объекта на соответствие классам основных примитивов
 
@@ -249,7 +251,7 @@ namespace Crawl
 
                     result = jsonHelper.To<crawlAcDbBlockReference>(cBlk);
 
-                    newDocument(id_platf, result);
+                    //newDocument(id_platf, result);
                 }
                 else if (id_platf.ObjectClass.Name == "AcDbProxyEntity")
                 {//Блок
@@ -315,6 +317,45 @@ namespace Crawl
             return result;
         }
 
+        /// <summary>
+        /// Функция возвращает список блоков с их атрибутами
+        /// </summary>
+        /// <param name="aDoc"></param>
+        /// <returns></returns>
+        private List<ObjectId> GetBlocks(Document aDoc)
+        {
+            Database aDocDatabase = aDoc.Database;
+
+
+            //Находим таблицу описаний блоков 
+            BlockTable blkTbl = (BlockTable)aDocDatabase.BlockTableId
+                .GetObject(OpenMode.ForRead, false, true);
+
+            //Открываем таблицу записей текущего чертежа
+            BlockTableRecord bt =
+                (BlockTableRecord)aDocDatabase.CurrentSpaceId
+                    .GetObject(OpenMode.ForRead);
+
+            //Переменная списка блоков
+            List<ObjectId> bNames = new List<ObjectId>();
+
+            //Пример итерации по таблице определений блоков
+            //https://sites.google.com/site/bushmansnetlaboratory/sendbox/stati/multipleattsync
+            //Как я понимаю, здесь пробегается по всем таблицам записей,
+            //в которых определения блоков не являются анонимными
+            //и не являются листами
+            foreach (BlockTableRecord btr in blkTbl.Cast<ObjectId>().Select(n =>
+                (BlockTableRecord)n.GetObject(OpenMode.ForRead, false))
+                .Where(n => !n.IsAnonymous && !n.IsLayout))
+            {
+                
+                bNames.Add(btr.ObjectId);
+
+                btr.Dispose();
+            };
+
+            return bNames;
+        }
 
     }
 }
