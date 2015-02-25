@@ -69,10 +69,13 @@ namespace Crawl
         {
             //Найти все файлы в папке
             string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.TopDirectoryOnly);
+            SqlDb sqlDB = new SqlDb();
 
             foreach (string dwgFile in dwgFiles)
             {
                 CrawlDocument cd = new CrawlDocument(dwgFile);
+                cd.sqlDB = sqlDB;
+                cd.ScanDocument();
             }
         }
     }
