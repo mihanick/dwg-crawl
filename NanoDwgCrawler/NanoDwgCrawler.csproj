@@ -64,6 +64,7 @@
     <Compile Include="multiContent\ContentCommands.cs" />
     <Compile Include="multiContent\CrawlDocument.cs" />
     <Compile Include="multiContent\Database.cs" />
+    <Compile Include="multiContent\HashFile.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
