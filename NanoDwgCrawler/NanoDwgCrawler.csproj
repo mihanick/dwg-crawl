@@ -61,7 +61,8 @@
   <ItemGroup>
     <Compile Include="multiContent\cDebug.cs" />
     <Compile Include="multiContent\cJson.cs" />
-    <Compile Include="multiContent\ContentCommands.cs" />
+    <Compile Include="multiContent\Commands.cs" />
+    <Compile Include="multiContent\crawlAcDbDocument.cs" />
     <Compile Include="multiContent\CrawlDocument.cs" />
     <Compile Include="multiContent\Database.cs" />
     <Compile Include="multiContent\HashFile.cs" />
