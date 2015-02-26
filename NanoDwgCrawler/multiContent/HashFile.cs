@@ -4,7 +4,7 @@ using System.IO;
 namespace Crawl
 {
     //http://stackoverflow.com/questions/2150455/how-do-i-create-an-md5-hash-digest-from-a-text-file
-    static class UtilityHash
+    public static class UtilityHash
     {
         public static string HashFile(string filePath)
         {
