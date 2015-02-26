@@ -44,20 +44,20 @@ namespace Crawl
             conn.Open();
 
 
-            string createTableSQL = @"CREATE TABLE Data (ObjectId NVARCHAR(256), Json NTEXT, ClassName NVARCHAR(256), FilePath NVARCHAR(4000))";
+            string createTableSQL = @"CREATE TABLE Data (ObjectId NVARCHAR(256), Json NTEXT, ClassName NVARCHAR(256), FileId NVARCHAR(256))";
             SqlCeCommand cmd = new SqlCeCommand(createTableSQL, conn);
             cmd.ExecuteNonQuery();
 
-            createTableSQL = @"CREATE TABLE Files (FilePath NVARCHAR(4000), docJson NTEXT)";
+            createTableSQL = @"CREATE TABLE Files (FilePath NVARCHAR(4000), docJson NTEXT, FileId NVARCHAR(256))";
             SqlCeCommand cmd2 = new SqlCeCommand(createTableSQL, conn);
             cmd2.ExecuteNonQuery();
 
             conn.Close();
         }
 
-        public void InsertIntoFiles(string FilePath, string docJson)
+        public void InsertIntoFiles(string FilePath, string docJson, string fileId)
         {
-            string sql = @"INSERT INTO Files (FilePath, docJson) VALUES (@FilePath, @docJson)";
+            string sql = @"INSERT INTO Files (FilePath, docJson, FileId) VALUES (@FilePath, @docJson, @FileId)";
 
             if (_conn.State == System.Data.ConnectionState.Open)
             {
@@ -65,22 +65,23 @@ namespace Crawl
 
                 command.Parameters.AddWithValue("@FilePath", FilePath);
                 command.Parameters.AddWithValue("@docJson", docJson);
+                command.Parameters.AddWithValue("@FileId", fileId);
 
                 command.ExecuteNonQuery();
             }
         }
 
-        public void SaveObjectData(string objectId, string objJson, string objectClassName, string filePath)
+        public void SaveObjectData(string objectId, string objJson, string objectClassName, string fileId)
         {
             if (_conn.State == System.Data.ConnectionState.Open)
             {
-                string sql = @"INSERT INTO Data (ObjectId, Json, ClassName, FilePath) VALUES (@ObjectId, @Json, @ClassName, @FilePath)";
+                string sql = @"INSERT INTO Data (ObjectId, Json, ClassName, FileId) VALUES (@ObjectId, @Json, @ClassName, @FileId)";
                 SqlCeCommand command = new SqlCeCommand(sql, _conn);
 
                 command.Parameters.Add("@ObjectId", objectId);
                 command.Parameters.Add("@ClassName", objectClassName);
                 command.Parameters.Add("@Json", objJson);
-                command.Parameters.Add("@FilePath", filePath);
+                command.Parameters.Add("@FileId", fileId);
 
                 command.ExecuteNonQuery();
             }

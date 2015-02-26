@@ -19,7 +19,9 @@ namespace Crawl
         [DataMember]
         string Path;
         [DataMember]
-        string id;
+        string FileId;
+        [DataMember]
+        string Hash;
 
         Document teighaDocument;
         public SqlDb sqlDB;
@@ -30,11 +32,10 @@ namespace Crawl
             try
             {
                 this.Path = dwgPath;
-                this.id = Crawl.UtilityHash.HashFile(dwgPath);
-
+                this.Hash = Crawl.UtilityHash.HashFile(dwgPath);
                 this.teighaDocument = TeighaApp.DocumentManager.Open(dwgPath);;
+                this.FileId = Guid.NewGuid().ToString();
                 this.docJson = jsonHelper.To<CrawlDocument>(this);
-                
             }
             catch
             {
@@ -45,7 +46,7 @@ namespace Crawl
         public void ScanDocument()
         {
 
-            this.sqlDB.InsertIntoFiles(this.Path, docJson);
+            this.sqlDB.InsertIntoFiles(this.Path, docJson, this.FileId);
 
             using (Transaction tr = this.teighaDocument.TransactionManager.StartTransaction())
             {
@@ -57,21 +58,20 @@ namespace Crawl
                     string objectJson = jsonGetObjectData(obj.ObjectId);
                     string objectClass = obj.ObjectId.ObjectClass.Name;
 
-                    this.sqlDB.SaveObjectData(objId, objectJson, objectClass,Path);
+                    this.sqlDB.SaveObjectData(objId, objectJson, objectClass, this.FileId);
                 }
 
                 List<ObjectId> blocks = GetBlocks(this.teighaDocument);
                 foreach (ObjectId btrId in blocks)
                 {
                     BlockTableRecord btr = (BlockTableRecord)btrId.GetObject(OpenMode.ForRead);
-                    crawlAcDbBlockTableRecord cBtr = new crawlAcDbBlockTableRecord(btr,this.Path);
-                    newDocument(btrId, jsonHelper.To<crawlAcDbBlockTableRecord>(cBtr));
+                    DocumentFromBlockOrProxy(btrId, this.FileId);
                 }
             }
             this.teighaDocument.CloseAndDiscard();
         }
 
-        private void newDocument(ObjectId objId, string docJson)
+        private void DocumentFromBlockOrProxy(ObjectId objId, string parentFileId)
         {
             //http://www.theswamp.org/index.php?topic=37860.0
             Document aDoc = Application.DocumentManager.GetDocument(objId.Database);
@@ -79,8 +79,13 @@ namespace Crawl
             if (objId.ObjectClass.Name == "AcDbBlockTableRecord")
             {
                 BlockTableRecord btr = (BlockTableRecord)objId.GetObject(OpenMode.ForRead);
+                crawlAcDbBlockTableRecord cBtr = new crawlAcDbBlockTableRecord(btr, this.Path);
 
-                this.sqlDB.InsertIntoFiles("", docJson);
+                cBtr.FileId = Guid.NewGuid().ToString();
+                cBtr.ParentFileId = parentFileId;
+                string blockJson = jsonHelper.To<crawlAcDbBlockTableRecord>(cBtr);
+                
+                this.sqlDB.InsertIntoFiles("AcDbBlockTableRecord", blockJson, parentFileId);
 
                 using (Transaction tr = aDoc.TransactionManager.StartTransaction())
                 {
@@ -89,7 +94,7 @@ namespace Crawl
                         string objectJson = jsonGetObjectData(obj);
                         string objectClass = obj.ObjectClass.Name;
 
-                        this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, Path);
+                        this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, cBtr.FileId);
                     }
                 }
             }
@@ -98,6 +103,15 @@ namespace Crawl
                 Entity ent = (Entity)objId.GetObject(OpenMode.ForRead);
                 DBObjectCollection dbo = new DBObjectCollection();
                 ent.Explode(dbo);
+
+                crawlAcDbProxyEntity cPxy = new crawlAcDbProxyEntity((ProxyEntity)ent);
+
+                cPxy.FileId = Guid.NewGuid().ToString();
+                cPxy.ParentFileId = parentFileId;
+
+                string pxyJson = jsonHelper.To<crawlAcDbProxyEntity>(cPxy);
+
+                this.sqlDB.InsertIntoFiles("AcDbProxyEntity", pxyJson, parentFileId);
 
                 foreach (ObjectId obj in dbo)
                 {
@@ -262,7 +276,7 @@ namespace Crawl
 
                     result = jsonHelper.To<crawlAcDbProxyEntity>(cBlk);
 
-                    newDocument(id_platf, result);
+                    DocumentFromBlockOrProxy(id_platf, result);
                 }
                 /*
 

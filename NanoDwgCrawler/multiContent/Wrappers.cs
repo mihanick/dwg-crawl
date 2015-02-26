@@ -488,6 +488,8 @@ public class crawlAcDbPoint3AngularDimension
     }
 }
 
+
+
 [DataContract]
 public class crawlAcDbLineAngularDimension2
 {
@@ -791,8 +793,6 @@ public class crawlAcDbSpline
 
         Vertixes = getSplinePoints(spline);
     }
-
-
     private List<crawlPoint3d> getSplinePoints(Spline spline)
     {
         List<crawlPoint3d> result = new List<crawlPoint3d>();
@@ -929,6 +929,11 @@ public class crawlAcDbProxyEntity
     string Color;
 
     [DataMember]
+    public string FileId;
+    [DataMember]
+    public string ParentFileId;
+
+    [DataMember]
     string Layer;
     [DataMember]
     string Linetype;
@@ -953,6 +958,11 @@ public class crawlAcDbBlockTableRecord
     string Name;
     [DataMember]
     string FilePath;
+
+    [DataMember]
+    public string FileId;
+    [DataMember]
+    public string ParentFileId;
 
     public crawlAcDbBlockTableRecord(BlockTableRecord btr, string filePath)
     {
