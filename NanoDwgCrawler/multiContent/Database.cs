@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Crawl
 {
-    class SqlDb
+    public class SqlDb
     {
         private string dbPath;
         private string dataProvider;
@@ -13,7 +13,7 @@ namespace Crawl
         public SqlDb()
         {
             dbPath = @"C:\Users\Mike Gladkikh\Documents\GitHub\dwg-crawl\NanoDwgCrawler\crawl.sdf";
-            dataProvider = @"Data Source= " + dbPath;
+            dataProvider = @"Data Source= " + dbPath + "; Max Database Size=4091";
 
             CreateTables();
 
@@ -33,41 +33,58 @@ namespace Crawl
 
 
             // check if exists */
-            if (File.Exists(dbPath))
-                File.Delete(dbPath);
-
-            // create Database */
-            SqlCeEngine engine = new SqlCeEngine(dataProvider);
-            engine.CreateDatabase();
+            if (!File.Exists(dbPath))
+            {
+                // create Database */
+                SqlCeEngine engine = new SqlCeEngine(dataProvider);
+                engine.CreateDatabase();
+            }
 
             SqlCeConnection conn = new SqlCeConnection(dataProvider);
             conn.Open();
 
+            if (!TableExist("Data", conn))
+            {
+                string createTableSQL = @"CREATE TABLE Data (ObjectId NVARCHAR(256), Json NTEXT, ClassName NVARCHAR(256), FileId NVARCHAR(256))";
+                SqlCeCommand cmd = new SqlCeCommand(createTableSQL, conn);
+                cmd.ExecuteNonQuery();
+            }
 
-            string createTableSQL = @"CREATE TABLE Data (ObjectId NVARCHAR(256), Json NTEXT, ClassName NVARCHAR(256), FileId NVARCHAR(256))";
-            SqlCeCommand cmd = new SqlCeCommand(createTableSQL, conn);
-            cmd.ExecuteNonQuery();
-
-            createTableSQL = @"CREATE TABLE Files (FilePath NVARCHAR(4000), docJson NTEXT, FileId NVARCHAR(256))";
-            SqlCeCommand cmd2 = new SqlCeCommand(createTableSQL, conn);
-            cmd2.ExecuteNonQuery();
+            if (!TableExist("Files", conn))
+            {
+                string createTableSQL = @"CREATE TABLE Files (FilePath NVARCHAR(4000), docJson NTEXT, FileId NVARCHAR(256), FileHash NVARCHAR(256), Scanned BIT NOT NULL)";
+                SqlCeCommand cmd = new SqlCeCommand(createTableSQL, conn);
+                cmd.ExecuteNonQuery();
+            }
 
             conn.Close();
         }
 
-        public void InsertIntoFiles(string FilePath, string docJson, string fileId)
-        {
-            string sql = @"INSERT INTO Files (FilePath, docJson, FileId) VALUES (@FilePath, @docJson, @FileId)";
 
+        public void InsertIntoFiles(string FilePath, string docJson, string fileId, string fileHash)
+        {
             if (_conn.State == System.Data.ConnectionState.Open)
             {
-                SqlCeCommand command = new SqlCeCommand(sql, _conn);
+                //http://stackoverflow.com/questions/12219324/how-to-check-value-exists-on-sql-table
+                SqlCeCommand chkHashExist = new SqlCeCommand("SELECT FileHash FROM Files WHERE (FileHash='" + fileHash + "' AND FilePath='"+FilePath+"')", _conn);
 
-                command.Parameters.AddWithValue("@FilePath", FilePath);
-                command.Parameters.AddWithValue("@docJson", docJson);
-                command.Parameters.AddWithValue("@FileId", fileId);
+                object qryRslt = chkHashExist.ExecuteScalar();
+                string sRslt = (string)qryRslt;
 
-                command.ExecuteNonQuery();
+                if (qryRslt == null)
+                {
+                    string sql = @"INSERT INTO Files (FilePath, docJson, FileId, FileHash, Scanned) VALUES (@FilePath, @docJson, @FileId, @FileHash,@Scanned)";
+
+                    SqlCeCommand command = new SqlCeCommand(sql, _conn);
+
+                    command.Parameters.AddWithValue("@FilePath", FilePath);
+                    command.Parameters.AddWithValue("@docJson", docJson);
+                    command.Parameters.AddWithValue("@FileId", fileId);
+                    command.Parameters.AddWithValue("@FileHash", fileHash);
+                    command.Parameters.AddWithValue("@Scanned", 0);
+
+                    command.ExecuteNonQuery();
+                }
             }
         }
 
@@ -81,6 +98,59 @@ namespace Crawl
                 command.Parameters.Add("@ObjectId", objectId);
                 command.Parameters.Add("@ClassName", objectClassName);
                 command.Parameters.Add("@Json", objJson);
+                command.Parameters.Add("@FileId", fileId);
+
+                command.ExecuteNonQuery();
+            }
+        }
+
+        private bool TableExist(string TableName, SqlCeConnection connection)
+        {
+
+            string commandTxt = "SELECT COUNT(*) FROM Information_Schema.Tables WHERE (TABLE_NAME = '" + TableName + "')";
+            SqlCeCommand command = new SqlCeCommand(commandTxt, connection);
+            int result = (int)command.ExecuteScalar();
+            return result != 0;
+        }
+
+        internal CrawlDocument GetNewRandomUnscannedDocument()
+        {
+            CrawlDocument result = null;
+            if (_conn.State != System.Data.ConnectionState.Open)
+                return result;
+
+
+            //http://stackoverflow.com/questions/13665309/how-to-randomly-select-one-row-off-table-based-on-critera
+            //https://msdn.microsoft.com/en-us/library/cc441928.aspx
+
+            string commandTxt = 
+                @"SELECT        FilePath, docJson, FileId, FileHash, Scanned
+                FROM            Files
+                WHERE        (Scanned = '0')
+                ORDER BY NEWID()";
+
+            SqlCeCommand command = new SqlCeCommand(commandTxt, _conn);
+            SqlCeDataReader dr = command.ExecuteReader();
+
+            while (dr.Read())
+            {
+                //http://stackoverflow.com/questions/4018114/read-data-from-sqldatareader
+                result = new CrawlDocument();
+                result.FileId = dr["FileId"].ToString();
+                result.Hash = dr["FileHash"].ToString();
+                result.Path = dr["FilePath"].ToString();
+                break;
+            }
+            return result;
+        }
+
+        public void SetDocumentScanned(string fileId)
+        {
+            if (_conn.State == System.Data.ConnectionState.Open)
+            {
+                string sql = @"UPDATE Files SET Scanned=1 WHERE (FileId=@FileId)";
+                SqlCeCommand command = new SqlCeCommand(sql, _conn);
+
                 command.Parameters.Add("@FileId", fileId);
 
                 command.ExecuteNonQuery();
