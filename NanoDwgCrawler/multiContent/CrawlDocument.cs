@@ -25,5 +25,6 @@ namespace Crawl
                 this.FileId = Guid.NewGuid().ToString();
                 this.docJson = jsonHelper.To<CrawlDocument>(this);
         }
+
     }
 }

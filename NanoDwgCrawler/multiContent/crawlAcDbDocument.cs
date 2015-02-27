@@ -26,6 +26,7 @@ namespace Crawl
             
         }
 
+
         public void ScanDocument()
         {
             sqlDB.SetDocumentScanned(this.FileId);
@@ -65,6 +66,17 @@ namespace Crawl
 
 
                     this.sqlDB.SaveObjectData(objId, objectJson, objectClass, this.FileId);
+                }
+
+                //Пробегаем внешние ссылки
+                List<CrawlDocument> xrefs = GetXrefs(this.teighaDocument);
+                foreach (CrawlDocument theXref in xrefs)
+                {
+                    crawlAcDbDocument cDoc = new crawlAcDbDocument(theXref);
+                    sqlDB.InsertIntoFiles(theXref.Path, theXref.docJson, theXref.FileId, theXref.Hash);
+
+                    cDoc.sqlDB = sqlDB;
+                    cDoc.ScanDocument();
                 }
             }
             this.teighaDocument.CloseAndDiscard();
@@ -378,6 +390,28 @@ namespace Crawl
             };
 
             return bNames;
+        }
+
+
+        private List<CrawlDocument> GetXrefs(Document aDoc)
+        {
+            //http://adndevblog.typepad.com/autocad/2012/06/finding-all-xrefs-in-the-current-database-using-cnet.html
+            XrefGraph xGraph = aDoc.Database.GetHostDwgXrefGraph(false);
+            int numXrefs = xGraph.NumNodes;
+            List<CrawlDocument> result = new List<CrawlDocument>();
+
+            for (int i = 0; i < numXrefs; i++)
+            {
+                XrefGraphNode xrefNode = xGraph.GetXrefNode(i);
+
+                if (xrefNode.XrefStatus == XrefStatus.Resolved)
+                {
+                    //Document theDoc = TeighaApp.DocumentManager.GetDocument(xrefNode.Database);
+                    CrawlDocument acDoc = new CrawlDocument(xrefNode.Database.Filename);
+                    result.Add(acDoc);
+                }
+            }
+            return result;
         }
 
     }
