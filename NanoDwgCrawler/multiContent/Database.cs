@@ -119,6 +119,12 @@ namespace Crawl
             if (_conn.State != System.Data.ConnectionState.Open)
                 return result;
 
+            //Check db size is close to maximum
+            FileInfo Fi = new FileInfo(dbPath);
+            long maxsize = 2000*1024*1024;
+            if (Fi.Length > maxsize)
+                return null;
+
 
             //http://stackoverflow.com/questions/13665309/how-to-randomly-select-one-row-off-table-based-on-critera
             //https://msdn.microsoft.com/en-us/library/cc441928.aspx
