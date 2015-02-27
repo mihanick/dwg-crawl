@@ -971,3 +971,49 @@ public class crawlAcDbBlockTableRecord
     }
 
 }
+
+[DataContract]
+public class crawlAcDbSolid
+{
+    [DataMember]
+    string ClassName = "AcDbSolid";
+    [DataMember]
+    string Color;
+
+    [DataMember]
+    public string FileId;
+    [DataMember]
+    public string ParentFileId;
+
+    [DataMember]
+    string Layer;
+    [DataMember]
+    string Linetype;
+    [DataMember]
+    string LineWeight;
+
+    [DataMember]
+    List<crawlPoint3d> Vertices;
+        
+    public crawlAcDbSolid(Solid solid)
+    {
+        this.Layer = solid.Layer;
+        this.Linetype = solid.Linetype;
+        this.LineWeight = solid.LineWeight.ToString();
+        this.Color = solid.Color.ToString();
+
+        Vertices = new List<crawlPoint3d>();
+        short i = 0;
+        Point3d pt = solid.GetPointAt(i);
+        try{
+            while(pt!=null)
+            {
+                Vertices.Add(new crawlPoint3d(pt));
+                i++;
+                pt = solid.GetPointAt(i);
+            }
+        }
+        catch {}
+        
+    }
+}

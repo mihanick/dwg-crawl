@@ -250,7 +250,7 @@ namespace Crawl
                     //newDocument(id_platf, result);
                 }
                 else if (id_platf.ObjectClass.Name == "AcDbProxyEntity")
-                {//Блок
+                {//Прокси
                     ProxyEntity pxy = ent as ProxyEntity;
 
 
@@ -260,7 +260,17 @@ namespace Crawl
 
                     DocumentFromBlockOrProxy(id_platf, result);
                 }
-                /*
+                else if (id_platf.ObjectClass.Name == "AcDbSolid")
+                {//Солид 2Д
+                    Solid solid = (Solid)ent;
+
+
+                    crawlAcDbSolid cSld = new crawlAcDbSolid(solid);
+
+                    result = jsonHelper.To<crawlAcDbSolid>(cSld);
+
+                }
+                    /*
 
 
             else if (id_platf.ObjectClass.Name == "AcDbLeader")
