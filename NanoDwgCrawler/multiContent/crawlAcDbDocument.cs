@@ -34,6 +34,7 @@ namespace Crawl
             {
                 PromptSelectionResult r = this.teighaDocument.Editor.SelectAll();
 
+                //Пробегаем по всем объектам в чертеже
                 foreach (SelectedObject obj in r.Value)
                 {
                     string objId = obj.ObjectId.ToString();
@@ -42,12 +43,28 @@ namespace Crawl
 
                     this.sqlDB.SaveObjectData(objId, objectJson, objectClass, this.FileId);
                 }
-
+                //Пробегаем все определения блоков
                 List<ObjectId> blocks = GetBlocks(this.teighaDocument);
                 foreach (ObjectId btrId in blocks)
                 {
                     BlockTableRecord btr = (BlockTableRecord)btrId.GetObject(OpenMode.ForRead);
                     DocumentFromBlockOrProxy(btrId, this.FileId);
+                }
+
+                //Пробегаем все определения слоев
+                //http://forums.autodesk.com/t5/net/how-to-get-all-names-of-layers-in-a-drawing-by-traversal-layers/td-p/3371751
+                LayerTable lt = (LayerTable)this.teighaDocument.Database.LayerTableId.GetObject(OpenMode.ForRead);
+                foreach (ObjectId ltr in lt)
+                {
+                    string objId = ltr.ToString();
+                    string objectClass = ltr.ObjectClass.Name;
+                    LayerTableRecord layerTblRec = (LayerTableRecord)ltr.GetObject(OpenMode.ForRead);
+
+                    crawlAcDbLayerTableRecord cltr = new crawlAcDbLayerTableRecord(layerTblRec);
+                    string objectJson = jsonHelper.To<crawlAcDbLayerTableRecord>(cltr); 
+
+
+                    this.sqlDB.SaveObjectData(objId, objectJson, objectClass, this.FileId);
                 }
             }
             this.teighaDocument.CloseAndDiscard();

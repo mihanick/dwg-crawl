@@ -1017,3 +1017,43 @@ public class crawlAcDbSolid
         
     }
 }
+
+[DataContract]
+public class crawlAcDbLayerTableRecord
+{
+    [DataMember]
+    string ClassName = "AcDbLayerTableRecord";
+
+    [DataMember]
+    string Name;
+    [DataMember]
+    string Linetype;
+    [DataMember]
+    bool IsFrozen;
+    [DataMember]
+    bool IsHidden;
+    [DataMember]
+    bool IsOff;
+    [DataMember]
+    bool IsPlottable;
+    [DataMember]
+    string LineWeight;
+    [DataMember]
+    string Color;
+
+    public crawlAcDbLayerTableRecord(LayerTableRecord layerRecord)
+    {
+        Name = layerRecord.Name;
+
+        LinetypeTableRecord ltRec = (LinetypeTableRecord)layerRecord.LinetypeObjectId.GetObject(OpenMode.ForRead);
+        this.Linetype = ltRec.Name;
+
+        this.LineWeight = layerRecord.LineWeight.ToString();
+        this.IsFrozen = layerRecord.IsFrozen;
+        this.IsHidden = layerRecord.IsHidden;
+        this.IsOff = layerRecord.IsOff;
+        this.IsPlottable = layerRecord.IsPlottable;
+        this.Color = layerRecord.Color.ToString();
+    }
+
+}
