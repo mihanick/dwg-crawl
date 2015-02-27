@@ -14,7 +14,7 @@ namespace Crawl
         static void Main(string[] args)
         {
             //Открыть папку, выбрать все файлы двг из нее
-            string dir = @"C:\Users\Mike Gladkikh\Documents\test 1800\AcDbLine";
+            string dir = @"C:\svn\Help\MCS10\OgpUtils\OgpUtils\multiContent\testSamples";
             //string dir = @"\\FILESERVER\home\#АРХИВ 2014";
 
             string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.TopDirectoryOnly);
@@ -42,7 +42,7 @@ namespace Crawl
 
         static void crawlinNano()
         {
-            ExecuteCommandLine(@"C:\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\nCad.exe");
+            //ExecuteCommandLine(@"C:\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\nCad.exe");
         }
 
         static Process ExecuteCommandLine(string exePath, string arguments = "")
