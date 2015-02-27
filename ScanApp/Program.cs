@@ -14,7 +14,8 @@ namespace Crawl
         static void Main(string[] args)
         {
             //Открыть папку, выбрать все файлы двг из нее
-            string dir = @"\\FILESERVER\home\#АРХИВ 2014";
+            string dir = @"C:\Users\Mike Gladkikh\Documents\test 1800\AcDbLine";
+            //string dir = @"\\FILESERVER\home\#АРХИВ 2014";
 
             string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.TopDirectoryOnly);
             SqlDb sqlDB = new SqlDb();
