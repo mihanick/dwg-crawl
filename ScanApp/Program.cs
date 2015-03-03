@@ -17,7 +17,7 @@ namespace Crawl
             string dir = @"C:\svn\Help\MCS10\OgpUtils\OgpUtils\multiContent\testSamples";
             //string dir = @"\\FILESERVER\home\#АРХИВ 2014";
 
-            string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.TopDirectoryOnly);
+            string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
             SqlDb sqlDB = new SqlDb();
 
             foreach (string dwgFile in dwgFiles)

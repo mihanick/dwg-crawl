@@ -16,6 +16,7 @@ namespace Crawl
             }
         }
 
+        [DebuggerStepThrough]
         public static string HashFile(FileStream stream)
         {
             StringBuilder sb = new StringBuilder();
