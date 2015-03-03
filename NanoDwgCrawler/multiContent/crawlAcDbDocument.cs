@@ -199,6 +199,14 @@ namespace Crawl
                     crawlAcDbEllipse cEll = new crawlAcDbEllipse(el);
                     result = jsonHelper.To<crawlAcDbEllipse>(cEll);
                 }
+                else if (id_platf.ObjectClass.Name == "AcDbAlignedDimension")
+                {//Размер повернутый
+                    AlignedDimension dim = (AlignedDimension)ent;
+
+                    crawlAcDbAlignedDimension rDim = new crawlAcDbAlignedDimension(dim);
+                    result = jsonHelper.To<crawlAcDbAlignedDimension>(rDim);
+                }
+
                 else if (id_platf.ObjectClass.Name == "AcDbRotatedDimension")
                 {//Размер повернутый
                     RotatedDimension dim = (RotatedDimension)ent;

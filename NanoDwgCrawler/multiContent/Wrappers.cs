@@ -395,6 +395,51 @@ public class crawlAcDbEllipse
 
     }
 }
+[DataContract]
+public class crawlAcDbAlignedDimension
+{
+    [DataMember]
+    string ClassName = "AcDbAlignedDimension";
+    [DataMember]
+    string Color;
+
+    [DataMember]
+    public crawlPoint3d XLine1Point { get; set; }
+    [DataMember]
+    public crawlPoint3d XLine2Point { get; set; }
+    [DataMember]
+    public crawlPoint3d DimLinePoint { get; set; }
+    [DataMember]
+    public crawlPoint3d TextPosition { get; set; }
+
+    [DataMember]
+    public string DimensionText;
+    [DataMember]
+    public string DimensionStyleName;
+
+    [DataMember]
+    string Layer;
+    [DataMember]
+    string Linetype;
+    [DataMember]
+    string LineWeight;
+
+    public crawlAcDbAlignedDimension(AlignedDimension dim)
+    {
+        this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
+        this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
+        this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+
+        this.Layer = dim.Layer;
+        this.Linetype = dim.Linetype;
+        this.LineWeight = dim.LineWeight.ToString();
+        this.Color = dim.Color.ToString();
+
+        this.DimensionText = dim.DimensionText;
+        this.DimensionStyleName = dim.DimensionStyleName;
+    }
+}
 
 [DataContract]
 public class crawlAcDbRotatedDimension
