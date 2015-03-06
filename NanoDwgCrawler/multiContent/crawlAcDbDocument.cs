@@ -31,6 +31,10 @@ namespace Crawl
         {
             sqlDB.SetDocumentScanned(this.FileId);
 
+            //Если документ неправильно зачитался то выходим
+            if (this.teighaDocument == null) 
+                return;
+
             using (Transaction tr = this.teighaDocument.TransactionManager.StartTransaction())
             {
                 PromptSelectionResult r = this.teighaDocument.Editor.SelectAll();

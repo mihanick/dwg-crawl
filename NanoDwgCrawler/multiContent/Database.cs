@@ -73,17 +73,23 @@ namespace Crawl
 
                 if (qryRslt == null)
                 {
-                    string sql = @"INSERT INTO Files (FilePath, docJson, FileId, FileHash, Scanned) VALUES (@FilePath, @docJson, @FileId, @FileHash,@Scanned)";
+                    try
+                    {
+                        string sql = @"INSERT INTO Files (FilePath, docJson, FileId, FileHash, Scanned) VALUES (@FilePath, @docJson, @FileId, @FileHash,@Scanned)";
 
-                    SqlCeCommand command = new SqlCeCommand(sql, _conn);
+                        SqlCeCommand command = new SqlCeCommand(sql, _conn);
 
-                    command.Parameters.AddWithValue("@FilePath", FilePath);
-                    command.Parameters.AddWithValue("@docJson", docJson);
-                    command.Parameters.AddWithValue("@FileId", fileId);
-                    command.Parameters.AddWithValue("@FileHash", fileHash);
-                    command.Parameters.AddWithValue("@Scanned", 0);
+                        command.Parameters.AddWithValue("@FilePath", FilePath);
+                        command.Parameters.AddWithValue("@docJson", docJson);
+                        command.Parameters.AddWithValue("@FileId", fileId);
+                        command.Parameters.AddWithValue("@FileHash", fileHash);
+                        command.Parameters.AddWithValue("@Scanned", 0);
 
-                    command.ExecuteNonQuery();
+                        command.ExecuteNonQuery();
+                    }
+                    catch
+                    {
+                    }
                 }
             }
         }
@@ -94,13 +100,19 @@ namespace Crawl
             {
                 string sql = @"INSERT INTO Data (ObjectId, Json, ClassName, FileId) VALUES (@ObjectId, @Json, @ClassName, @FileId)";
                 SqlCeCommand command = new SqlCeCommand(sql, _conn);
+                try
+                {
+                    command.Parameters.Add("@ObjectId", objectId);
+                    command.Parameters.Add("@ClassName", objectClassName);
+                    command.Parameters.Add("@Json", objJson);
+                    command.Parameters.Add("@FileId", fileId);
 
-                command.Parameters.Add("@ObjectId", objectId);
-                command.Parameters.Add("@ClassName", objectClassName);
-                command.Parameters.Add("@Json", objJson);
-                command.Parameters.Add("@FileId", fileId);
-
-                command.ExecuteNonQuery();
+                    command.ExecuteNonQuery();
+                }
+                catch(System.Exception e)
+                {
+                    cDebug.WriteLine("Save to db failed: " + e.Message);
+                }
             }
         }
 
