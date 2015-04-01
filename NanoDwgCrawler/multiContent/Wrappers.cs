@@ -26,6 +26,10 @@ public class crawlAcDbLine
     [DataMember]
     string LineWeight;
 
+    public crawlAcDbLine()
+    {
+    }
+
     public crawlAcDbLine(Line line)
     {
         this.EndPoint = new crawlPoint3d(line.EndPoint);
@@ -142,6 +146,8 @@ public class crawlAcDbText
     string Linetype;
     [DataMember]
     string LineWeight;
+
+    public crawlAcDbText() { }
 
     public crawlAcDbText(DBText text)
     {
