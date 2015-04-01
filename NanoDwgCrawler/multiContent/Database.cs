@@ -1,5 +1,6 @@
 ﻿using System.Data.SqlServerCe;
 using System.IO;
+using System.Collections.Generic;
 
 namespace Crawl
 {
@@ -8,7 +9,6 @@ namespace Crawl
         private string dbPath;
         private string dataProvider;
         private SqlCeConnection _conn;
-
 
         public SqlDb()
         {
@@ -20,7 +20,6 @@ namespace Crawl
             _conn = new SqlCeConnection(dataProvider);
             _conn.Open();
         }
-
 
         ~SqlDb()
         {
@@ -173,6 +172,36 @@ namespace Crawl
 
                 command.ExecuteNonQuery();
             }
+        }
+
+        public List<string> GetObjectJsonByClassName(string className)
+        {
+            List<string> result = new List<string>();
+
+            if (_conn.State != System.Data.ConnectionState.Open)
+                return result;
+
+
+            //http://stackoverflow.com/questions/13665309/how-to-randomly-select-one-row-off-table-based-on-critera
+            //https://msdn.microsoft.com/en-us/library/cc441928.aspx
+
+            string commandTxt =
+                @"SELECT        Json, ClassName
+                FROM            Data
+                WHERE        (ClassName = '"+className+"')";
+
+            SqlCeCommand command = new SqlCeCommand(commandTxt, _conn);
+            SqlCeDataReader dr = command.ExecuteReader();
+
+            while (dr.Read())
+            {
+                //http://stackoverflow.com/questions/4018114/read-data-from-sqldatareader
+
+                string json =  dr["Json"].ToString();
+                result.Add(json);
+
+            }
+            return result;
         }
     }
 }
