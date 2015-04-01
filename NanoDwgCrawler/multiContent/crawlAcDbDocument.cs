@@ -7,12 +7,15 @@ using HostMgd.ApplicationServices;
 using Teigha.DatabaseServices;
 using HostMgd.EditorInput;
 using TeighaApp = HostMgd.ApplicationServices.Application;
+using System.IO;
 
 namespace Crawl
 {
     class crawlAcDbDocument
     {
-        string Path;
+        private string _dataDir = @"F:\Data";
+
+        string FullPath;
         string FileId;
 
         Document teighaDocument;
@@ -20,17 +23,15 @@ namespace Crawl
 
         public crawlAcDbDocument(CrawlDocument crawlDoc)
         {
-            this.Path = crawlDoc.Path;
+            this.FullPath = crawlDoc.Path;
             this.FileId = crawlDoc.FileId;
-            this.teighaDocument = TeighaApp.DocumentManager.Open(crawlDoc.Path);
+            this.teighaDocument = TeighaApp.DocumentManager.Open(Path.Combine(_dataDir,crawlDoc.FileId+".dwg"));
             
         }
 
 
         public void ScanDocument()
         {
-            sqlDB.SetDocumentScanned(this.FileId);
-
             //Если документ неправильно зачитался то выходим
             if (this.teighaDocument == null) 
                 return;
@@ -84,6 +85,8 @@ namespace Crawl
                 }
             }
             this.teighaDocument.CloseAndDiscard();
+
+            sqlDB.SetDocumentScanned(this.FileId);
         }
 
         private void DocumentFromBlockOrProxy(ObjectId objId, string parentFileId)
@@ -94,7 +97,7 @@ namespace Crawl
             if (objId.ObjectClass.Name == "AcDbBlockTableRecord")
             {
                 BlockTableRecord btr = (BlockTableRecord)objId.GetObject(OpenMode.ForRead);
-                crawlAcDbBlockTableRecord cBtr = new crawlAcDbBlockTableRecord(btr, this.Path);
+                crawlAcDbBlockTableRecord cBtr = new crawlAcDbBlockTableRecord(btr, this.FullPath);
 
                 cBtr.FileId = Guid.NewGuid().ToString();
                 cBtr.ParentFileId = parentFileId;
@@ -133,7 +136,7 @@ namespace Crawl
                     string objectJson = jsonGetObjectData(obj);
                     string objectClass = obj.ObjectClass.Name;
 
-                    this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, Path);
+                    this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, FullPath);
                 }
             }
         }

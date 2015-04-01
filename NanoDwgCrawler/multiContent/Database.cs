@@ -12,7 +12,7 @@ namespace Crawl
 
         public SqlDb()
         {
-            dbPath = @"C:\Users\Mike Gladkikh\Documents\GitHub\dwg-crawl\NanoDwgCrawler\crawl2.sdf";
+            dbPath = @"F:\Data\crawl3.sdf";
             dataProvider = @"Data Source= " + dbPath + "; Max Database Size=4091";
 
             CreateTables();
