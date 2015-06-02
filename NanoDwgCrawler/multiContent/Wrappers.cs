@@ -276,7 +276,12 @@ public class crawlPoint3d
     }
     public override string ToString()
     {
-        return string.Format("({0}, {1}, {2})", this.X, this.Y, this.Z);
+        return string.Format("({0}, {1}, {2})", Math.Round(this.X,2), Math.Round(this.Y,2), Math.Round(this.Z,2));
+    }
+
+    public bool Equals(crawlPoint3d otherPoint3d)
+    {
+        return this.ToString().Equals(otherPoint3d.ToString());
     }
 }
 

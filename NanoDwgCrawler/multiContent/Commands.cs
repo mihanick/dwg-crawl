@@ -49,9 +49,7 @@ namespace Crawl
         Document acCurDoc = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
         Editor ed = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
 
-#if DEBUG
         [CommandMethod("ogpTestDWGcrawl")]
-#endif
         public static void ogpTestDWGcrawl()
         {
 

@@ -13,7 +13,7 @@ namespace Crawl
 {
     class crawlAcDbDocument
     {
-        private string _dataDir = @"F:\Data";
+        private string _dataDir = @"c:\Data";
 
         string FullPath;
         string FileId;
