@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using Crawl;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 using System.Diagnostics;
 
 namespace Crawl
@@ -16,7 +16,7 @@ namespace Crawl
             //Открыть папку, выбрать все файлы двг из нее
             //string dir = @"C:\svn\Help\MCS10\OgpUtils\OgpUtils\multiContent\testSamples";
             string dir = @"\\FILESERVER\home\#АРХИВ 2014\Объекты\МНОГОТОПЛИВНАЯ АЗС №15";
-            string dataDir = @"F:\Data\";
+            string dataDir = @"c:\Data\";
 
             string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
             SqlDb sqlDB = new SqlDb();
@@ -34,7 +34,7 @@ namespace Crawl
             {
                 //crawlinNano();
                 //http://cplus.about.com/od/learnc/a/multi-threading-using-task-parallel-library.htm
-                Task.Factory.StartNew(() => crawlinNano());
+                //Task.Factory.StartNew(() => crawlinNano());
             }
 
             //Процесс выбирает из базы случайным образом непросканированный файл и сканирует его в Json

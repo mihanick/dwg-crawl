@@ -15,17 +15,18 @@
     <AssemblyName>NanoDwgCrawler</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\..\Program Files %28x86%29\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\</OutputPath>
+    <OutputPath>..\..\..\Program Files %28x86%29\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -36,14 +37,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="hostdbmgd">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\hostdbmgd.dll</HintPath>
+    <Reference Include="hostdbmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD СПДС 5.4\bin\hostdbmgd.dll</HintPath>
     </Reference>
-    <Reference Include="hostmgd">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\hostmgd.dll</HintPath>
-    </Reference>
-    <Reference Include="nrxgatemgd">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\nrxgatemgd.dll</HintPath>
+    <Reference Include="hostmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD СПДС 5.4\bin\hostmgd.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
