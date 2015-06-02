@@ -12,7 +12,7 @@ namespace Crawl
 
         public SqlDb()
         {
-            dbPath = @"F:\Data\crawl3.sdf";
+            dbPath = @"c:\Data\crawl2.sdf";
             dataProvider = @"Data Source= " + dbPath + "; Max Database Size=4091";
 
             CreateTables();
@@ -187,8 +187,10 @@ namespace Crawl
 
             string commandTxt =
                 @"SELECT        Json, ClassName
-                FROM            Data
-                WHERE        (ClassName = '"+className+"')";
+                FROM            Data";
+
+            if (className != "")
+                commandTxt += @" WHERE        (ClassName = '"+className+"')";
 
             SqlCeCommand command = new SqlCeCommand(commandTxt, _conn);
             SqlCeDataReader dr = command.ExecuteReader();
