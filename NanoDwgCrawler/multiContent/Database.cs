@@ -12,7 +12,8 @@ namespace Crawl
 
         public SqlDb()
         {
-            dbPath = @"c:\Data\crawl2.sdf";
+            //dbPath = @"c:\Data\SingleFile.sdf";
+            dbPath = @"c:\Data\rectangle.sdf";
             dataProvider = @"Data Source= " + dbPath + "; Max Database Size=4091";
 
             CreateTables();

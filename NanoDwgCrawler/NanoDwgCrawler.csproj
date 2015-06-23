@@ -68,6 +68,10 @@
     <Compile Include="multiContent\HashFile.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RTree\Node.cs" />
+    <Compile Include="RTree\Point.cs" />
+    <Compile Include="RTree\Rectangle.cs" />
+    <Compile Include="RTree\RTree.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

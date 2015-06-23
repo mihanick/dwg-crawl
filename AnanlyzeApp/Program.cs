@@ -1,9 +1,7 @@
-﻿using System;
+﻿using Crawl;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Crawl;
 using System.IO;
+using System.Text;
 
 namespace AnanlyzeApp
 {
@@ -195,12 +193,6 @@ namespace AnanlyzeApp
                                             rectangles.Add(rectangle);
                                         }
                                 }
-
-            foreach (Rectangle rec in rectangles)
-                sw.WriteLine(rec.line1.Length + "; " + rec.line2.Length);
-
-            return;
-
 
             HashSet<crawlAcDbLine> allRectangleLines = new HashSet<crawlAcDbLine>();
             foreach (Rectangle rectangle in rectangles)
