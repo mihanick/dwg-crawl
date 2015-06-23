@@ -10,7 +10,7 @@ namespace Crawl
     /// <summary>
     /// Вывод сообщений в командную строку или DEBUG
     /// </summary>
-    public class cDebug
+    public static class cDebug
     {
         public enum DebugMessageWriteMedia
         {
@@ -18,7 +18,6 @@ namespace Crawl
             Debug,
             LogFile
         }
-        //DEBUG: для целей дебага по умолчанию сообщения будут выводиться в командную строку:
 
         [DebuggerStepThrough]
         /// <summary>
