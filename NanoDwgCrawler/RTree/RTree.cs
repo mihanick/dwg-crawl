@@ -650,7 +650,7 @@ namespace RTree
             n.mbr.add(newRect);
 
 
-                cDebug.WriteLine("pickSeeds(): NodeId = " + n.nodeId + ", newRect = " + newRect);
+            cDebug.WriteLine("pickSeeds(): NodeId = " + n.nodeId + ", newRect = " + newRect);
 
             for (int d = 0; d < Rectangle.DIMENSIONS; d++)
             {
@@ -689,10 +689,10 @@ namespace RTree
                     }
 
                     //if (log.IsDebugEnabled)
-                        cDebug.WriteLine("Entry " + i + ", dimension " + d + ": HighestLow = " + tempHighestLow +
-                                  " (index " + tempHighestLowIndex + ")" + ", LowestHigh = " +
-                                  tempLowestHigh + " (index " + tempLowestHighIndex + ", NormalizedSeparation = " + normalizedSeparation);
-                    
+                    cDebug.WriteLine("Entry " + i + ", dimension " + d + ": HighestLow = " + tempHighestLow +
+                              " (index " + tempHighestLowIndex + ")" + ", LowestHigh = " +
+                              tempLowestHigh + " (index " + tempLowestHighIndex + ", NormalizedSeparation = " + normalizedSeparation);
+
 
                     // PS3 [Select the most extreme pair] Choose the pair with the greatest
                     // normalized separation along any dimension.
@@ -752,7 +752,7 @@ namespace RTree
             maxDifference = float.NegativeInfinity;
 
             //if (log.IsDebugEnabled)
-                cDebug.WriteLine("pickNext()");
+            cDebug.WriteLine("pickNext()");
 
             for (int i = 0; i < maxNodeEntries; i++)
             {
@@ -799,10 +799,10 @@ namespace RTree
                         maxDifference = difference;
                     }
                     //if (log.IsDebugEnabled)
-                    
-                        cDebug.WriteLine("Entry " + i + " group0 increase = " + nIncrease + ", group1 increase = " + newNodeIncrease +
-                                  ", diff = " + difference + ", MaxDiff = " + maxDifference + " (entry " + next + ")");
-                    
+
+                    cDebug.WriteLine("Entry " + i + " group0 increase = " + nIncrease + ", group1 increase = " + newNodeIncrease +
+                              ", diff = " + difference + ", MaxDiff = " + maxDifference + " (entry " + next + ")");
+
                 }
             }
 
