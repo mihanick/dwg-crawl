@@ -10,10 +10,16 @@ namespace Crawl
         private string dataProvider;
         private SqlCeConnection _conn;
 
-        public SqlDb()
+        public SqlDb(string path="")
         {
-            //dbPath = @"c:\Data\SingleFile.sdf";
-            dbPath = @"c:\Data\rectangle.sdf";
+
+            
+            if (path == "")
+                dbPath = @"c:\Data\SingleFile.sdf";
+                //dbPath = @"c:\Data\rectangle.sdf";
+            else
+                dbPath = path;
+
             dataProvider = @"Data Source= " + dbPath + "; Max Database Size=4091";
 
             CreateTables();
