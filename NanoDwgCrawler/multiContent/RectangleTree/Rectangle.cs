@@ -7,13 +7,11 @@
     /// </summary>
     public class Rectangle
     {
+        /*
         public crawlAcDbLine line1;
         public crawlAcDbLine line2;
         public crawlAcDbLine line3;
         public crawlAcDbLine line4;
-
-        public crawlPoint3d pointA;
-        public crawlPoint3d pointC;
 
         public Rectangle Rectangle1;
         public Rectangle Rectangle2;
@@ -33,6 +31,10 @@
                 return this.Area / this.Rectangle2.Area;
             }
         }
+       */
+
+        public crawlPoint3d pointA;
+        public crawlPoint3d pointC;
 
         public crawlPoint3d MinPoint
         {
@@ -98,7 +100,6 @@
             }
         }
 
-
         public double Perimeter
         {
             get
@@ -112,6 +113,12 @@
         {
             this.pointA = new crawlPoint3d(0, 0, 0);
             this.pointC = new crawlPoint3d(0, 0, 0);
+        }
+
+        public Rectangle(double pointAx, double pointAy, double pointCx, double pointCy)
+        {
+            this.pointA = new crawlPoint3d(pointAx, pointAy, 0);
+            this.pointC = new crawlPoint3d(pointCx, pointCy, 0);
         }
 
         public Rectangle(crawlPoint3d bottomLeftCorner, crawlPoint3d topRightCorner)
@@ -148,6 +155,30 @@
         }
 
         /// <summary>
+        /// Checks whether Rectangle rec is fully included in this rectangle
+        /// </summary>
+        /// <param name="rec">Rectangle to check inclusion</param>
+        /// <returns>true if rec is fully included </returns>
+        public bool Intersects(Rectangle rec)
+        {
+            if (this.MinPoint.X > rec.MaxPoint.X)
+                return false;
+            if (this.MinPoint.Y > rec.MaxPoint.Y)
+                return false;
+            if (this.MinPoint.Z > rec.MaxPoint.Z)
+                return false;
+
+            if (this.MaxPoint.X < rec.MinPoint.X)
+                return false;
+            if (this.MaxPoint.Y < rec.MinPoint.Y)
+                return false;
+            if (this.MaxPoint.Z < rec.MinPoint.Z)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
         /// Checks whether point is inside rectangle
         /// </summary>
         /// <param name="pnt">Point to check</param>
@@ -175,12 +206,28 @@
         {
             return new Rectangle(this.pointA, this.pointC);
         }
-        #endregion
+
+        public bool Equals(Rectangle otherRectangle)
+        {
+            // Recomendations for implementing Equals
+            // https://msdn.microsoft.com/en-US/library/ms173147(v=vs.80).aspx
+
+            if (otherRectangle == null)
+                return false;
+            if (this == otherRectangle)
+                return true;
+
+            if (this.pointA.Equals(otherRectangle.pointA) && this.pointC.Equals(otherRectangle.pointC))
+                return true;
+
+            return false;
+        }
 
         public override string ToString()
         {
             return string.Format("({0}, {1}), ({2}, {3})", this.MinPoint.X.ToString(), this.MinPoint.Y.ToString(), this.MaxPoint.X.ToString(), this.MaxPoint.Y.ToString());
         }
+        #endregion
     }
 
     public class RectangleIntersection : Rectangle

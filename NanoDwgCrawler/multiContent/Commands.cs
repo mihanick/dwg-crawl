@@ -47,56 +47,6 @@ public class App : IExtensionApplication
 namespace Crawl
 {
 
-    public class RectangleCollection
-    {
-        public List<Rectangle> Rectangles { get; set; }
-
-        public RectangleCollection()
-        {
-            Rectangles = new List<Rectangle>();
-        }
-
-        public void Add(Rectangle rec)
-        {
-            this.Rectangles.Add(rec);
-            JoinTwoRectangle();
-        }
-
-        private void JoinTwoRectangle()
-        {
-            List<Rectangle> result = new List<Rectangle>();
-            result.AddRange(this.Rectangles);
-            foreach (Rectangle rec1 in this.Rectangles)
-                foreach (Rectangle rec2 in this.Rectangles)
-                {
-                    if (!this.Rectangles.Contains(rec1))
-                        throw new System.Exception();
-                    if (rec1 == rec2)
-                        continue;
-
-                    RectangleIntersection recIns = new RectangleIntersection(rec1, rec2);
-
-                    if (recIns.Intersects)
-                    {
-                        if (recIns.Area == rec1.Area)
-                        {
-                            //if (rec2.Area >= recIns.IntersectionArea)
-                            result.Remove(rec1);
-                        }
-                        if (recIns.Area == rec2.Area)
-                        {
-                            //if (rec1.Area >= recIns.IntersectionArea)
-                            result.Remove(rec2);
-                        }
-                    }
-
-                    result.Add(recIns);
-                }
-
-            this.Rectangles = result;
-        }
-    }
-
     public partial class Commands
     {
         Database acCurDb = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
@@ -136,26 +86,36 @@ namespace Crawl
         {
             SqlDb sqlDB = new SqlDb();
             List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
-
-            RectangleCollection groups = new RectangleCollection();
+            RectangleTree rt = new RectangleTree();
+            List<Rectangle> rectangles = new List<Rectangle>();
 
             int i = 0;
             foreach (string jsonLine in jsonOfLines)
             {
-                Stopwatch timer = Stopwatch.StartNew();
-
                 crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
+                Rectangle rec = new Rectangle(cLine.StartPoint, cLine.EndPoint);
+                rectangles.Add(rec);
 
-                groups.Add(new Rectangle(cLine.StartPoint, cLine.EndPoint));
+                rt.Add(rec);
                 i++;
-                timer.Stop();
-                Debug.WriteLine(i.ToString() + " " + timer.ElapsedMilliseconds);
             }
 
-            foreach (var ri in groups.Rectangles)
+            List<RectangleIntersection> intersections = new List<RectangleIntersection>();
+
+            foreach (Rectangle rec in rectangles)
             {
-                DrawRectangle(ri.MinPoint.X, ri.MinPoint.Y, ri.MaxPoint.X, ri.MaxPoint.Y);
+                foreach (Rectangle recInt in rt.Intersections(rec))
+                {
+
+
+                }
             }
+
+
+            var ri = new Rectangle();
+            
+                DrawRectangle(ri.MinPoint.X, ri.MinPoint.Y, ri.MaxPoint.X, ri.MaxPoint.Y);
+            
         }
 
         [CommandMethod("ogpTestTree")]

@@ -9,6 +9,9 @@ namespace Crawl
 {
     public class RectangleTree
     {
+        public Node Root { get; set; }
+
+        #region Internal Classes
         public class Node
         {
             private Rectangle contents;
@@ -85,14 +88,14 @@ namespace Crawl
                 return false;
             }
 
-            public List<Rectangle> Search(Rectangle rec)
+            public List<Rectangle> Included(Rectangle rec)
             {
                 List<Rectangle> result = new List<Rectangle>();
 
                 if (this.contents == null)
                 {
                     foreach (Node child in this.children)
-                        result.AddRange(child.Search(rec));
+                        result.AddRange(child.Included(rec));
                 }
                 else
                     if (rec.Includes(this.boundBox))
@@ -100,14 +103,31 @@ namespace Crawl
 
                 return result;
             }
+
+            public List<Rectangle> Intersected(Rectangle rec)
+            {
+                List<Rectangle> result = new List<Rectangle>();
+
+                if (this.contents == null)
+                {
+                    foreach (Node child in this.children)
+                        result.AddRange(child.Included(rec));
+                }
+                else
+                    if (rec.Intersects(this.boundBox))
+                        result.Add(this.contents);
+
+                return result;
+            }
         }
+
+        #endregion
 
         public RectangleTree()
         {
         }
 
-        public Node Root { get; set; }
-
+        #region Methods
         public void Add(Rectangle rec)
         {
             if (this.Root == null)
@@ -140,7 +160,109 @@ namespace Crawl
 
         public List<Rectangle> Search(Rectangle rec)
         {
-            return Root.Search(rec);
+            return Root.Included(rec);
         }
+
+        public List<Rectangle> Intersections(Rectangle rec)
+        {
+            return this.Root.Intersected(rec);
+        }
+
+        #endregion
+    }
+
+    public class ClusterTree
+    {
+        private RectangleTree rTree;
+
+        public int Depth { get; set; }
+
+        #region Internal Classes
+
+        public class Cluster : HashSet<Rectangle>
+        {
+            #region properties
+            public int Level { get; set; }
+
+            private Rectangle boundBox;
+            public Rectangle BoundBox
+            {
+                get
+                {
+                    return this.boundBox;
+                }
+            }
+            #endregion
+
+            public Cluster()
+            {
+                this.Level = -1;
+                this.boundBox = new Rectangle();
+            }
+
+            #region Methods
+
+            public void Add(Rectangle rec)
+            {
+                base.Add(rec);
+                RectangleIntersection intersection = new RectangleIntersection(this.boundBox, rec);
+                this.boundBox = intersection;
+            }
+            #endregion
+        }
+        #endregion
+
+        public ClusterTree(Rectangle[] rects)
+        {
+            List<Rectangle> rectangles = new List<Rectangle>(rects);
+            foreach (var rec in rects)
+                this.rTree.Add(rec);
+
+            this.FindClusters(rectangles);
+        }
+
+        private void FindClusters(List<Rectangle> rectangles)
+        {
+            List<Cluster> clusters = new List<Cluster>();
+
+            List<Rectangle> iteratedList = new List<Rectangle>(rectangles);
+
+            while (iteratedList.Count != 0)
+            {
+                iteratedList = iterate(iteratedList);
+            }
+        }
+
+        private List<Rectangle> iterate(List<Rectangle> rectangles)
+        {
+            List<Rectangle> input = new List<Rectangle>(rectangles);
+            List<Cluster> clusters = new List<Cluster>();
+            List<Rectangle> toRemove = new List<Rectangle>();
+
+            foreach (Rectangle rec in input)
+            {
+                List<Rectangle> intersections = rTree.Intersections(rec);
+                toRemove.AddRange(intersections);
+
+                Cluster cluster = new Cluster();
+                foreach (Rectangle rectangleIntersected in intersections)
+                    cluster.Add(rectangleIntersected);
+
+                clusters.Add(cluster);
+            }
+
+            foreach (Rectangle rect in toRemove)
+                input.Remove(rect);
+
+            return input;
+        }
+
+        #region Methods
+
+        public List<Cluster> Clusters(int level = 0)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
     }
 }
