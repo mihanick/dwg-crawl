@@ -23,8 +23,6 @@
             rectangles[5] = new Rectangle(new crawlPoint3d(750, 150, 0), new crawlPoint3d(850, 250, 0));
             rectangles[6] = new Rectangle(new crawlPoint3d(800, 100, 0), new crawlPoint3d(900, 200, 0));
 
-            ct = new ClusterTree(rectangles);
-
             // Clusters to be found (rectangle coordinates and rectangles)
             // at Level0:
             // ((0, 0) (900, 350))
@@ -44,32 +42,7 @@
             //          ((575, 275) (625, 325))
             //           rectangles[3]
         }
-   /*
-        [TestMethod]
-        public void TestClustersLevel0()
-        {
-            // Clusters to be found (rectangle coordinates and rectangles)
-            // at Level0:
-            // ((0, 0) (900, 350))
-            // rectangles[0..6]
 
-            List<ClusterTree.Cluster> clusters = ct.Clusters(0);
-
-            // Check number of clusters at level 0
-            int rectCount = clusters.Count;
-            Assert.AreEqual(1, rectCount);
-
-            // Check boundbox of cluster at level 0
-            ClusterTree.Cluster cluster0 = clusters[0];
-            Rectangle rectLevel0expected = new Rectangle(0, 0, 900, 350);
-            Assert.IsTrue(rectLevel0expected.Equals(cluster0.BoundBox));
-
-            // Check resulting contents at level 0
-            List<Rectangle> expectedContents = new List<Rectangle>(rectangles);
-            foreach (var rect in expectedContents)
-                Assert.IsTrue(cluster0.Contains(rect));
-        }
-                        */
         [TestMethod]
         public void TestClustersLevel0()
         {
@@ -82,6 +55,12 @@
 
             //     ((750, 50) (900, 250))
             //     rectangles[4..6]
+
+            Rectangle [] rectangles1 = new Rectangle[7];
+            for (int i = 0; i < rectangles.Length; i++)
+                rectangles1[rectangles.Length - i - 1] = rectangles[i];
+
+            ct = new ClusterTree(rectangles1);
 
             // Getting clusters at level 1
             List<ClusterTree.Cluster> clusters = ct.Clusters(0);
@@ -153,6 +132,13 @@
             //          ((575, 275) (625, 325))
             //           rectangles[3]
 
+
+            Rectangle[] rectangles1 = new Rectangle[7];
+            for (int i = 0; i < rectangles.Length; i++)
+                rectangles1[rectangles.Length - i - 1] = rectangles[i];
+
+            ct = new ClusterTree(rectangles1);
+
             List<ClusterTree.Cluster> clusters = ct.Clusters(1);
 
             // Check number of clusters at level 1
@@ -170,6 +156,36 @@
 
             foreach (var rect in expectedContents)
                 Assert.IsTrue(cluster.Contains(rect));
+        }
+
+        [TestMethod]
+        public void TestBigClusterTree()
+        {
+            SqlDb sqlDB = new SqlDb(@"C:\Data\SingleFile.sdf");
+            List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
+
+            List<Rectangle> rects = new List<Rectangle>();
+
+            foreach (string jsonLine in jsonOfLines)
+            {
+                try
+                {
+                    crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
+                    if (cLine.Length > 10)
+                    {
+                        Rectangle rec = new Rectangle(cLine.StartPoint, cLine.EndPoint);
+                        rects.Add(rec);
+                    }
+                }
+                catch { }
+            }
+            
+
+            Stopwatch timer = Stopwatch.StartNew();
+            ClusterTree ct= new ClusterTree(rects.ToArray());
+            timer.Stop();
+
+            Assert.IsTrue(timer.ElapsedMilliseconds < rects.Count);
         }
     }
 }
