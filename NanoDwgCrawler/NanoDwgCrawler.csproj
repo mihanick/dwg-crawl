@@ -66,6 +66,7 @@
     <Compile Include="multiContent\CrawlDocument.cs" />
     <Compile Include="multiContent\Database.cs" />
     <Compile Include="multiContent\HashFile.cs" />
+    <Compile Include="multiContent\RectangleTree\ClusterTree.cs" />
     <Compile Include="multiContent\RectangleTree\Rectangle.cs" />
     <Compile Include="multiContent\RectangleTree\RectangleTree.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
