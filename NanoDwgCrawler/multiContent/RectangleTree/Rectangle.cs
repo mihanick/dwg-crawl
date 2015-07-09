@@ -169,7 +169,7 @@
                 return false;
 
             // Special check that it is not full inclusion
-            if (this.Includes(rec))
+            if (this.Includes(rec) || rec.Includes(this))
                 return false;
 
             return true;

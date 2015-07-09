@@ -1,6 +1,7 @@
 ﻿namespace Crawl
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     public class ClusterTree
     {
@@ -8,7 +9,7 @@
 
         public int Depth { get; set; }
 
-        List<Cluster> clusters;
+        public List<Cluster> clusters;
 
         #region Internal Classes
 
@@ -25,6 +26,7 @@
                     return this.boundBox;
                 }
             }
+
             #endregion
 
             public Cluster()
@@ -50,6 +52,7 @@
             }
             #endregion
         }
+
         #endregion
 
         public ClusterTree(Rectangle[] rects)
@@ -70,7 +73,10 @@
 
             while (iteratedList.Count != 0)
             {
-                iteratedList = iterate(iteratedList);
+                Stopwatch timer = Stopwatch.StartNew();
+                iteratedList = this.iterate(iteratedList);
+                timer.Stop();
+                Debug.WriteLine(iteratedList.Count.ToString()+" "+timer.ElapsedMilliseconds.ToString());
             }
         }
 
@@ -85,8 +91,9 @@
                 List<Rectangle> intersections = rTree.Intersections(rec);
                 toRemove.AddRange(intersections);
 
-                // Поскольку rTree.Intersections и так должно возвращать сам прямоугольник rec, то его не нужно добавлять повторно
-                // toRemove.Add(rec);
+                // TODO: WTF?? Should include itself by search
+                if (!toRemove.Contains(rec))
+                    toRemove.Add(rec);
 
                 foreach (Rectangle rectangleIntersected in toRemove)
                 {
@@ -126,6 +133,8 @@
 
                         return;
                     }
+
+            JoinClusters();
         }
 
         private void AddToClusterOrCreate(Rectangle rec)
@@ -142,7 +151,7 @@
                 bool needToAddNewCluster = true;
 
                 foreach (Cluster cluster in this.clusters)
-                    if (cluster.BoundBox.Intersects(rec))
+                    if (cluster.BoundBox.Intersects(rec) || cluster.BoundBox.Includes(rec))
                     {
                         clusterToAdd = cluster;
                         // Cluster found, no need to add new
@@ -155,6 +164,37 @@
                     this.clusters.Add(clusterToAdd);
             }
             clusterToAdd.Add(rec);
+
+            JoinClusters();
+        }
+
+        private void JoinClusters()
+        {
+            bool cntinue = false;
+            while (cntinue)
+                cntinue = this.iterateClusters(this.clusters);
+        }
+
+        private bool iterateClusters(List<Cluster> inputlist)
+        {
+            foreach (Cluster cluster in this.clusters)
+                foreach (Cluster otherCluster in this.clusters)
+                    if (cluster != otherCluster)
+                    {
+                        if (cluster.BoundBox.Intersects(otherCluster.BoundBox))
+                        {
+                            foreach (Rectangle rec in otherCluster)
+                                cluster.Add(rec);
+                            this.clusters.Remove(otherCluster);
+                            return true;
+                        }
+                        if (cluster.BoundBox.Includes(otherCluster.BoundBox))
+                        {
+                            otherCluster.Level = cluster.Level + 1;
+                        }
+                    }
+
+            return false;
         }
 
         #region Methods

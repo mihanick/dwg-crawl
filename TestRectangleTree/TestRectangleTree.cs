@@ -217,7 +217,6 @@
             Assert.IsTrue(timer.ElapsedMilliseconds < Math.Log(jsonOfLines.Count));
 
             Assert.AreEqual(numberOfLinesInsideSearchedArea, result.Count);
-
         }
 
         [TestMethod]

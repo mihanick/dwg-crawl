@@ -84,38 +84,31 @@ namespace Crawl
         [CommandMethod("Clusters")]
         public static void Clusters()
         {
-            SqlDb sqlDB = new SqlDb();
+            // SqlDb sqlDB = new SqlDb(@"c:\Data\rectangle.sdf");
+            SqlDb sqlDB = new SqlDb(@"c:\Data\SingleFile.sdf");
             List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
-            RectangleTree rt = new RectangleTree();
             List<Rectangle> rectangles = new List<Rectangle>();
 
             int i = 0;
             foreach (string jsonLine in jsonOfLines)
             {
                 crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
-                Rectangle rec = new Rectangle(cLine.StartPoint, cLine.EndPoint);
-                rectangles.Add(rec);
-
-                rt.Add(rec);
+                if (cLine.Length > 10)
+                {
+                    Rectangle rec = new Rectangle(cLine.StartPoint, cLine.EndPoint);
+                    rectangles.Add(rec);
+                }
                 i++;
             }
 
-            List<RectangleIntersection> intersections = new List<RectangleIntersection>();
+            ClusterTree ct = new ClusterTree(rectangles.ToArray());
 
-            foreach (Rectangle rec in rectangles)
+            foreach (ClusterTree.Cluster cluster in ct.clusters)
             {
-                foreach (Rectangle recInt in rt.Intersections(rec))
-                {
-
-
-                }
+                if (cluster.Count > 1)
+                DrawRectangle(cluster.BoundBox.MinPoint.X, cluster.BoundBox.MinPoint.Y, cluster.BoundBox.MaxPoint.X, cluster.BoundBox.MaxPoint.Y, cluster.Level.ToString());
             }
 
-
-            var ri = new Rectangle(0,0,0,0);
-            
-                DrawRectangle(ri.MinPoint.X, ri.MinPoint.Y, ri.MaxPoint.X, ri.MaxPoint.Y);
-            
         }
 
         [CommandMethod("ogpTestTree")]
