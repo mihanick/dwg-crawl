@@ -57,6 +57,9 @@
             // Full intersection should not be included
             Assert.IsFalse(rectangles[2].Intersects(rectangles[3]));
 
+            // Intersection of fully included rectangle
+            Assert.IsFalse(rectangles[3].Intersects(rectangles[2]));
+
             // Side-touching
             Assert.IsTrue(rectangles[4].Intersects(rectangles[5]));
 
