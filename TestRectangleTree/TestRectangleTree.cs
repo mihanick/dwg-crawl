@@ -68,6 +68,75 @@
         }
 
         [TestMethod]
+        public void TestIntersections()
+        {
+            for (int i = 0; i < rectangles.Length; i++)
+                rt.Add(rectangles[i]);
+
+            List<Rectangle> result = rt.Intersections(rectangles[0]);
+
+            Assert.AreEqual(2, result.Count);
+
+            Assert.IsTrue(result[0].Equals(rectangles[0]));
+            Assert.IsTrue(result[1].Equals(rectangles[1]));
+
+            result = rt.Intersections(rectangles[4]);
+
+            Assert.AreEqual(3, result.Count);
+
+            Assert.IsTrue(result[0].Equals(rectangles[4]));
+            Assert.IsTrue(result[1].Equals(rectangles[5]));
+            Assert.IsTrue(result[2].Equals(rectangles[6]));
+        }
+
+        [TestMethod]
+        public void TestRectangleTreeAllContents()
+        {
+            for (int i = 0; i < rectangles.Length; i++)
+                rt.Add(rectangles[i]);
+
+            List<Rectangle> contents = rt.GetContents();
+
+            Assert.AreEqual(7, contents.Count);
+
+            foreach (Rectangle rec in rectangles)
+                Assert.IsTrue(contents.Contains(rec));
+        }
+
+        [TestMethod]
+        public void TestRectangleTreeStructure()
+        {
+            for (int i = 0; i < rectangles.Length; i++)
+                rt.Add(rectangles[i]);
+
+            string contents = rt.Root.ConvertToString();
+
+            string expected =
+@"(0, 0), (900, 350)
+	(0, 0), (650, 350)
+		(0, 0), (350, 150)
+			(0, 0), (100, 100)
+				rec:(0, 0), (100, 100)
+			(50, 50), (350, 150)
+				rec:(50, 50), (350, 150)
+
+		(550, 250), (650, 350)
+			rec:(550, 250), (650, 350)
+		(575, 275), (625, 325)
+			rec:(575, 275), (625, 325)
+
+	(750, 50), (850, 150)
+		rec:(750, 50), (850, 150)
+	(750, 150), (850, 250)
+		rec:(750, 150), (850, 250)
+	(800, 100), (900, 200)
+		rec:(800, 100), (900, 200)
+";
+
+            Assert.AreEqual(expected, contents);
+        }
+
+        [TestMethod]
         public void TestSearchResultAndTimeMedium()
         {
             Rectangle searchedArea = new Rectangle(new crawlPoint3d(-24, -34, 0), new crawlPoint3d(401, 74, 0));
@@ -137,7 +206,6 @@
             Assert.AreEqual(numberOfLinesInsideSearchedArea, result.Count);
 
         }
-
 
         [TestMethod]
         public void TestCreateBigTree()
