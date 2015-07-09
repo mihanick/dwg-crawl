@@ -38,7 +38,7 @@
         }
 
         [TestMethod]
-        public void TestSearchTime()
+        public void TestSearchIntersectionsTime()
         {
             Rectangle searchedArea = new Rectangle(new crawlPoint3d(0, 0, 0), new crawlPoint3d(350, 150, 0));
 
@@ -46,20 +46,20 @@
                 rt.Add(rectangles[i]);
 
             Stopwatch timer = Stopwatch.StartNew();
-            List<Rectangle> result = rt.Search(searchedArea);
+            List<Rectangle> result = rt.Intersections(searchedArea);
             timer.Stop();
             Assert.IsTrue(timer.ElapsedMilliseconds < 1);
         }
 
         [TestMethod]
-        public void TestSearchResultSimple()
+        public void TestSearchIntersectionResultSimple()
         {
             Rectangle searchedArea = new Rectangle(new crawlPoint3d(0, 0, 0), new crawlPoint3d(350, 150, 0));
 
             for (int i = 0; i < rectangles.Length; i++)
                 rt.Add(rectangles[i]);
 
-            List<Rectangle> result = rt.Search(searchedArea);
+            List<Rectangle> result = rt.Intersections(searchedArea);
 
             Assert.AreEqual(2, result.Count);
 
@@ -87,6 +87,19 @@
             Assert.IsTrue(result[0].Equals(rectangles[4]));
             Assert.IsTrue(result[1].Equals(rectangles[5]));
             Assert.IsTrue(result[2].Equals(rectangles[6]));
+        }
+
+        [TestMethod]
+        public void TestInclusions()
+        {
+            for (int i = 0; i < rectangles.Length; i++)
+                rt.Add(rectangles[i]);
+
+            List<Rectangle> result = rt.Inclusions(rectangles[2]);
+
+            Assert.AreEqual(1, result.Count);
+
+            Assert.IsTrue(result[0].Equals(rectangles[3]));
         }
 
         [TestMethod]
@@ -156,7 +169,7 @@
             }
 
             Stopwatch timer = Stopwatch.StartNew();
-            List<Rectangle> result = rt.Search(searchedArea);
+            List<Rectangle> result = rt.Inclusions(searchedArea);
             timer.Stop();
             Assert.IsTrue(timer.ElapsedMilliseconds < Math.Log(jsonOfLines.Count));
 
@@ -199,7 +212,7 @@
             }
 
             Stopwatch timer = Stopwatch.StartNew();
-            List<Rectangle> result = rt.Search(searchedArea);
+            List<Rectangle> result = rt.Inclusions(searchedArea);
             timer.Stop();
             Assert.IsTrue(timer.ElapsedMilliseconds < Math.Log(jsonOfLines.Count));
 

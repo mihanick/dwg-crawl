@@ -44,7 +44,7 @@
             //          ((575, 275) (625, 325))
             //           rectangles[3]
         }
-
+   /*
         [TestMethod]
         public void TestClustersLevel0()
         {
@@ -69,9 +69,9 @@
             foreach (var rect in expectedContents)
                 Assert.IsTrue(cluster0.Contains(rect));
         }
-
+                        */
         [TestMethod]
-        public void TestClustersLevel1()
+        public void TestClustersLevel0()
         {
             //     at level1:
             //     ((0, 0) (150, 350))
@@ -84,14 +84,14 @@
             //     rectangles[4..6]
 
             // Getting clusters at level 1
-            List<ClusterTree.Cluster> clusters = ct.Clusters(1);
+            List<ClusterTree.Cluster> clusters = ct.Clusters(0);
 
             // Check number of clusters in
             int rectCount = clusters.Count;
             Assert.AreEqual(3, rectCount);
 
             int grade = 0;
-            Rectangle rect1 = new Rectangle(0, 0, 150, 350);
+            Rectangle rect1 = new Rectangle(0, 0, 350, 150);
             Rectangle rect2 = new Rectangle(550, 250, 650, 350);
             Rectangle rect3 = new Rectangle(750, 50, 900, 250);
 
@@ -147,24 +147,24 @@
         }
 
         [TestMethod]
-        public void TestClustersLeve2()
+        public void TestClustersLeve1()
         {
-            //          at Level2:-
+            //          at Level1:-
             //          ((575, 275) (625, 325))
             //           rectangles[3]
 
-            List<ClusterTree.Cluster> clusters = ct.Clusters(2);
+            List<ClusterTree.Cluster> clusters = ct.Clusters(1);
 
-            // Check number of clusters at level 2
+            // Check number of clusters at level 1
             int rectCount = clusters.Count;
             Assert.AreEqual(1, rectCount);
 
-            // Check boundbox of cluster at level 2
-            ClusterTree.Cluster cluster = clusters[2];
+            // Check boundbox of cluster at level 1
+            ClusterTree.Cluster cluster = clusters[0];
             Rectangle rectExpected = new Rectangle(575, 275, 625, 325);
             Assert.IsTrue(rectExpected.Equals(cluster.BoundBox));
 
-            // Check resulting contents at level 2
+            // Check resulting contents at level 1
             List<Rectangle> expectedContents = new List<Rectangle>();
             expectedContents.Add(rectangles[3]);
 

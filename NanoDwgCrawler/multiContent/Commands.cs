@@ -112,7 +112,7 @@ namespace Crawl
             }
 
 
-            var ri = new Rectangle();
+            var ri = new Rectangle(0,0,0,0);
             
                 DrawRectangle(ri.MinPoint.X, ri.MinPoint.Y, ri.MaxPoint.X, ri.MaxPoint.Y);
             

@@ -42,12 +42,12 @@
             #endregion
 
             #region Constructors
-            public Node()
+            public Node(Node childLeaf)
             {
                 this.IsALeaf = false;
-                this.boundBox = new Rectangle();
                 this.children = new List<Node>();
-                this.boundBox = new Rectangle();
+                this.children.Add(childLeaf);
+                this.boundBox = childLeaf.boundBox.Clone();
             }
 
             public Node(Rectangle rec)
@@ -67,7 +67,6 @@
 
                 this.contents = null;
                 this.boundBox = new RectangleIntersection(nodeLeft.boundBox, nodeRight.boundBox);
-
             }
             #endregion
 
@@ -95,7 +94,7 @@
 
             public bool Contains(Rectangle rec)
             {
-                if (this.boundBox.Intersects(rec))
+                if (this.boundBox.Intersects(rec) || this.boundBox.Includes(rec))
                     return true;
 
                 return false;
@@ -166,7 +165,7 @@
 
         public RectangleTree()
         {
-            this.Root = new Node();
+            //this.Root = new Node();
         }
 
         #region Methods
@@ -179,6 +178,14 @@
         {
             if (rec == null)
                 throw new NullReferenceException("Нельзя добавлять пустой прямоугольник");
+
+            // If it's the first rectangle to add
+            if (this.Root == null)
+            {
+                Node firstLeaf= new Node(rec);
+                this.Root = new Node(firstLeaf);
+                return;
+            }
 
             // Если добавляемый прямоугольник не содержится в корневом элементе
             if (!this.Root.Contains(rec))
@@ -193,7 +200,7 @@
             }
         }
 
-        public List<Rectangle> Search(Rectangle rec)
+        public List<Rectangle> Inclusions(Rectangle rec)
         {
             return Root.Included(rec);
         }

@@ -43,6 +43,9 @@
 
             // Partial inclusion
             Assert.IsFalse(rectangles[4].Includes(rectangles[6]));
+
+            // Touched by side
+            Assert.IsFalse(rectangles[4].Includes(rectangles[5]));
         }
 
         [TestMethod]
@@ -51,8 +54,8 @@
             // Partial intersection
             Assert.IsTrue(rectangles[0].Intersects(rectangles[1]));
 
-            // Full intersection
-            Assert.IsTrue(rectangles[2].Intersects(rectangles[3]));
+            // Full intersection should not be included
+            Assert.IsFalse(rectangles[2].Intersects(rectangles[3]));
 
             // Side-touching
             Assert.IsTrue(rectangles[4].Intersects(rectangles[5]));
@@ -60,7 +63,7 @@
             // No intersection
             Assert.IsFalse(rectangles[0].Intersects(rectangles[5]));
 
-            // No intersection from other side
+            // No intersection backwards
             Assert.IsFalse(rectangles[5].Intersects(rectangles[0]));
         }
     }
