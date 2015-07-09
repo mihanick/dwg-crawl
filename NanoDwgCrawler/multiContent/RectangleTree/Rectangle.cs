@@ -109,11 +109,12 @@
         }
 
         #region Constructors
+        
         public Rectangle()
         {
-            this.pointA = new crawlPoint3d(0, 0, 0);
-            this.pointC = new crawlPoint3d(0, 0, 0);
+            // Required by child classes
         }
+        
 
         public Rectangle(double pointAx, double pointAy, double pointCx, double pointCy)
         {
@@ -137,42 +138,38 @@
         /// <returns>true if rec is fully included </returns>
         public bool Includes(Rectangle rec)
         {
-            if (this.MinPoint.X > rec.MinPoint.X)
+            if (this.MinPoint.X >= rec.MinPoint.X)
                 return false;
-            if (this.MinPoint.Y > rec.MinPoint.Y)
-                return false;
-            if (this.MinPoint.Z > rec.MinPoint.Z)
+            if (this.MinPoint.Y >= rec.MinPoint.Y)
                 return false;
 
-            if (this.MaxPoint.X < rec.MaxPoint.X)
+            if (this.MaxPoint.X <= rec.MaxPoint.X)
                 return false;
-            if (this.MaxPoint.Y < rec.MaxPoint.Y)
-                return false;
-            if (this.MaxPoint.Z < rec.MaxPoint.Z)
+            if (this.MaxPoint.Y <= rec.MaxPoint.Y)
                 return false;
 
             return true;
         }
 
         /// <summary>
-        /// Checks whether Rectangle rec is fully included in this rectangle
+        /// Checks whether Rectangle rec intersects this rectangle, but not included
         /// </summary>
-        /// <param name="rec">Rectangle to check inclusion</param>
-        /// <returns>true if rec is fully included </returns>
+        /// <param name="rec">Rectangle to check intersection</param>
+        /// <returns>true if rec at least touches this rectangle</returns>
         public bool Intersects(Rectangle rec)
         {
             if (this.MinPoint.X > rec.MaxPoint.X)
                 return false;
             if (this.MinPoint.Y > rec.MaxPoint.Y)
                 return false;
-            if (this.MinPoint.Z > rec.MaxPoint.Z)
-                return false;
 
             if (this.MaxPoint.X < rec.MinPoint.X)
                 return false;
             if (this.MaxPoint.Y < rec.MinPoint.Y)
                 return false;
-            if (this.MaxPoint.Z < rec.MinPoint.Z)
+
+            // Special check that it is not full inclusion
+            if (this.Includes(rec))
                 return false;
 
             return true;
@@ -229,7 +226,7 @@
         }
         #endregion
     }
-
+    
     public class RectangleIntersection : Rectangle
     {
         public Rectangle Rectangle1;
@@ -308,5 +305,5 @@
 
         #endregion
     }
-
+   
 }
