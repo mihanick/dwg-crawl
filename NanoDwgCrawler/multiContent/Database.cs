@@ -189,15 +189,26 @@ namespace Crawl
                 return result;
 
 
-            //http://stackoverflow.com/questions/13665309/how-to-randomly-select-one-row-off-table-based-on-critera
-            //https://msdn.microsoft.com/en-us/library/cc441928.aspx
+            // http://stackoverflow.com/questions/13665309/how-to-randomly-select-one-row-off-table-based-on-critera
+            // https://msdn.microsoft.com/en-us/library/cc441928.aspx
+
+// SELECT        ObjectId, Json, ClassName, FileId
+// FROM            Data
+// WHERE        (FileId IN
+//                              (SELECT        FileId
+//                                FROM            Files
+//                                WHERE        (FileHash <> ''))) AND (ClassName = 'AcDbLine')
 
             string commandTxt =
                 @"SELECT        Json, ClassName
                 FROM            Data";
 
             if (className != "")
-                commandTxt += @" WHERE        (ClassName = '"+className+"')";
+                commandTxt += @" WHERE        (ClassName = '"+className+"')" +
+                    @"AND (FileId IN
+                              (SELECT        FileId
+                                FROM            Files
+                                WHERE        (FileHash <> '')))";
 
             SqlCeCommand command = new SqlCeCommand(commandTxt, _conn);
             SqlCeDataReader dr = command.ExecuteReader();
