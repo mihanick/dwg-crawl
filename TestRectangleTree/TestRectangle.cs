@@ -1,6 +1,7 @@
 ﻿namespace Crawl.Test
 {
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using System;
 
     [TestClass]
     public class TestRectangle
@@ -28,8 +29,33 @@
             Rectangle rec = new Rectangle(pntA, pntC);
             Assert.AreEqual(rec.pointA, pntA);
             Assert.AreEqual(rec.pointC, pntC);
-            Assert.AreEqual(rec.MinPoint, pntA);
-            Assert.AreEqual(rec.MaxPoint, pntC);
+        }
+
+        [TestMethod]
+        public void TestRectangleMinMaxPoint()
+        {
+            crawlPoint3d pntA = new crawlPoint3d(11, 23, 17);
+            crawlPoint3d pntC = new crawlPoint3d(19, 13, 29);
+            Rectangle rec = new Rectangle(pntA, pntC);
+
+            crawlPoint3d pntMinExpected = new crawlPoint3d(
+                Math.Min(pntA.X, pntC.X),
+                Math.Min(pntA.Y, pntC.Y),
+                Math.Min(pntA.Z, pntC.Z)
+            );
+
+            crawlPoint3d pntMaxExpected = new crawlPoint3d(
+                Math.Max(pntA.X, pntC.X),
+                Math.Max(pntA.Y, pntC.Y),
+                Math.Max(pntA.Z, pntC.Z)
+            );
+
+            Assert.IsTrue(pntMinExpected.Equals(rec.MinPoint));
+            Assert.IsTrue(pntMaxExpected.Equals(rec.MaxPoint));
+
+            rec = new Rectangle(pntC, pntA);
+            Assert.IsTrue(pntMinExpected.Equals(rec.MinPoint));
+            Assert.IsTrue(pntMaxExpected.Equals(rec.MaxPoint));
         }
 
         [TestMethod]
@@ -70,7 +96,8 @@
             Assert.IsFalse(rectangles[5].Intersects(rectangles[0]));
 
             Rectangle notRound1= new Rectangle(9571.0563, 11257.8221, 12095.1892, 13879.5525);
-            Rectangle notRound2 = new Rectangle(6559.4258, 4018.8264, 16465.4917, 13169.6058);
+            //Rectangle notRound2 = new Rectangle(6559.4258, 4018.8264, 16465.4917, 13169.6058);
+            Rectangle notRound2 = new Rectangle(3704, 4018, 16465, 13169);
 
             Assert.IsTrue(notRound1.Intersects(notRound2));
         }
