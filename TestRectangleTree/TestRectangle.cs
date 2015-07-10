@@ -68,6 +68,22 @@
 
             // No intersection backwards
             Assert.IsFalse(rectangles[5].Intersects(rectangles[0]));
+
+            Rectangle notRound1= new Rectangle(9571.0563, 11257.8221, 12095.1892, 13879.5525);
+            Rectangle notRound2 = new Rectangle(6559.4258, 4018.8264, 16465.4917, 13169.6058);
+
+            Assert.IsTrue(notRound1.Intersects(notRound2));
+        }
+
+        [TestMethod]
+        public void TestRectangleIntersection()
+        {
+            RectangleIntersection ri = new RectangleIntersection(rectangles[0], rectangles[1]);
+
+            Rectangle expectedIntersection = new Rectangle(0,0,350,150);
+
+            Assert.IsTrue(expectedIntersection.Equals(ri));
+            Assert.IsTrue(ri.HasIntersection);
         }
     }
 }
