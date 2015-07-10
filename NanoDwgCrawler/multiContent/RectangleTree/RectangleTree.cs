@@ -143,7 +143,7 @@
                 foreach (Node child in this.children)
                     result += child.ConvertToString(indent + "\t") + Environment.NewLine;
                 if (this.IsALeaf)
-                    result += indent+"\t" + "rec:" + this.contents.ToString();
+                    result += indent + "\t" + "rec:" + this.contents.ToString();
                 return result;
             }
 
@@ -165,7 +165,12 @@
 
         public RectangleTree()
         {
-            //this.Root = new Node();
+        }
+
+        public RectangleTree(IEnumerable<Rectangle> rectangles)
+        {
+            foreach (Rectangle rectangle in rectangles)
+                this.Add(rectangle);
         }
 
         #region Methods
@@ -182,7 +187,7 @@
             // If it's the first rectangle to add
             if (this.Root == null)
             {
-                Node firstLeaf= new Node(rec);
+                Node firstLeaf = new Node(rec);
                 this.Root = new Node(firstLeaf);
                 return;
             }

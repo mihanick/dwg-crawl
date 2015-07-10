@@ -40,6 +40,11 @@
         {
             get
             {
+                double x = Math.Min(pointA.X, pointC.X);
+                double y = Math.Min(pointA.Y, pointC.Y);
+                double z = Math.Min(pointA.Z, pointC.Z);
+
+                /*
                 if (pointA.X < pointC.X)
                     return pointA;
                 if (pointA.X > pointC.X)
@@ -52,7 +57,8 @@
                     return pointA;
                 if (pointA.Z > pointC.Z)
                     return pointC;
-                return pointA;
+                 */
+                return new crawlPoint3d(x,y,z);
             }
         }
 
@@ -60,6 +66,12 @@
         {
             get
             {
+                double x = Math.Max(pointA.X, pointC.X);
+                double y = Math.Max(pointA.Y, pointC.Y);
+                double z = Math.Max(pointA.Z, pointC.Z);
+
+                return new crawlPoint3d(x, y, z);
+                /*
                 if (pointA.X > pointC.X)
                     return pointA;
                 if (pointA.X < pointC.X)
@@ -72,7 +84,9 @@
                     return pointA;
                 if (pointA.Z < pointC.Z)
                     return pointC;
+
                 return pointA;
+                 */
             }
         }
 
