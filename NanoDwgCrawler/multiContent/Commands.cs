@@ -92,20 +92,21 @@ namespace Crawl
             foreach (string jsonLine in jsonOfLines)
             {
                 crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
-                if (cLine.Length > 10)
+                if (cLine.Length > 0)
                 {
                     Rectangle rec = new Rectangle(cLine.StartPoint, cLine.EndPoint);
                     rectangles.Add(rec);
+                    DrawLine(cLine.StartPoint.X, cLine.StartPoint.Y, cLine.EndPoint.X, cLine.EndPoint.Y);
                 }
                 i++;
             }
 
             ClusterTree ct = new ClusterTree(rectangles.ToArray());
 
-            foreach (ClusterTree.Cluster cluster in ct.clusters)
+            foreach (ClusterTree.Cluster cluster in ct.Clusters)
             {
-                if (cluster.Count > 1)
-                DrawRectangle(cluster.BoundBox.MinPoint.X, cluster.BoundBox.MinPoint.Y, cluster.BoundBox.MaxPoint.X, cluster.BoundBox.MaxPoint.Y, cluster.Level.ToString());
+                if (cluster.Count > 2)
+                    DrawRectangle(cluster.BoundBox.MinPoint.X, cluster.BoundBox.MinPoint.Y, cluster.BoundBox.MaxPoint.X, cluster.BoundBox.MaxPoint.Y);
             }
 
         }
@@ -164,6 +165,51 @@ namespace Crawl
                 tr.Commit();
             }
 
+        }
+
+        private static void DrawLine(double x1, double y1, double x2, double y2, string text = "")
+        {
+            Document doc = TeighaApp.DocumentManager.MdiActiveDocument;
+            Database acCurDb = doc.Database;
+            using (Transaction tr = doc.Database.TransactionManager.StartTransaction())
+            {
+                // Open the Block table for read
+                BlockTable acBlkTbl;
+                acBlkTbl = tr.GetObject(
+                    acCurDb.BlockTableId,
+                    OpenMode.ForRead) as BlockTable;
+
+                // Open the Block table record Model space for write
+                BlockTableRecord acBlkTblRec;
+                acBlkTblRec = tr.GetObject(
+                    acBlkTbl[BlockTableRecord.ModelSpace],
+                    OpenMode.ForWrite) as BlockTableRecord;
+
+                // Create a copy of the object 
+                Polyline pl = new Polyline();
+                pl.SetDatabaseDefaults();
+
+                pl.AddVertexAt(0, new Point2d(x1, y1), 0, 0, 0);
+                pl.AddVertexAt(0, new Point2d(x2, y2), 0, 0, 0);
+
+                pl.Color = PlatformDb.Colors.Color.FromRgb(0, 255, 0);
+
+                DBText txt = new DBText();
+                txt.Color = PlatformDb.Colors.Color.FromRgb(0, 255, 0);
+                txt.TextString = text;
+                txt.Position = new Point3d(x1, y1, 0);
+                txt.SetDatabaseDefaults();
+                txt.Height = 250;
+
+                acBlkTblRec.AppendEntity(txt);
+                tr.AddNewlyCreatedDBObject(txt, true);
+
+                // Add the cloned object to db
+                acBlkTblRec.AppendEntity(pl);
+                tr.AddNewlyCreatedDBObject(pl, true);
+
+                tr.Commit();
+            }
         }
     }
 }
