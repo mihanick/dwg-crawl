@@ -21,7 +21,6 @@ using Polyline3d = Teigha.DatabaseServices.Polyline3d;
 
 using TeighaApp = HostMgd.ApplicationServices.Application;
 using System.Collections.Generic;
-using RTree;
 
 
 public class App : IExtensionApplication
@@ -111,50 +110,6 @@ namespace Crawl
 
         }
 
-        [CommandMethod("ogpTestTree")]
-        public static void ogpTestTree()
-        {
-            SqlDb sqlDB = new SqlDb();
-            List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
-            List<crawlAcDbLine> lines = new List<crawlAcDbLine>();
-
-            foreach (string jsonLine in jsonOfLines)
-            {
-                crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
-                lines.Add(cLine);
-            }
-
-            RTree<string> tree = new RTree<string>(4, 2);
-
-            int i = 0;
-            foreach (crawlAcDbLine line in lines)
-            {
-
-                float x1 = Convert.ToSingle(line.StartPoint.X);
-                float y1 = Convert.ToSingle(line.StartPoint.Y);
-                float z1 = Convert.ToSingle(line.StartPoint.Z);
-                float x2 = Convert.ToSingle(line.EndPoint.X);
-                float y2 = Convert.ToSingle(line.EndPoint.Y);
-                float z2 = Convert.ToSingle(line.EndPoint.Z);
-
-                RTree.Rectangle rect = new RTree.Rectangle(x1, y1, x2, y2, z1, z2);
-
-                tree.Add(rect, i.ToString());
-                i++;
-            }
-
-            for (i = 0; i < tree.Count; i++)
-            {
-                var node = tree.getNode(i);
-
-                if (!node.isLeaf())//&& node.getLevel() > 1 && node.getLevel() < tree.treeHeight)
-                {
-                    RTree.Rectangle rec = node.getMBR();
-                    DrawRectangle(rec.min[0], rec.min[1], rec.max[0], rec.max[1], node.getLevel().ToString());
-                }
-            }
-
-        }
 
         [CommandMethod("DrawRectangletest")]
         public static void DrawRectangletest()
