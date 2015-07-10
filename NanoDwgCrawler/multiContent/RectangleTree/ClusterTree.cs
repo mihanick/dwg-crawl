@@ -5,209 +5,107 @@
 
     public class ClusterTree
     {
-        private RectangleTree rTree;
-
-        public int Depth { get; set; }
-
-        public List<Cluster> clusters;
-
-        #region Internal Classes
-
+        // Internal classes
         public class Cluster : HashSet<Rectangle>
         {
-            #region properties
             public int Level { get; set; }
 
-            private Rectangle boundBox;
-            public Rectangle BoundBox
-            {
-                get
-                {
-                    return this.boundBox;
-                }
-            }
+            public Rectangle BoundBox { get; set; }
 
-            #endregion
+           // public List<Cluster> Children { get; set; }
 
-            public Cluster()
-            {
-                this.Level = -1;
-            }
-
-            #region Methods
-
-            public void Add(Rectangle rec)
+            public void AddRectangle(Rectangle rec)
             {
                 if (rec == null)
-                    throw new System.NullReferenceException("Cannot add null rectangle");
+                    throw new System.ArgumentNullException("Cannot add null rectangle to cluster");
+
+                if (this.BoundBox == null)
+                    this.BoundBox = rec.Clone();
+
+                this.BoundBox = new RectangleIntersection(this.BoundBox, rec);
 
                 base.Add(rec);
-
-                // First-time cluster initialisation from first rectangle
-                if (this.boundBox == null)
-                    this.boundBox = rec.Clone();
-
-                RectangleIntersection intersection = new RectangleIntersection(this.boundBox, rec);
-                this.boundBox = intersection;
             }
-            #endregion
         }
 
-        #endregion
+        // Properties
+        public List<Cluster> Clusters { get; set; }
 
-        public ClusterTree(Rectangle[] rects)
+        private RectangleTree rTree;
+
+        public ClusterTree(Rectangle[] rectangles)
         {
-            this.clusters = new List<Cluster>();
-            this.rTree = new RectangleTree();
-            List<Rectangle> rectangles = new List<Rectangle>(rects);
+            this.rTree = new RectangleTree(rectangles);
+            this.Clusters = new List<Cluster>();
 
-            foreach (var rec in rects)
-                this.rTree.Add(rec);
-
-            this.FindClusters(rectangles);
-        }
-
-        private void FindClusters(List<Rectangle> rectangles)
-        {
             List<Rectangle> iteratedList = new List<Rectangle>(rectangles);
 
             while (iteratedList.Count != 0)
             {
-                Stopwatch timer = Stopwatch.StartNew();
-                iteratedList = this.iterate(iteratedList);
-                timer.Stop();
-                Debug.WriteLine(iteratedList.Count.ToString()+" "+timer.ElapsedMilliseconds.ToString());
+                iteratedList = Iterate(iteratedList);
             }
+
         }
 
-        private List<Rectangle> iterate(List<Rectangle> rectangles)
+        private List<Rectangle> Iterate(List<Rectangle> input)
         {
-            List<Rectangle> input = new List<Rectangle>(rectangles);
+            List<Rectangle> result = new List<Rectangle>(input);
+            HashSet<Rectangle> toDelete = new HashSet<Rectangle>();
 
-            List<Rectangle> toRemove = new List<Rectangle>();
+            toDelete = RecursiveIntersections(input[0], toDelete);
 
-            foreach (Rectangle rec in input)
-            {
-                List<Rectangle> intersections = rTree.Intersections(rec);
-                toRemove.AddRange(intersections);
+            Cluster cluster = new Cluster();
+            foreach (Rectangle rect in toDelete)
+                cluster.AddRectangle(rect);
+            this.AddCluster(cluster);
 
-                // TODO: WTF?? Should include itself by search
-                if (!toRemove.Contains(rec))
-                    toRemove.Add(rec);
+            foreach (var rec in toDelete)
+                result.Remove(rec);
+            return result;
+        }
 
-                foreach (Rectangle rectangleIntersected in toRemove)
+        private void AddCluster(Cluster clusterNew)
+        {
+            foreach (Cluster cluster in this.Clusters)
+                if (cluster.BoundBox.Intersects(clusterNew.BoundBox))
                 {
-                    input.Remove(rectangleIntersected);
-
-                    AddToClusterOrCreate(rectangleIntersected);
+                    foreach (Rectangle rec in clusterNew)
+                    {
+                        cluster.AddRectangle(rec);
+                    }
+                    this.Clusters.Remove(cluster);
+                    this.AddCluster(cluster);
+                    return;
                 }
 
-                List<Rectangle> inclusions = rTree.Inclusions(rec);
-
-                foreach (Rectangle rectangleIncluded in inclusions)
-                {
-                    input.Remove(rectangleIncluded);
-                    AddIncluded(rectangleIncluded);
-                }
-
-                return input;
-            }
-
-            return new List<Rectangle>();
+            this.Clusters.Add(clusterNew);
         }
 
-        private void AddIncluded(Rectangle rec)
+        private HashSet<Rectangle> RecursiveIntersections(Rectangle rec, HashSet<Rectangle> allIntersections)
         {
-            foreach (Cluster cluster in this.clusters)
-                foreach (Rectangle rectBig in cluster)
-                    if (rectBig.Includes(rec))
-                    {
-                        Cluster clusterNew = new Cluster();
-                        clusterNew.Level = cluster.Level + 1;
-                        clusterNew.Add(rec);
+            HashSet<Rectangle> result = new HashSet<Rectangle>();
+            foreach (var rect in allIntersections)
+                result.Add(rect);
 
-                        // We want included rectangles to be included in parent cluster as well
-                        cluster.Add(rec);
+            result.Add(rec);
 
-                        clusters.Add(clusterNew);
-
-                        return;
-                    }
-
-            JoinClusters();
-        }
-
-        private void AddToClusterOrCreate(Rectangle rec)
-        {
-            Cluster clusterToAdd = new Cluster();
-            clusterToAdd.Level = 0;
-
-            if (this.clusters.Count == 0)
+            foreach (Rectangle rect in rTree.Intersections(rec))
             {
-                this.clusters.Add(clusterToAdd);
+                if (!result.Contains(rect))
+                    result = RecursiveIntersections(rect, result);
             }
-            else
-            {
-                bool needToAddNewCluster = true;
-
-                foreach (Cluster cluster in this.clusters)
-                    if (cluster.BoundBox.Intersects(rec) || cluster.BoundBox.Includes(rec))
-                    {
-                        clusterToAdd = cluster;
-                        // Cluster found, no need to add new
-                        needToAddNewCluster = false;
-                        break;
-                    }
-
-                // If cluster wasn't found, we should add new cluster to list of clusters
-                if (needToAddNewCluster)
-                    this.clusters.Add(clusterToAdd);
-            }
-            clusterToAdd.Add(rec);
-
-            JoinClusters();
-        }
-
-        private void JoinClusters()
-        {
-            bool cntinue = false;
-            while (cntinue)
-                cntinue = this.iterateClusters(this.clusters);
-        }
-
-        private bool iterateClusters(List<Cluster> inputlist)
-        {
-            foreach (Cluster cluster in this.clusters)
-                foreach (Cluster otherCluster in this.clusters)
-                    if (cluster != otherCluster)
-                    {
-                        if (cluster.BoundBox.Intersects(otherCluster.BoundBox))
-                        {
-                            foreach (Rectangle rec in otherCluster)
-                                cluster.Add(rec);
-                            this.clusters.Remove(otherCluster);
-                            return true;
-                        }
-                        if (cluster.BoundBox.Includes(otherCluster.BoundBox))
-                        {
-                            otherCluster.Level = cluster.Level + 1;
-                        }
-                    }
-
-            return false;
-        }
-
-        #region Methods
-
-        public List<Cluster> Clusters(int level = 0)
-        {
-            List<Cluster> result = new List<Cluster>();
-            foreach (Cluster cluster in this.clusters)
-                if (cluster.Level == level)
-                    result.Add(cluster);
 
             return result;
         }
-        #endregion
+
+        public List<Cluster> ClustersAtLevel(int level)
+        {
+            List<Cluster> result = new List<Cluster>();
+            foreach (var cluster in this.Clusters)
+                if (cluster.Level == level)
+                    result.Add(cluster);
+
+            return this.Clusters;
+        }
     }
 }
