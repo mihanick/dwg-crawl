@@ -232,7 +232,7 @@
         public Rectangle Rectangle1;
         public Rectangle Rectangle2;
 
-        public bool Intersects;
+        public bool HasIntersection;
         public double IntersectionArea;
 
 
@@ -252,7 +252,6 @@
             }
         }
 
-
         #region Constructors
 
         public RectangleIntersection(Rectangle rectangle1, Rectangle rectangle2)
@@ -260,17 +259,18 @@
             this.Rectangle1 = rectangle1;
             this.Rectangle2 = rectangle2;
 
+            double minX = Math.Min(this.Rectangle1.MinPoint.X, this.Rectangle2.MinPoint.X);
+            double maxX = Math.Max(this.Rectangle1.MaxPoint.X, this.Rectangle2.MaxPoint.X);
+            double minY = Math.Min(this.Rectangle1.MinPoint.Y, this.Rectangle2.MinPoint.Y);
+            double maxY = Math.Max(this.Rectangle1.MaxPoint.Y, this.Rectangle2.MaxPoint.Y);
+
+
             if (this.Rectangle1.MaxPoint.X < this.Rectangle2.MinPoint.X ||
                 this.Rectangle2.MaxPoint.X < this.Rectangle1.MinPoint.X ||
                 this.Rectangle1.MaxPoint.Y < this.Rectangle2.MinPoint.Y ||
                 this.Rectangle2.MaxPoint.Y < this.Rectangle1.MinPoint.Y)
             {
-                this.Intersects = false;
-
-                double minX = Math.Min(this.Rectangle1.MinPoint.X, this.Rectangle2.MinPoint.X);
-                double maxX = Math.Max(this.Rectangle1.MaxPoint.X, this.Rectangle2.MaxPoint.X);
-                double minY = Math.Min(this.Rectangle1.MinPoint.Y, this.Rectangle2.MinPoint.Y);
-                double maxY = Math.Max(this.Rectangle1.MaxPoint.Y, this.Rectangle2.MaxPoint.Y);
+                this.HasIntersection = false;
 
                 this.pointA = new crawlPoint3d(minX, minY, 0);
                 this.pointC = new crawlPoint3d(maxX, maxY, 0);
@@ -279,15 +279,10 @@
             }
             else
             {
-                double minX = Math.Min(this.Rectangle1.MinPoint.X, this.Rectangle2.MinPoint.X);
-                double maxX = Math.Max(this.Rectangle1.MaxPoint.X, this.Rectangle2.MaxPoint.X);
-                double minY = Math.Min(this.Rectangle1.MinPoint.Y, this.Rectangle2.MinPoint.Y);
-                double maxY = Math.Max(this.Rectangle1.MaxPoint.Y, this.Rectangle2.MaxPoint.Y);
-
                 this.pointA = new crawlPoint3d(minX, minY, 0);
                 this.pointC = new crawlPoint3d(maxX, maxY, 0);
 
-                this.Intersects = true;
+                this.HasIntersection = true;
 
                 double minXi = Math.Max(this.Rectangle1.MinPoint.X, this.Rectangle2.MinPoint.X);
                 double maxXi = Math.Min(this.Rectangle1.MaxPoint.X, this.Rectangle2.MaxPoint.X);
@@ -296,7 +291,6 @@
 
                 crawlPoint3d intersectionA = new crawlPoint3d(minXi, minYi, 0);
                 crawlPoint3d intersectionC = new crawlPoint3d(maxXi, maxYi, 0);
-
             }
         }
         #endregion
