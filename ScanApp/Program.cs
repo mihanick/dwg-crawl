@@ -17,7 +17,7 @@ namespace Crawl
             //string dir = @"C:\svn\Help\MCS10\OgpUtils\OgpUtils\multiContent\testSamples";
             //string dir = @"\\FILESERVER\home\#АРХИВ 2014\Объекты\МНОГОТОПЛИВНАЯ АЗС №15";
             //string dir = @"D:\Documents\Desktop\rectangles";
-            string dir = @"D:\Documents\Desktop\SingleFile";
+            string dir = @"D:\Documents\Dropbox\CrawlDwgs";
             string dataDir = @"c:\Data\";
 
             string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);

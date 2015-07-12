@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NanoDwgCrawler", "NanoDwgCrawler\NanoDwgCrawler.csproj", "{CF276394-892C-4117-B42C-370CF97CFA32}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScanApp", "ScanApp\ScanApp.csproj", "{F378EC4A-5C42-47E6-9A3F-49F83923AE80}"
@@ -8,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnanlyzeApp", "AnanlyzeApp\AnanlyzeApp.csproj", "{3290A963-3761-4D27-9914-22520BB15A93}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRectangleTree", "TestRectangleTree\TestRectangleTree.csproj", "{318E74AA-25A8-483C-9F0F-5EEBA32A03E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMongoDb", "TestMongoDb\TestMongoDb.csproj", "{51BDCCE3-116B-4292-A3E2-2FDB64910C44}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +63,16 @@ Global
 		{318E74AA-25A8-483C-9F0F-5EEBA32A03E4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{318E74AA-25A8-483C-9F0F-5EEBA32A03E4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{318E74AA-25A8-483C-9F0F-5EEBA32A03E4}.Release|x86.ActiveCfg = Release|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{51BDCCE3-116B-4292-A3E2-2FDB64910C44}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

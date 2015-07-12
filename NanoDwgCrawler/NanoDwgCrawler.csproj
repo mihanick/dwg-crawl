@@ -39,11 +39,17 @@
   <ItemGroup>
     <Reference Include="hostdbmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD СПДС 5.4\bin\hostdbmgd.dll</HintPath>
+      <HintPath>C:\Program Files\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\hostdbmgd.dll</HintPath>
     </Reference>
     <Reference Include="hostmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD СПДС 5.4\bin\hostmgd.dll</HintPath>
+      <HintPath>C:\Program Files\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\hostmgd.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Bson">
+      <HintPath>..\packages\mongocsharpdriver.1.10.0\lib\net35\MongoDB.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver">
+      <HintPath>..\packages\mongocsharpdriver.1.10.0\lib\net35\MongoDB.Driver.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,6 +65,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DbMongo.cs" />
     <Compile Include="multiContent\cDebug.cs" />
     <Compile Include="multiContent\cJson.cs" />
     <Compile Include="multiContent\Commands.cs" />
@@ -71,6 +78,9 @@
     <Compile Include="multiContent\RectangleTree\RectangleTree.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

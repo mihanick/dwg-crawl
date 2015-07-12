@@ -15,7 +15,7 @@ namespace Crawl
 
             
             if (path == "")
-                dbPath = @"c:\Data\SingleFile.sdf";
+                dbPath = @"c:\Data\ManyDwgs.sdf";
                 //dbPath = @"c:\Data\rectangle.sdf";
             else
                 dbPath = path;
