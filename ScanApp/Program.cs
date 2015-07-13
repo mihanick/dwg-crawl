@@ -15,19 +15,19 @@ namespace Crawl
         {
             //Открыть папку, выбрать все файлы двг из нее
             //string dir = @"C:\svn\Help\MCS10\OgpUtils\OgpUtils\multiContent\testSamples";
-            //string dir = @"\\FILESERVER\home\#АРХИВ 2014\Объекты\МНОГОТОПЛИВНАЯ АЗС №15";
+            string dir = @"\\FILESERVER\home\#АРХИВ 2014\Объекты\МНОГОТОПЛИВНАЯ АЗС №15";
             //string dir = @"D:\Documents\Desktop\rectangles";
-            string dir = @"D:\Documents\Dropbox\CrawlDwgs";
+            //string dir = @"D:\Documents\Dropbox\CrawlDwgs";
             string dataDir = @"c:\Data\";
 
             string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
-            SqlDb sqlDB = new SqlDb();
+            DbMongo db = new DbMongo();
 
             foreach (string dwgFile in dwgFiles)
             {
                 CrawlDocument cDoc = new CrawlDocument(dwgFile);
                 FileCopy(dwgFile, Path.Combine(dataDir,cDoc.FileId+".dwg"));
-                sqlDB.InsertIntoFiles(cDoc.Path, cDoc.docJson, cDoc.FileId, cDoc.Hash);
+                db.InsertIntoFiles(cDoc.Path, cDoc.docJson, cDoc.FileId, cDoc.Hash);
             }
 
             //Запуситить процессы по числу ядер процессоров каждый на своем ядре

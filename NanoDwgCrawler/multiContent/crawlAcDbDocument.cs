@@ -19,7 +19,7 @@ namespace Crawl
         string FileId;
 
         Document teighaDocument;
-        public SqlDb sqlDB;
+        public DbMongo sqlDB;
 
         public crawlAcDbDocument(CrawlDocument crawlDoc)
         {
@@ -47,7 +47,8 @@ namespace Crawl
                     string objectJson = jsonGetObjectData(obj.ObjectId);
                     string objectClass = obj.ObjectId.ObjectClass.Name;
 
-                    this.sqlDB.SaveObjectData(objId, objectJson, objectClass, this.FileId);
+                    if (!string.IsNullOrEmpty(objectJson))
+                        this.sqlDB.SaveObjectData(objectJson, this.FileId);
                 }
                 //Пробегаем все определения блоков
                 List<ObjectId> blocks = GetBlocks(this.teighaDocument);
@@ -70,7 +71,7 @@ namespace Crawl
                     string objectJson = jsonHelper.To<crawlAcDbLayerTableRecord>(cltr); 
 
 
-                    this.sqlDB.SaveObjectData(objId, objectJson, objectClass, this.FileId);
+                    this.sqlDB.SaveObjectData(objectJson, this.FileId);
                 }
 
                 //Пробегаем внешние ссылки
@@ -112,7 +113,7 @@ namespace Crawl
                         string objectJson = jsonGetObjectData(obj);
                         string objectClass = obj.ObjectClass.Name;
 
-                        this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, cBtr.FileId);
+                        this.sqlDB.SaveObjectData(objectJson, cBtr.FileId);
                     }
                 }
             }
@@ -136,7 +137,7 @@ namespace Crawl
                     string objectJson = jsonGetObjectData(obj);
                     string objectClass = obj.ObjectClass.Name;
 
-                    this.sqlDB.SaveObjectData(obj.ToString(), objectJson, objectClass, FullPath);
+                    this.sqlDB.SaveObjectData(objectJson, FullPath);
                 }
             }
         }

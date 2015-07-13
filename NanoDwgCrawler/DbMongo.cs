@@ -9,40 +9,46 @@
     public class DbMongo
     {
         private string DbName;
-        private MongoClient clientMongo;
-        private MongoDatabase databaseMongo;
+        private MongoClient ClientMongo;
+        private MongoDatabase DatabaseMongo;
 
-        public DbMongo(string dbName="")
+        public DbMongo()
         {
-            if (dbName == "")
+            DbName = "geometry";
+            ClientMongo = new MongoClient();
+            DatabaseMongo = ClientMongo.GetServer().GetDatabase(DbName);
+        }
+
+        public DbMongo(string dbName)
+        {
+            if (string.IsNullOrEmpty(dbName))
                 DbName = "geometry";
             else
                 DbName = dbName;
 
-            clientMongo = new MongoClient();
-            databaseMongo = clientMongo.GetServer().GetDatabase(DbName);
-
-            CreateTables();
+            ClientMongo = new MongoClient();
+            DatabaseMongo = ClientMongo.GetServer().GetDatabase(DbName);
        }
 
         public void Clear()
         {
-            clientMongo.GetServer().GetDatabase(DbName).DropCollection("objects");
-            clientMongo.GetServer().GetDatabase(DbName).DropCollection("files");            
+            ClientMongo.GetServer().GetDatabase(DbName).DropCollection("objects");
+            ClientMongo.GetServer().GetDatabase(DbName).DropCollection("files");
+            //clientMongo.GetServer().GetDatabase(DbName).Drop();
         }
 
-        void CreateTables()
+        public void Seed()
         {
             // Seed initial data
-            if (!databaseMongo.CollectionExists("objects"))
+            if (!DatabaseMongo.CollectionExists("objects"))
             {
                 // http://mongodb.github.io/mongo-csharp-driver/2.0/getting_started/quick_tour/
                 // Seed with object data
-                var collection = databaseMongo.GetCollection<BsonDocument>("objects");
+                var collection = DatabaseMongo.GetCollection<BsonDocument>("objects");
 
-                string docJson  =
+                string objJson  =
                 @"{
-                'ObjectId': '1',
+                'ObjectId': '12345678',
                 'FileId':'7ad00d95-f663-4db9-b379-1ff0f30a616d',
                         'ClassName': 'AcDbLine',
                         'Color': 'BYLAYER',
@@ -64,14 +70,14 @@
                         }
                     }";
 
-                BsonDocument doc = BsonDocument.Parse(docJson);
+                BsonDocument doc = BsonDocument.Parse(objJson);
 
                 collection.Insert(doc);
             }
 
-            if (!databaseMongo.CollectionExists("files"))
+            if (!DatabaseMongo.CollectionExists("files"))
             {
-                var collection = databaseMongo.GetCollection<BsonDocument>("files");
+                var collection = DatabaseMongo.GetCollection<BsonDocument>("files");
                 string docJson =
                     @"{
                         'FileId':'7ad00d95-f663-4db9-b379-1ff0f30a616d',
@@ -85,86 +91,170 @@
             }
         }
 
-        public void InsertIntoFiles(string FilePath, string docJson, string fileId, string fileHash)
+        public void InsertIntoFiles(string filePath, string docJson, string fileId, string fileHash)
         {
+            var files = DatabaseMongo.GetCollection<BsonDocument>("files");
 
-            // Check hash alreade exists, if no - insert
-            // if yes - skip
+            BsonDocument doc =new BsonDocument();
+            doc.Add("FileId", fileId);
+            doc.Add("Hash", fileHash);
+            doc.Add("FilePath", filePath);
+            doc.Add("Scanned", false);
 
+            var filter = new QueryDocument("Hash", fileHash);
+            var qryResult = files.Find(filter);
+            // if hash exist - we should skip insertion
+            if (qryResult.Count() == 0)
+                // Check hash already exists, if no - insert
+                files.Insert(doc);
         }
 
-        public void SaveObjectData(string objectId, string objJson, string objectClassName, string fileId)
+        public void InsertIntoFiles(CrawlDocument crawlDocument)
         {
-            // Just save
+            var files = DatabaseMongo.GetCollection<BsonDocument>("files");
+            BsonDocument doc = crawlDocument.ToBsonDocument();
+
+            var filter = new QueryDocument("Hash", crawlDocument.Hash);
+            var qryResult = files.FindOne(filter);
+            // if hash exist - we should skip insertion
+            if (qryResult == null)
+                // Check hash already exists, if no - insert
+                files.Insert(doc);
         }
 
-
-
-        internal CrawlDocument GetNewRandomUnscannedDocument()
+        public void SaveObjectData(string objJson, string fileId)
         {
-            CrawlDocument result = null;
-            /*
-            if (_conn.State != System.Data.ConnectionState.Open)
-                return result;
-
-            //Check db size is close to maximum
-            FileInfo Fi = new FileInfo(dbPath);
-            long maxsize = 2000*1024*1024;
-            if (Fi.Length > maxsize)
-                return null;
-
-
-            //http://stackoverflow.com/questions/13665309/how-to-randomly-select-one-row-off-table-based-on-critera
-            //https://msdn.microsoft.com/en-us/library/cc441928.aspx
-
-            string commandTxt = 
-                @"SELECT        FilePath, docJson, FileId, FileHash, Scanned
-                FROM            Files
-                WHERE        (Scanned = '0')
-                ORDER BY NEWID()";
-
-            SqlCeCommand command = new SqlCeCommand(commandTxt, _conn);
-            SqlCeDataReader dr = command.ExecuteReader();
-
-            while (dr.Read())
+            var objects = DatabaseMongo.GetCollection<BsonDocument>("objects");
+            try
             {
-                //http://stackoverflow.com/questions/4018114/read-data-from-sqldatareader
-                result = new CrawlDocument();
-                result.FileId = dr["FileId"].ToString();
-                result.Hash = dr["FileHash"].ToString();
-                result.Path = dr["FilePath"].ToString();
-                break;
+                BsonDocument doc = BsonDocument.Parse(objJson);
+                doc.Add("FileId", fileId);
+                objects.Insert(doc);
             }
-             */
-            return result;
+            catch (System.Exception e)
+            {
+                cDebug.WriteLine(e.Message);
+            }
+
+            
+        }
+
+        public CrawlDocument GetNewRandomUnscannedDocument()
+        {
+            var files = DatabaseMongo.GetCollection<BsonDocument>("files");
+            QueryDocument filter = new QueryDocument("Scanned", false);
+
+            // Not efficient to obtain all collection, but 'files' cooolection shouldn't bee too large
+            // http://stackoverflow.com/questions/3975290/produce-a-random-number-in-a-range-using-c-sharp
+            Random r = new Random();
+            long num = files.Find(filter).Count();
+            int x = r.Next((int)num);//Max range
+            var allFiles = files.Find(filter).SetSkip(x).SetLimit(1);
+
+            foreach (var file in allFiles)
+            {
+
+                CrawlDocument result = new CrawlDocument();
+                result.FileId = file["FileId"].ToString();
+                result.docJson = file.ToString();
+                result.Hash = file["Hash"].ToString();
+                result.Path = file["FilePath"].ToString();
+                result.Scanned = file["Scanned"].ToBoolean();
+
+                // Check db size is close to maximum
+                // FileInfo Fi = new FileInfo(dbPath);
+                // long maxsize = 2000*1024*1024;
+                // if (Fi.Length > maxsize)
+                // return null;
+
+                return result;
+            }
+
+            return null;
+        }
+
+        public List<CrawlDocument> GetFile(string fileId)
+        {
+            List<CrawlDocument> resultList = new List<CrawlDocument>();
+
+            var files = DatabaseMongo.GetCollection<BsonDocument>("files");
+            QueryDocument filter = new QueryDocument("FileId", fileId);
+
+            var allFiles = files.Find(filter);
+
+            foreach (BsonDocument file in allFiles)
+            {
+                CrawlDocument result = new CrawlDocument();
+                result.FileId = file["FileId"].ToString();
+                result.docJson = file.ToString();
+                result.Hash = file["Hash"].ToString();
+                result.Path = file["FilePath"].ToString();
+                result.Scanned = file["Scanned"].ToBoolean();
+
+                // Check db size is close to maximum
+                // FileInfo Fi = new FileInfo(dbPath);
+                // long maxsize = 2000*1024*1024;
+                // if (Fi.Length > maxsize)
+                // return null;
+
+                resultList.Add(result);
+            }
+
+            return resultList;
         }
 
         public void SetDocumentScanned(string fileId)
         {
-            /*
-            if (_conn.State == System.Data.ConnectionState.Open)
-            {
-                string sql = @"UPDATE Files SET Scanned=1 WHERE (FileId=@FileId)";
-                SqlCeCommand command = new SqlCeCommand(sql, _conn);
+            var files = DatabaseMongo.GetCollection<BsonDocument>("files");
+            QueryDocument filter = new QueryDocument("FileId", fileId);
 
-                command.Parameters.Add("@FileId", fileId);
+            IMongoUpdate upd = new UpdateDocument("Scanned",true);
 
-                command.ExecuteNonQuery();
-            }
-             */
+            files.Update(filter, upd);
         }
 
         public List<string> GetObjectJsonByClassName(string className)
         {
             List<string> result = new List<string>();
-
-            QueryDocument filter = new QueryDocument("ClassName", className);
-            var objJsons = databaseMongo.GetCollection("objects").Find(filter);
-
-            foreach (var anObject in objJsons)
-                result.Add(anObject.ToString());
+            if (!string.IsNullOrEmpty(className))
+            {
+                QueryDocument filter = new QueryDocument("ClassName", className);
+                var objJsons = DatabaseMongo.GetCollection("objects").Find(filter);
+                foreach (var anObject in objJsons)
+                    result.Add(anObject.ToString());
+            }
+            else
+            {
+                var objJsons = DatabaseMongo.GetCollection("objects").FindAll();
+                foreach (var anObject in objJsons)
+                    result.Add(anObject.ToString());
+            }
 
             return result;
+        }
+
+        public bool HasFileId(string FileId)
+        {
+            QueryDocument filter = new QueryDocument("FileId", FileId);
+            var files = DatabaseMongo.GetCollection("files").Find(filter);
+
+            return files.Count() > 0;
+        }
+
+        public bool HasFileHash(string FileHash)
+        {
+            QueryDocument filter = new QueryDocument("Hash", FileHash);
+            var files = DatabaseMongo.GetCollection("files").Find(filter);
+
+            return files.Count() > 0;
+        }
+
+        public bool HasObject(string objectId)
+        {
+            QueryDocument filter = new QueryDocument("ObjectId", objectId);
+            var objJsons = DatabaseMongo.GetCollection("objects").Find(filter);
+
+            return objJsons.Count() > 0;
         }
     }
 }

@@ -66,7 +66,7 @@ namespace Crawl
 
         public static void Crawl(bool closeAfterComplete = true)
         {
-            SqlDb sqlDB = new SqlDb();
+            DbMongo sqlDB = new DbMongo();
             //While Get random dwg from database that not scanned
             CrawlDocument crawlDoc = sqlDB.GetNewRandomUnscannedDocument();
             while (crawlDoc != null)

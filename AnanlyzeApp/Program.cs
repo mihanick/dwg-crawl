@@ -10,7 +10,9 @@ namespace AnanlyzeApp
         static void Main(string[] args)
         {
             //LineData();
-            LineIsArectangle();
+            TextData();
+            LineData();
+            ObjJsons();
         }
 
         class DicList : Dictionary<object, List<object>>
@@ -223,7 +225,7 @@ namespace AnanlyzeApp
 
         static void ObjJsons()
         {
-            SqlDb sqlDB = new SqlDb();
+            DbMongo sqlDB = new DbMongo();
 
             List<string> jsonObjs = sqlDB.GetObjectJsonByClassName("");
 
@@ -256,7 +258,7 @@ namespace AnanlyzeApp
 
         static void TextData()
         {
-            SqlDb sqlDB = new SqlDb();
+            DbMongo sqlDB = new DbMongo();
             string className = "AcDbText";
 
             List<string> jsonObjs = sqlDB.GetObjectJsonByClassName(className);
@@ -290,9 +292,9 @@ namespace AnanlyzeApp
 
         static void LineData()
         {
-            SqlDb sqlDB = new SqlDb();
+            DbMongo sqlDB = new DbMongo();
             List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
-            StreamWriter sw = new StreamWriter(@"F:\Data\LineData.csv");
+            StreamWriter sw = new StreamWriter(@"C:\Data\LineData.csv");
             sw.WriteLine("Alignment" + "; " + "Length");
 
             foreach (string jsonLine in jsonOfLines)

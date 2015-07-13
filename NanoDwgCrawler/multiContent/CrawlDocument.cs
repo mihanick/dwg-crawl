@@ -13,18 +13,21 @@ namespace Crawl
         public string FileId;
         [DataMember]
         public string Hash;
+        [DataMember]
+        public bool Scanned;
 
         public string docJson;
 
-        public CrawlDocument(string dwgPath="")
+        public CrawlDocument(string dwgPath = "")
         {
-                this.Path = dwgPath;
-                if(File.Exists(dwgPath))
-                    this.Hash = Crawl.UtilityHash.HashFile(dwgPath);
-         
-                this.FileId = Guid.NewGuid().ToString();
-                this.docJson = jsonHelper.To<CrawlDocument>(this);
-        }
+            this.Path = dwgPath;
+            if (File.Exists(dwgPath))
+                this.Hash = Crawl.UtilityHash.HashFile(dwgPath);
 
+            this.FileId = Guid.NewGuid().ToString();
+            this.docJson = jsonHelper.To<CrawlDocument>(this);
+
+            this.Scanned = false;
+        }
     }
 }

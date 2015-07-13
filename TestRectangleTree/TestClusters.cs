@@ -161,12 +161,11 @@
                 catch { }
             }
 
-
             Stopwatch timer = Stopwatch.StartNew();
             ClusterTree ct = new ClusterTree(rects.ToArray());
             timer.Stop();
 
-            Assert.IsTrue(timer.ElapsedMilliseconds < rects.Count);
+            Assert.IsTrue(timer.ElapsedMilliseconds < 3*rects.Count);
 
             for (int i = 0; i < ct.Clusters.Count; i++)
                 for (int j = 0; j < ct.Clusters.Count; j++)

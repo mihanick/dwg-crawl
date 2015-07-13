@@ -6,12 +6,27 @@ using System;
 using Crawl;
 
 [DataContract]
-public class crawlAcDbLine
+public class crawlEntity
+{
+    [DataMember]
+    ObjectId ObjectId;
+
+    [DataMember]
+    public string Color;
+    [DataMember]
+    public string Layer;
+    [DataMember]
+    public string Linetype;
+    [DataMember]
+    public string LineWeight;
+}
+
+
+[DataContract]
+public class crawlAcDbLine : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbLine";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d EndPoint { get; set; }
@@ -19,12 +34,6 @@ public class crawlAcDbLine
     public crawlPoint3d StartPoint { get; set; }
     [DataMember]
     public double Length;
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbLine()
     {
@@ -44,21 +53,14 @@ public class crawlAcDbLine
 }
 
 [DataContract]
-public class crawlAcDbPolyline
+public class crawlAcDbPolyline : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbPolyline";
-    [DataMember]
-    public string Color;
+
 
     [DataMember]
     public double Length;
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
     [DataMember]
     public double Area;
 
@@ -131,23 +133,15 @@ public class crawlAcDbPolyline
 }
 
 [DataContract]
-public class crawlAcDbText
+public class crawlAcDbText : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbText";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Position { get; set; }
     [DataMember]
     public string TextString;
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbText() { }
 
@@ -165,23 +159,15 @@ public class crawlAcDbText
 }
 
 [DataContract]
-public class crawlAcDbMText
+public class crawlAcDbMText : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbMText";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Position { get; set; }
     [DataMember]
     public string TextString;
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbMText() { }
 
@@ -198,12 +184,10 @@ public class crawlAcDbMText
 }
 
 [DataContract]
-public class crawlAcDbAttributeDefinition
+public class crawlAcDbAttributeDefinition : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbAttributeDefinition";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Position { get; set; }
@@ -217,13 +201,6 @@ public class crawlAcDbAttributeDefinition
 
     [DataMember]
     public crawlAcDbMText MTextAttributeDefinition;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbAttributeDefinition() { }
 
@@ -286,12 +263,10 @@ public class crawlPoint3d
 }
 
 [DataContract]
-public class crawlAcDbArc
+public class crawlAcDbArc : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbArc";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Center { get; set; }
@@ -306,13 +281,6 @@ public class crawlAcDbArc
     public double Thickness;
     [DataMember]
     public double Radius;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbArc() { }
 
@@ -335,12 +303,10 @@ public class crawlAcDbArc
 }
 
 [DataContract]
-public class crawlAcDbCircle
+public class crawlAcDbCircle : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbCircle";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Center { get; set; }
@@ -355,13 +321,6 @@ public class crawlAcDbCircle
     public double Thickness;
     [DataMember]
     public double Radius;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbCircle() { }
 
@@ -382,12 +341,10 @@ public class crawlAcDbCircle
 }
 
 [DataContract]
-public class crawlAcDbEllipse
+public class crawlAcDbEllipse : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbEllipse";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Center { get; set; }
@@ -398,13 +355,6 @@ public class crawlAcDbEllipse
 
     [DataMember]
     public double Length;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbEllipse() { }
 
@@ -422,12 +372,10 @@ public class crawlAcDbEllipse
     }
 }
 [DataContract]
-public class crawlAcDbAlignedDimension
+public class crawlAcDbAlignedDimension : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbAlignedDimension";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d XLine1Point { get; set; }
@@ -442,13 +390,6 @@ public class crawlAcDbAlignedDimension
     public string DimensionText;
     [DataMember]
     public string DimensionStyleName;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbAlignedDimension() { }
 
@@ -470,12 +411,10 @@ public class crawlAcDbAlignedDimension
 }
 
 [DataContract]
-public class crawlAcDbRotatedDimension
+public class crawlAcDbRotatedDimension : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbRotatedDimension";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d XLine1Point { get; set; }
@@ -490,13 +429,6 @@ public class crawlAcDbRotatedDimension
     public string DimensionText;
     [DataMember]
     public string DimensionStyleName;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbRotatedDimension() { }
 
@@ -518,12 +450,10 @@ public class crawlAcDbRotatedDimension
 }
 
 [DataContract]
-public class crawlAcDbPoint3AngularDimension
+public class crawlAcDbPoint3AngularDimension : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbPoint3AngularDimension";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d XLine1Point { get; set; }
@@ -538,13 +468,6 @@ public class crawlAcDbPoint3AngularDimension
     public string DimensionText;
     [DataMember]
     public string DimensionStyleName;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbPoint3AngularDimension() { }
 
@@ -565,15 +488,11 @@ public class crawlAcDbPoint3AngularDimension
     }
 }
 
-
-
 [DataContract]
-public class crawlAcDbLineAngularDimension2
+public class crawlAcDbLineAngularDimension2 : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbLineAngularDimension2";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d XLine1Start { get; set; }
@@ -592,13 +511,6 @@ public class crawlAcDbLineAngularDimension2
     public string DimensionText;
     [DataMember]
     public string DimensionStyleName;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbLineAngularDimension2() { }
 
@@ -622,12 +534,10 @@ public class crawlAcDbLineAngularDimension2
 }
 
 [DataContract]
-public class crawlAcDbDiametricDimension
+public class crawlAcDbDiametricDimension : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbDiametricDimension";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d FarChordPoint { get; set; }
@@ -640,13 +550,6 @@ public class crawlAcDbDiametricDimension
     public string DimensionText;
     [DataMember]
     public string DimensionStyleName;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbDiametricDimension() { }
 
@@ -667,12 +570,10 @@ public class crawlAcDbDiametricDimension
 }
 
 [DataContract]
-public class crawlAcDbArcDimension
+public class crawlAcDbArcDimension : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbArcDimension";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d XLine1Point { get; set; }
@@ -687,13 +588,6 @@ public class crawlAcDbArcDimension
     public string DimensionText;
     [DataMember]
     public string DimensionStyleName;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbArcDimension() { }
 
@@ -715,12 +609,10 @@ public class crawlAcDbArcDimension
 }
 
 [DataContract]
-public class crawlAcDbRadialDimension
+public class crawlAcDbRadialDimension : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbRadialDimension";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Center { get; set; }
@@ -733,13 +625,6 @@ public class crawlAcDbRadialDimension
     public string DimensionText;
     [DataMember]
     public string DimensionStyleName;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbRadialDimension() { }
 
@@ -760,21 +645,13 @@ public class crawlAcDbRadialDimension
 }
 
 [DataContract]
-public class crawlAcDbHatch
+public class crawlAcDbHatch : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbHatch";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     double Area;
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
     [DataMember]
     string PatternName;
 
@@ -850,19 +727,11 @@ public class crawlAcDbHatch
 }
 
 [DataContract]
-public class crawlAcDbSpline
+public class crawlAcDbSpline : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbSpline";
-    [DataMember]
-    public string Color;
 
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
     [DataMember]
     double Area;
 
@@ -914,22 +783,13 @@ public class crawlAcDbSpline
 }
 
 [DataContract]
-public class crawlAcDbPoint
+public class crawlAcDbPoint : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbPoint";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Position { get; set; }
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbPoint() { }
 
@@ -945,22 +805,13 @@ public class crawlAcDbPoint
 }
 
 [DataContract]
-public class crawlAcDbBlockReference
+public class crawlAcDbBlockReference : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbBlockReference";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public crawlPoint3d Position { get; set; }
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     [DataMember]
     string Name;
@@ -993,12 +844,10 @@ public class crawlAcDbBlockReference
 }
 
 [DataContract]
-public class crawlAcDbAttributeReference
+public class crawlAcDbAttributeReference : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbAttributeReference";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     string Tag;
@@ -1016,24 +865,15 @@ public class crawlAcDbAttributeReference
 }
 
 [DataContract]
-public class crawlAcDbProxyEntity
+public class crawlAcDbProxyEntity : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbProxyEntity";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public string FileId;
     [DataMember]
     public string ParentFileId;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     public crawlAcDbProxyEntity(ProxyEntity prxy)
     {
@@ -1070,24 +910,15 @@ public class crawlAcDbBlockTableRecord
 }
 
 [DataContract]
-public class crawlAcDbSolid
+public class crawlAcDbSolid : crawlEntity
 {
     [DataMember]
     string ClassName = "AcDbSolid";
-    [DataMember]
-    public string Color;
 
     [DataMember]
     public string FileId;
     [DataMember]
     public string ParentFileId;
-
-    [DataMember]
-    public string Layer;
-    [DataMember]
-    public string Linetype;
-    [DataMember]
-    public string LineWeight;
 
     [DataMember]
     List<crawlPoint3d> Vertices;
