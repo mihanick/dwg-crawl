@@ -3,6 +3,7 @@
     using MongoDB;
     using MongoDB.Bson;
     using MongoDB.Driver;
+    using MongoDB.Driver.Builders;
     using System;
     using System.Collections.Generic;
 
@@ -91,22 +92,33 @@
             }
         }
 
-        public void InsertIntoFiles(string filePath, string docJson, string fileId, string fileHash)
+        public void InsertIntoFiles(string docJson)
         {
             var files = DatabaseMongo.GetCollection<BsonDocument>("files");
+            
+            BsonDocument doc =BsonDocument.Parse(docJson);
+            bool docIsAFile = doc["ClassName"].ToString() == "File";
 
-            BsonDocument doc =new BsonDocument();
-            doc.Add("FileId", fileId);
-            doc.Add("Hash", fileHash);
-            doc.Add("FilePath", filePath);
-            doc.Add("Scanned", false);
+            if (docIsAFile)
+            {
+                string hash = doc["Hash"].ToString();
+                doc["Scanned"] = false;
 
-            var filter = new QueryDocument("Hash", fileHash);
-            var qryResult = files.Find(filter);
-            // if hash exist - we should skip insertion
-            if (qryResult.Count() == 0)
-                // Check hash already exists, if no - insert
+                var filter = new QueryDocument();
+                filter.Add("Hash", hash);
+                filter.Add("ClassName", "File");
+
+                var qryResult = files.Find(filter);
+                // if hash exist - we should skip insertion
+                if (qryResult.Count() == 0)
+                    // Check hash already exists, if no - insert
+                    files.Insert(doc);
+            }
+            else
+            {
+                doc["Scanned"] = true;
                 files.Insert(doc);
+            }
         }
 
         public void InsertIntoFiles(CrawlDocument crawlDocument)
@@ -135,30 +147,28 @@
             {
                 cDebug.WriteLine(e.Message);
             }
-
-            
         }
 
         public CrawlDocument GetNewRandomUnscannedDocument()
         {
             var files = DatabaseMongo.GetCollection<BsonDocument>("files");
-            QueryDocument filter = new QueryDocument("Scanned", false);
+            QueryDocument filter = new QueryDocument();
+            filter.Add("Scanned", false);
+            filter.Add("ClassName", "File");
 
             // Not efficient to obtain all collection, but 'files' cooolection shouldn't bee too large
             // http://stackoverflow.com/questions/3975290/produce-a-random-number-in-a-range-using-c-sharp
-            Random r = new Random();
+            Random r = new Random((int)DateTime.Now.Ticks);
             long num = files.Find(filter).Count();
             int x = r.Next((int)num);//Max range
             var allFiles = files.Find(filter).SetSkip(x).SetLimit(1);
 
             foreach (var file in allFiles)
             {
-
                 CrawlDocument result = new CrawlDocument();
                 result.FileId = file["FileId"].ToString();
-                result.docJson = file.ToString();
                 result.Hash = file["Hash"].ToString();
-                result.Path = file["FilePath"].ToString();
+                result.Path = file["Path"].ToString();
                 result.Scanned = file["Scanned"].ToBoolean();
 
                 // Check db size is close to maximum
@@ -178,7 +188,9 @@
             List<CrawlDocument> resultList = new List<CrawlDocument>();
 
             var files = DatabaseMongo.GetCollection<BsonDocument>("files");
-            QueryDocument filter = new QueryDocument("FileId", fileId);
+            QueryDocument filter = new QueryDocument();
+            filter.Add("FileId", fileId);
+            filter.Add("ClassName", "File");
 
             var allFiles = files.Find(filter);
 
@@ -186,9 +198,8 @@
             {
                 CrawlDocument result = new CrawlDocument();
                 result.FileId = file["FileId"].ToString();
-                result.docJson = file.ToString();
                 result.Hash = file["Hash"].ToString();
-                result.Path = file["FilePath"].ToString();
+                result.Path = file["Path"].ToString();
                 result.Scanned = file["Scanned"].ToBoolean();
 
                 // Check db size is close to maximum
@@ -206,11 +217,9 @@
         public void SetDocumentScanned(string fileId)
         {
             var files = DatabaseMongo.GetCollection<BsonDocument>("files");
-            QueryDocument filter = new QueryDocument("FileId", fileId);
-
-            IMongoUpdate upd = new UpdateDocument("Scanned",true);
-
-            files.Update(filter, upd);
+            var filter = new QueryDocument("FileId", fileId);
+            var update = MongoDB.Driver.Builders.Update.Set("Scanned",true);
+            var result = files.Update(filter, update);
         }
 
         public List<string> GetObjectJsonByClassName(string className)

@@ -27,7 +27,7 @@ namespace Crawl
             {
                 CrawlDocument cDoc = new CrawlDocument(dwgFile);
                 FileCopy(dwgFile, Path.Combine(dataDir,cDoc.FileId+".dwg"));
-                db.InsertIntoFiles(cDoc.Path, cDoc.docJson, cDoc.FileId, cDoc.Hash);
+                db.InsertIntoFiles(cDoc);
             }
 
             //Запуситить процессы по числу ядер процессоров каждый на своем ядре

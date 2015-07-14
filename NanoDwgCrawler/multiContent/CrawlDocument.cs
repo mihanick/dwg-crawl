@@ -8,6 +8,8 @@ namespace Crawl
     public class CrawlDocument
     {
         [DataMember]
+        public string ClassName;
+        [DataMember]
         public string Path;
         [DataMember]
         public string FileId;
@@ -16,17 +18,17 @@ namespace Crawl
         [DataMember]
         public bool Scanned;
 
-        public string docJson;
-
         public CrawlDocument(string dwgPath = "")
         {
+
             this.Path = dwgPath;
             if (File.Exists(dwgPath))
+            {
                 this.Hash = Crawl.UtilityHash.HashFile(dwgPath);
+                this.ClassName = "File";
+            }
 
             this.FileId = Guid.NewGuid().ToString();
-            this.docJson = jsonHelper.To<CrawlDocument>(this);
-
             this.Scanned = false;
         }
     }

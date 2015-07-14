@@ -871,9 +871,9 @@ public class crawlAcDbProxyEntity : crawlEntity
     string ClassName = "AcDbProxyEntity";
 
     [DataMember]
-    public string FileId;
+    public string BlockId;
     [DataMember]
-    public string ParentFileId;
+    public string FileId;
 
     public crawlAcDbProxyEntity(ProxyEntity prxy)
     {
@@ -897,7 +897,7 @@ public class crawlAcDbBlockTableRecord
     [DataMember]
     public string FileId;
     [DataMember]
-    public string ParentFileId;
+    public string BlockId;
 
     public crawlAcDbBlockTableRecord() { }
 

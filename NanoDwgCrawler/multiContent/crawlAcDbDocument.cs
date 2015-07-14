@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Runtime.Serialization;
-using HostMgd.ApplicationServices;
-using Teigha.DatabaseServices;
-using HostMgd.EditorInput;
-using TeighaApp = HostMgd.ApplicationServices.Application;
-using System.IO;
-
-namespace Crawl
+﻿namespace Crawl
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Runtime.Serialization;
+    using HostMgd.ApplicationServices;
+    using Teigha.DatabaseServices;
+    using HostMgd.EditorInput;
+    using TeighaApp = HostMgd.ApplicationServices.Application;
+    using System.IO;
+
     class crawlAcDbDocument
     {
         private string _dataDir = @"c:\Data";
@@ -79,7 +79,7 @@ namespace Crawl
                 foreach (CrawlDocument theXref in xrefs)
                 {
                     crawlAcDbDocument cDoc = new crawlAcDbDocument(theXref);
-                    sqlDB.InsertIntoFiles(theXref.Path, theXref.docJson, theXref.FileId, theXref.Hash);
+                    sqlDB.InsertIntoFiles(theXref);
 
                     cDoc.sqlDB = sqlDB;
                     cDoc.ScanDocument();
@@ -100,11 +100,11 @@ namespace Crawl
                 BlockTableRecord btr = (BlockTableRecord)objId.GetObject(OpenMode.ForRead);
                 crawlAcDbBlockTableRecord cBtr = new crawlAcDbBlockTableRecord(btr, this.FullPath);
 
-                cBtr.FileId = Guid.NewGuid().ToString();
-                cBtr.ParentFileId = parentFileId;
+                cBtr.BlockId = Guid.NewGuid().ToString();
+                cBtr.FileId = parentFileId;
                 string blockJson = jsonHelper.To<crawlAcDbBlockTableRecord>(cBtr);
 
-                this.sqlDB.InsertIntoFiles("AcDbBlockTableRecord", blockJson, parentFileId, "");
+                this.sqlDB.InsertIntoFiles(blockJson);
 
                 using (Transaction tr = aDoc.TransactionManager.StartTransaction())
                 {
@@ -113,7 +113,7 @@ namespace Crawl
                         string objectJson = jsonGetObjectData(obj);
                         string objectClass = obj.ObjectClass.Name;
 
-                        this.sqlDB.SaveObjectData(objectJson, cBtr.FileId);
+                        this.sqlDB.SaveObjectData(objectJson, cBtr.BlockId);
                     }
                 }
             }
@@ -125,19 +125,19 @@ namespace Crawl
 
                 crawlAcDbProxyEntity cPxy = new crawlAcDbProxyEntity((ProxyEntity)ent);
 
-                cPxy.FileId = Guid.NewGuid().ToString();
-                cPxy.ParentFileId = parentFileId;
+                cPxy.BlockId = Guid.NewGuid().ToString();
+                cPxy.FileId = parentFileId;
 
                 string pxyJson = jsonHelper.To<crawlAcDbProxyEntity>(cPxy);
 
-                this.sqlDB.InsertIntoFiles("AcDbProxyEntity", pxyJson, parentFileId, "");
+                this.sqlDB.InsertIntoFiles(pxyJson);
 
                 foreach (ObjectId obj in dbo)
                 {
                     string objectJson = jsonGetObjectData(obj);
                     string objectClass = obj.ObjectClass.Name;
 
-                    this.sqlDB.SaveObjectData(objectJson, FullPath);
+                    this.sqlDB.SaveObjectData(objectJson, cPxy.BlockId);
                 }
             }
         }
