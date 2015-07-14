@@ -45,7 +45,6 @@ public class App : IExtensionApplication
 
 namespace Crawl
 {
-
     public partial class Commands
     {
         Database acCurDb = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
@@ -110,7 +109,6 @@ namespace Crawl
             }
 
         }
-
 
         [CommandMethod("DrawRectangletest")]
         public static void DrawRectangletest()

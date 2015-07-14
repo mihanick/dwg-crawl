@@ -13,9 +13,14 @@ namespace Crawl
     {
         static void Main(string[] args)
         {
+            Scan();
+        }
+
+        static void Scan()
+        {
             //Открыть папку, выбрать все файлы двг из нее
             //string dir = @"C:\svn\Help\MCS10\OgpUtils\OgpUtils\multiContent\testSamples";
-            string dir = @"\\FILESERVER\home\#АРХИВ 2014\Объекты\МНОГОТОПЛИВНАЯ АЗС №15";
+            string dir = @"U:\#АРХИВ 2014\Объекты";
             //string dir = @"D:\Documents\Desktop\rectangles";
             //string dir = @"D:\Documents\Dropbox\CrawlDwgs";
             string dataDir = @"c:\Data\";
@@ -26,7 +31,7 @@ namespace Crawl
             foreach (string dwgFile in dwgFiles)
             {
                 CrawlDocument cDoc = new CrawlDocument(dwgFile);
-                FileCopy(dwgFile, Path.Combine(dataDir,cDoc.FileId+".dwg"));
+                FileCopy(dwgFile, Path.Combine(dataDir, cDoc.FileId + ".dwg"));
                 db.InsertIntoFiles(cDoc);
             }
 
