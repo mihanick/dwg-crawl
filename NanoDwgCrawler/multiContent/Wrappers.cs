@@ -43,8 +43,8 @@ public class crawlAcDbLine : crawlEntity
         Entity ent = (Entity)line;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.EndPoint = new crawlPoint3d(line.EndPoint.X,line.EndPoint.Y,line.EndPoint.Z);
-        this.StartPoint = new crawlPoint3d(line.StartPoint.X,line.StartPoint.Y,line.StartPoint.Z);
+        this.EndPoint = new crawlPoint3d(line.EndPoint.X, line.EndPoint.Y, line.EndPoint.Z);
+        this.StartPoint = new crawlPoint3d(line.StartPoint.X, line.StartPoint.Y, line.StartPoint.Z);
         this.Layer = line.Layer;
         this.Linetype = line.Linetype;
         this.LineWeight = line.LineWeight.ToString();
@@ -60,7 +60,6 @@ public class crawlAcDbPolyline : crawlEntity
     [DataMember]
     string ClassName = "AcDbPolyline";
 
-
     [DataMember]
     public double Length;
     [DataMember]
@@ -69,7 +68,7 @@ public class crawlAcDbPolyline : crawlEntity
     [DataMember]
     List<crawlPoint3d> Vertixes;
 
-    public crawlAcDbPolyline(){ }
+    public crawlAcDbPolyline() { }
 
     public crawlAcDbPolyline(Polyline polyline)
     {
@@ -93,7 +92,7 @@ public class crawlAcDbPolyline : crawlEntity
             double x = polyline.GetPoint3dAt(i).X;
             double y = polyline.GetPoint3dAt(i).Y;
             double z = polyline.GetPoint3dAt(i).Z;
-            Vertixes.Add(new crawlPoint3d(x,y,z));
+            Vertixes.Add(new crawlPoint3d(x, y, z));
         }
     }
 
@@ -121,7 +120,7 @@ public class crawlAcDbPolyline : crawlEntity
             double x = v2d.Position.X;
             double y = v2d.Position.Y;
             double z = v2d.Position.Z;
-            Vertixes.Add(new crawlPoint3d(x,y,z));
+            Vertixes.Add(new crawlPoint3d(x, y, z));
         }
     }
 
@@ -147,7 +146,7 @@ public class crawlAcDbPolyline : crawlEntity
             double x = v3d.Position.X;
             double y = v3d.Position.Y;
             double z = v3d.Position.Z;
-            Vertixes.Add(new crawlPoint3d(x,y,z));
+            Vertixes.Add(new crawlPoint3d(x, y, z));
         }
     }
 }
@@ -170,7 +169,7 @@ public class crawlAcDbText : crawlEntity
         Entity ent = (Entity)text;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Position = new crawlPoint3d(text.Position.X,text.Position.Y,text.Position.Z);
+        this.Position = new crawlPoint3d(text.Position.X, text.Position.Y, text.Position.Z);
 
         this.Layer = text.Layer;
         this.Linetype = text.Linetype;
@@ -199,7 +198,7 @@ public class crawlAcDbMText : crawlEntity
         Entity ent = (Entity)text;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Position = new crawlPoint3d(text.Location.X,text.Location.Y,text.Location.Z);
+        this.Position = new crawlPoint3d(text.Location.X, text.Location.Y, text.Location.Z);
         this.Layer = text.Layer;
         this.Linetype = text.Linetype;
         this.LineWeight = text.LineWeight.ToString();
@@ -318,7 +317,7 @@ public class crawlAcDbCircle : crawlEntity
         Entity ent = (Entity)circle;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.EndPoint = new crawlPoint3d(circle.EndPoint.X,circle.EndPoint.Y,circle.EndPoint.Z);
+        this.EndPoint = new crawlPoint3d(circle.EndPoint.X, circle.EndPoint.Y, circle.EndPoint.Z);
         this.StartPoint = new crawlPoint3d(circle.StartPoint.X, circle.StartPoint.Y, circle.StartPoint.Z);
         this.Center = new crawlPoint3d(circle.Center.X, circle.Center.Y, circle.Center.Z);
 
@@ -355,7 +354,7 @@ public class crawlAcDbEllipse : crawlEntity
         Entity ent = (Entity)ellipse;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.EndPoint = new crawlPoint3d(ellipse.EndPoint.X,ellipse.EndPoint.Y,ellipse.EndPoint.Z);
+        this.EndPoint = new crawlPoint3d(ellipse.EndPoint.X, ellipse.EndPoint.Y, ellipse.EndPoint.Z);
         this.StartPoint = new crawlPoint3d(ellipse.StartPoint.X, ellipse.StartPoint.Y, ellipse.StartPoint.Z);
         this.Center = new crawlPoint3d(ellipse.Center.X, ellipse.Center.Y, ellipse.Center.Z);
 
@@ -436,9 +435,9 @@ public class crawlAcDbRotatedDimension : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X,dim.XLine1Point.Y,dim.XLine1Point.Z);
+        this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
         this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
-        this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint.X,dim.DimLinePoint.Y,dim.DimLinePoint.Z);
+        this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint.X, dim.DimLinePoint.Y, dim.DimLinePoint.Z);
         this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
@@ -795,7 +794,7 @@ public class crawlAcDbSpline : crawlEntity
                 // Could also get the 3D point here
                 Point3d pt = spline.GetControlPointAt(i);
 
-                result.Add(new crawlPoint3d(pt.X,pt.Y,pt.Z));
+                result.Add(new crawlPoint3d(pt.X, pt.Y, pt.Z));
             }
         }
         catch
@@ -982,7 +981,7 @@ public class crawlAcDbSolid : crawlEntity
         {
             while (pt != null)
             {
-                Vertices.Add(new crawlPoint3d(pt.X,pt.Y,pt.Z));
+                Vertices.Add(new crawlPoint3d(pt.X, pt.Y, pt.Z));
                 i++;
                 pt = solid.GetPointAt(i);
             }
