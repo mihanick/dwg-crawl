@@ -12,19 +12,40 @@ namespace AnanlyzeApp
     class Program
     {
         static void Main(string[] args)
-        {
+        {   
+            NumberOfPrimitivesInBlocks();
+            /*
             Stopwatch timer = Stopwatch.StartNew();
             LineData();
             timer.Stop();
             Console.WriteLine("Obtain Linedata, ms: " + timer.ElapsedMilliseconds);
             Console.ReadLine();
-
+ 
             timer = Stopwatch.StartNew();
             TextData();
             timer.Stop();
             Console.WriteLine("Obtain Textdata, ms: " + timer.ElapsedMilliseconds);
             Console.ReadLine();
+            */
+        }
 
+        static void NumberOfPrimitivesInBlocks()
+        {
+            MongoClient ClientMongo = new MongoClient();
+            MongoDatabase DatabaseMongo = ClientMongo.GetServer().GetDatabase("geometry");
+            var files = DatabaseMongo.GetCollection<BsonDocument>("files").Distinct("BlockId");
+
+            FileStream fs = new FileStream(@"c:\data\blockCount.txt", FileMode.Truncate);
+            using (StreamWriter writer = new StreamWriter(fs, Encoding.Default))
+            {
+                foreach (var file in files)
+                {
+                    string fileId = file.ToString();
+                    QueryDocument filter = new QueryDocument("FileId", fileId);
+                       long count = DatabaseMongo.GetCollection("objects").Find(filter).Count();
+                    writer.WriteLine(fileId+";"+count);
+                }
+            }
         }
 
         static void TextData()
@@ -111,7 +132,7 @@ namespace AnanlyzeApp
             if (!string.IsNullOrEmpty(className))
             {
                 QueryDocument filter = new QueryDocument("ClassName", className);
-                var objJsons = DatabaseMongo.GetCollection("objects").Find(filter).SetLimit(1000000);
+                var objJsons = DatabaseMongo.GetCollection<BsonDocument>("objects").Find(filter).SetLimit(1000000);
                 foreach (var anObject in objJsons)
                     result.Add(anObject.ToString());
             }
