@@ -73,14 +73,17 @@
     <Compile Include="multiContent\CrawlDocument.cs" />
     <Compile Include="multiContent\Database.cs" />
     <Compile Include="multiContent\HashFile.cs" />
-    <Compile Include="multiContent\RectangleTree\ClusterTree.cs" />
-    <Compile Include="multiContent\RectangleTree\Rectangle.cs" />
-    <Compile Include="multiContent\RectangleTree\RectangleTree.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RectangleTree\RectangleTree.csproj">
+      <Project>{90909af6-627e-4720-b900-579a9afb21a9}</Project>
+      <Name>RectangleTree</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

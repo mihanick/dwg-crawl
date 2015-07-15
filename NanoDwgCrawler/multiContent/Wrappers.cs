@@ -21,7 +21,6 @@ public class crawlEntity
     public string LineWeight;
 }
 
-
 [DataContract]
 public class crawlAcDbLine : crawlEntity
 {
@@ -44,8 +43,8 @@ public class crawlAcDbLine : crawlEntity
         Entity ent = (Entity)line;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.EndPoint = new crawlPoint3d(line.EndPoint);
-        this.StartPoint = new crawlPoint3d(line.StartPoint);
+        this.EndPoint = new crawlPoint3d(line.EndPoint.X,line.EndPoint.Y,line.EndPoint.Z);
+        this.StartPoint = new crawlPoint3d(line.StartPoint.X,line.StartPoint.Y,line.StartPoint.Z);
         this.Layer = line.Layer;
         this.Linetype = line.Linetype;
         this.LineWeight = line.LineWeight.ToString();
@@ -91,7 +90,10 @@ public class crawlAcDbPolyline : crawlEntity
         int vn = polyline.NumberOfVertices;
         for (int i = 0; i < vn; i++)
         {
-            Vertixes.Add(new crawlPoint3d(polyline.GetPoint3dAt(i)));
+            double x = polyline.GetPoint3dAt(i).X;
+            double y = polyline.GetPoint3dAt(i).Y;
+            double z = polyline.GetPoint3dAt(i).Z;
+            Vertixes.Add(new crawlPoint3d(x,y,z));
         }
     }
 
@@ -116,7 +118,10 @@ public class crawlAcDbPolyline : crawlEntity
                 vId.GetObject(
                 OpenMode.ForRead
               );
-            Vertixes.Add(new crawlPoint3d(v2d.Position));
+            double x = v2d.Position.X;
+            double y = v2d.Position.Y;
+            double z = v2d.Position.Z;
+            Vertixes.Add(new crawlPoint3d(x,y,z));
         }
     }
 
@@ -139,7 +144,10 @@ public class crawlAcDbPolyline : crawlEntity
             PolylineVertex3d v3d =
               (PolylineVertex3d)
                 vId.GetObject(OpenMode.ForRead);
-            Vertixes.Add(new crawlPoint3d(v3d.Position));
+            double x = v3d.Position.X;
+            double y = v3d.Position.Y;
+            double z = v3d.Position.Z;
+            Vertixes.Add(new crawlPoint3d(x,y,z));
         }
     }
 }
@@ -162,7 +170,7 @@ public class crawlAcDbText : crawlEntity
         Entity ent = (Entity)text;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Position = new crawlPoint3d(text.Position);
+        this.Position = new crawlPoint3d(text.Position.X,text.Position.Y,text.Position.Z);
 
         this.Layer = text.Layer;
         this.Linetype = text.Linetype;
@@ -191,7 +199,7 @@ public class crawlAcDbMText : crawlEntity
         Entity ent = (Entity)text;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Position = new crawlPoint3d(text.Location);
+        this.Position = new crawlPoint3d(text.Location.X,text.Location.Y,text.Location.Z);
         this.Layer = text.Layer;
         this.Linetype = text.Linetype;
         this.LineWeight = text.LineWeight.ToString();
@@ -227,7 +235,7 @@ public class crawlAcDbAttributeDefinition : crawlEntity
         Entity ent = (Entity)att;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Position = new crawlPoint3d(att.Position);
+        this.Position = new crawlPoint3d(att.Position.X, att.Position.Y, att.Position.Z);
         this.Layer = att.Layer;
         this.Linetype = att.Linetype;
         this.LineWeight = att.LineWeight.ToString();
@@ -237,48 +245,6 @@ public class crawlAcDbAttributeDefinition : crawlEntity
         this.Tag = att.Tag;
 
         this.MTextAttributeDefinition = new crawlAcDbMText(att.MTextAttributeDefinition);
-    }
-}
-
-[DataContract]
-public class crawlPoint3d
-{
-    [DataMember]
-    string ClassName = "Point3D";
-
-    [DataMember]
-    public double X;
-    [DataMember]
-    public double Y;
-    [DataMember]
-    public double Z;
-
-    public crawlPoint3d()
-    {
-        this.X = 0;
-        this.Y = 0;
-        this.Z = 0;
-    }
-    public crawlPoint3d(double X, double Y, double Z)
-    {
-        this.X = X;
-        this.Y = Y;
-        this.Z = Z;
-    }
-    public crawlPoint3d(Point3d pt)
-    {
-        this.X = pt.X;
-        this.Y = pt.Y;
-        this.Z = pt.Z;
-    }
-    public override string ToString()
-    {
-        return string.Format("({0}, {1}, {2})", Math.Round(this.X,2), Math.Round(this.Y,2), Math.Round(this.Z,2));
-    }
-
-    public bool Equals(crawlPoint3d otherPoint3d)
-    {
-        return this.ToString().Equals(otherPoint3d.ToString());
     }
 }
 
@@ -309,9 +275,9 @@ public class crawlAcDbArc : crawlEntity
         Entity ent = (Entity)arc;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.EndPoint = new crawlPoint3d(arc.EndPoint);
-        this.StartPoint = new crawlPoint3d(arc.StartPoint);
-        this.Center = new crawlPoint3d(arc.Center);
+        this.EndPoint = new crawlPoint3d(arc.EndPoint.X, arc.EndPoint.Y, arc.EndPoint.Z);
+        this.StartPoint = new crawlPoint3d(arc.StartPoint.X, arc.StartPoint.Y, arc.StartPoint.Z);
+        this.Center = new crawlPoint3d(arc.Center.X, arc.Center.Y, arc.Center.Z);
 
         this.Layer = arc.Layer;
         this.Linetype = arc.Linetype;
@@ -352,9 +318,9 @@ public class crawlAcDbCircle : crawlEntity
         Entity ent = (Entity)circle;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.EndPoint = new crawlPoint3d(circle.EndPoint);
-        this.StartPoint = new crawlPoint3d(circle.StartPoint);
-        this.Center = new crawlPoint3d(circle.Center);
+        this.EndPoint = new crawlPoint3d(circle.EndPoint.X,circle.EndPoint.Y,circle.EndPoint.Z);
+        this.StartPoint = new crawlPoint3d(circle.StartPoint.X, circle.StartPoint.Y, circle.StartPoint.Z);
+        this.Center = new crawlPoint3d(circle.Center.X, circle.Center.Y, circle.Center.Z);
 
         this.Layer = circle.Layer;
         this.Linetype = circle.Linetype;
@@ -389,9 +355,9 @@ public class crawlAcDbEllipse : crawlEntity
         Entity ent = (Entity)ellipse;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.EndPoint = new crawlPoint3d(ellipse.EndPoint);
-        this.StartPoint = new crawlPoint3d(ellipse.StartPoint);
-        this.Center = new crawlPoint3d(ellipse.Center);
+        this.EndPoint = new crawlPoint3d(ellipse.EndPoint.X,ellipse.EndPoint.Y,ellipse.EndPoint.Z);
+        this.StartPoint = new crawlPoint3d(ellipse.StartPoint.X, ellipse.StartPoint.Y, ellipse.StartPoint.Z);
+        this.Center = new crawlPoint3d(ellipse.Center.X, ellipse.Center.Y, ellipse.Center.Z);
 
         this.Layer = ellipse.Layer;
         this.Linetype = ellipse.Linetype;
@@ -428,10 +394,10 @@ public class crawlAcDbAlignedDimension : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
-        this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
-        this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint);
-        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+        this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
+        this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+        this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint.X, dim.DimLinePoint.Y, dim.DimLinePoint.Z);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
@@ -470,10 +436,10 @@ public class crawlAcDbRotatedDimension : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
-        this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
-        this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint);
-        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+        this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X,dim.XLine1Point.Y,dim.XLine1Point.Z);
+        this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+        this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint.X,dim.DimLinePoint.Y,dim.DimLinePoint.Z);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
@@ -512,10 +478,10 @@ public class crawlAcDbPoint3AngularDimension : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
-        this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
-        this.CenterPoint = new crawlPoint3d(dim.CenterPoint);
-        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+        this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
+        this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+        this.CenterPoint = new crawlPoint3d(dim.CenterPoint.X, dim.CenterPoint.Y, dim.CenterPoint.Z);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
@@ -558,12 +524,12 @@ public class crawlAcDbLineAngularDimension2 : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.XLine1Start = new crawlPoint3d(dim.XLine1Start);
-        this.XLine1End = new crawlPoint3d(dim.XLine1End);
-        this.XLine2Start = new crawlPoint3d(dim.XLine2Start);
-        this.XLine2End = new crawlPoint3d(dim.XLine2End);
-        this.ArcPoint = new crawlPoint3d(dim.ArcPoint);
-        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+        this.XLine1Start = new crawlPoint3d(dim.XLine1Start.X, dim.XLine1Start.Y, dim.XLine1Start.Z);
+        this.XLine1End = new crawlPoint3d(dim.XLine1End.X, dim.XLine1End.Y, dim.XLine1End.Z);
+        this.XLine2Start = new crawlPoint3d(dim.XLine2Start.X, dim.XLine2Start.Y, dim.XLine2Start.Z);
+        this.XLine2End = new crawlPoint3d(dim.XLine2End.X, dim.XLine2End.Y, dim.XLine2End.Z);
+        this.ArcPoint = new crawlPoint3d(dim.ArcPoint.X, dim.ArcPoint.Y, dim.ArcPoint.Z);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
@@ -600,9 +566,9 @@ public class crawlAcDbDiametricDimension : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.FarChordPoint = new crawlPoint3d(dim.FarChordPoint);
-        this.ChordPoint = new crawlPoint3d(dim.ChordPoint);
-        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+        this.FarChordPoint = new crawlPoint3d(dim.FarChordPoint.X, dim.FarChordPoint.Y, dim.FarChordPoint.Z);
+        this.ChordPoint = new crawlPoint3d(dim.ChordPoint.X, dim.ChordPoint.Y, dim.ChordPoint.Z);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
@@ -641,10 +607,10 @@ public class crawlAcDbArcDimension : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
-        this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
-        this.ArcPoint = new crawlPoint3d(dim.ArcPoint);
-        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+        this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
+        this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+        this.ArcPoint = new crawlPoint3d(dim.ArcPoint.X, dim.ArcPoint.Y, dim.ArcPoint.Z);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
@@ -681,9 +647,9 @@ public class crawlAcDbRadialDimension : crawlEntity
         Entity ent = (Entity)dim;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Center = new crawlPoint3d(dim.Center);
-        this.ChordPoint = new crawlPoint3d(dim.ChordPoint);
-        this.TextPosition = new crawlPoint3d(dim.TextPosition);
+        this.Center = new crawlPoint3d(dim.Center.X, dim.Center.Y, dim.Center.Z);
+        this.ChordPoint = new crawlPoint3d(dim.ChordPoint.X, dim.ChordPoint.Y, dim.ChordPoint.Z);
+        this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
         this.Layer = dim.Layer;
         this.Linetype = dim.Linetype;
@@ -829,7 +795,7 @@ public class crawlAcDbSpline : crawlEntity
                 // Could also get the 3D point here
                 Point3d pt = spline.GetControlPointAt(i);
 
-                result.Add(new crawlPoint3d(pt));
+                result.Add(new crawlPoint3d(pt.X,pt.Y,pt.Z));
             }
         }
         catch
@@ -856,7 +822,7 @@ public class crawlAcDbPoint : crawlEntity
         Entity ent = (Entity)pnt;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Position = new crawlPoint3d(pnt.Position);
+        this.Position = new crawlPoint3d(pnt.Position.X, pnt.Position.Y, pnt.Position.Z);
 
         this.Layer = pnt.Layer;
         this.Linetype = pnt.Linetype;
@@ -887,7 +853,7 @@ public class crawlAcDbBlockReference : crawlEntity
         Entity ent = (Entity)blk;
         this.ObjectId = ent.ObjectId.ToString();
 
-        this.Position = new crawlPoint3d(blk.Position);
+        this.Position = new crawlPoint3d(blk.Position.X, blk.Position.Y, blk.Position.Z);
 
         this.Layer = blk.Layer;
         this.Linetype = blk.Linetype;
@@ -1016,7 +982,7 @@ public class crawlAcDbSolid : crawlEntity
         {
             while (pt != null)
             {
-                Vertices.Add(new crawlPoint3d(pt));
+                Vertices.Add(new crawlPoint3d(pt.X,pt.Y,pt.Z));
                 i++;
                 pt = solid.GetPointAt(i);
             }
