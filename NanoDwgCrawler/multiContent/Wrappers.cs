@@ -9,7 +9,7 @@ using Crawl;
 public class crawlEntity
 {
     [DataMember]
-    ObjectId ObjectId;
+    public string ObjectId;
 
     [DataMember]
     public string Color;
@@ -41,6 +41,9 @@ public class crawlAcDbLine : crawlEntity
 
     public crawlAcDbLine(Line line)
     {
+        Entity ent = (Entity)line;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.EndPoint = new crawlPoint3d(line.EndPoint);
         this.StartPoint = new crawlPoint3d(line.StartPoint);
         this.Layer = line.Layer;
@@ -71,6 +74,9 @@ public class crawlAcDbPolyline : crawlEntity
 
     public crawlAcDbPolyline(Polyline polyline)
     {
+        Entity ent = (Entity)polyline;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Length = polyline.Length;
         this.Area = polyline.Area;
 
@@ -91,6 +97,9 @@ public class crawlAcDbPolyline : crawlEntity
 
     public crawlAcDbPolyline(Polyline2d polyline)
     {
+        Entity ent = (Entity)polyline;
+        this.ObjectId = ent.ObjectId.ToString();
+
         Length = polyline.Length;
         this.Layer = polyline.Layer;
         this.Linetype = polyline.Linetype;
@@ -113,6 +122,9 @@ public class crawlAcDbPolyline : crawlEntity
 
     public crawlAcDbPolyline(Polyline3d polyline)
     {
+        Entity ent = (Entity)polyline;
+        this.ObjectId = ent.ObjectId.ToString();
+
         Length = polyline.Length;
         this.Layer = polyline.Layer;
         this.Linetype = polyline.Linetype;
@@ -147,6 +159,9 @@ public class crawlAcDbText : crawlEntity
 
     public crawlAcDbText(DBText text)
     {
+        Entity ent = (Entity)text;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Position = new crawlPoint3d(text.Position);
 
         this.Layer = text.Layer;
@@ -173,6 +188,9 @@ public class crawlAcDbMText : crawlEntity
 
     public crawlAcDbMText(MText text)
     {
+        Entity ent = (Entity)text;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Position = new crawlPoint3d(text.Location);
         this.Layer = text.Layer;
         this.Linetype = text.Linetype;
@@ -206,6 +224,9 @@ public class crawlAcDbAttributeDefinition : crawlEntity
 
     public crawlAcDbAttributeDefinition(AttributeDefinition att)
     {
+        Entity ent = (Entity)att;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Position = new crawlPoint3d(att.Position);
         this.Layer = att.Layer;
         this.Linetype = att.Linetype;
@@ -224,7 +245,6 @@ public class crawlPoint3d
 {
     [DataMember]
     string ClassName = "Point3D";
-
 
     [DataMember]
     public double X;
@@ -286,6 +306,9 @@ public class crawlAcDbArc : crawlEntity
 
     public crawlAcDbArc(Arc arc)
     {
+        Entity ent = (Entity)arc;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.EndPoint = new crawlPoint3d(arc.EndPoint);
         this.StartPoint = new crawlPoint3d(arc.StartPoint);
         this.Center = new crawlPoint3d(arc.Center);
@@ -326,6 +349,9 @@ public class crawlAcDbCircle : crawlEntity
 
     public crawlAcDbCircle(Circle circle)
     {
+        Entity ent = (Entity)circle;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.EndPoint = new crawlPoint3d(circle.EndPoint);
         this.StartPoint = new crawlPoint3d(circle.StartPoint);
         this.Center = new crawlPoint3d(circle.Center);
@@ -360,6 +386,9 @@ public class crawlAcDbEllipse : crawlEntity
 
     public crawlAcDbEllipse(Ellipse ellipse)
     {
+        Entity ent = (Entity)ellipse;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.EndPoint = new crawlPoint3d(ellipse.EndPoint);
         this.StartPoint = new crawlPoint3d(ellipse.StartPoint);
         this.Center = new crawlPoint3d(ellipse.Center);
@@ -371,6 +400,7 @@ public class crawlAcDbEllipse : crawlEntity
 
     }
 }
+
 [DataContract]
 public class crawlAcDbAlignedDimension : crawlEntity
 {
@@ -395,6 +425,9 @@ public class crawlAcDbAlignedDimension : crawlEntity
 
     public crawlAcDbAlignedDimension(AlignedDimension dim)
     {
+        Entity ent = (Entity)dim;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
         this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
         this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint);
@@ -434,6 +467,9 @@ public class crawlAcDbRotatedDimension : crawlEntity
 
     public crawlAcDbRotatedDimension(RotatedDimension dim)
     {
+        Entity ent = (Entity)dim;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
         this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
         this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint);
@@ -473,6 +509,9 @@ public class crawlAcDbPoint3AngularDimension : crawlEntity
 
     public crawlAcDbPoint3AngularDimension(Point3AngularDimension dim)
     {
+        Entity ent = (Entity)dim;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
         this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
         this.CenterPoint = new crawlPoint3d(dim.CenterPoint);
@@ -516,6 +555,9 @@ public class crawlAcDbLineAngularDimension2 : crawlEntity
 
     public crawlAcDbLineAngularDimension2(LineAngularDimension2 dim)
     {
+        Entity ent = (Entity)dim;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.XLine1Start = new crawlPoint3d(dim.XLine1Start);
         this.XLine1End = new crawlPoint3d(dim.XLine1End);
         this.XLine2Start = new crawlPoint3d(dim.XLine2Start);
@@ -555,6 +597,9 @@ public class crawlAcDbDiametricDimension : crawlEntity
 
     public crawlAcDbDiametricDimension(DiametricDimension dim)
     {
+        Entity ent = (Entity)dim;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.FarChordPoint = new crawlPoint3d(dim.FarChordPoint);
         this.ChordPoint = new crawlPoint3d(dim.ChordPoint);
         this.TextPosition = new crawlPoint3d(dim.TextPosition);
@@ -593,6 +638,9 @@ public class crawlAcDbArcDimension : crawlEntity
 
     public crawlAcDbArcDimension(ArcDimension dim)
     {
+        Entity ent = (Entity)dim;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.XLine1Point = new crawlPoint3d(dim.XLine1Point);
         this.XLine2Point = new crawlPoint3d(dim.XLine2Point);
         this.ArcPoint = new crawlPoint3d(dim.ArcPoint);
@@ -630,6 +678,9 @@ public class crawlAcDbRadialDimension : crawlEntity
 
     public crawlAcDbRadialDimension(RadialDimension dim)
     {
+        Entity ent = (Entity)dim;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Center = new crawlPoint3d(dim.Center);
         this.ChordPoint = new crawlPoint3d(dim.ChordPoint);
         this.TextPosition = new crawlPoint3d(dim.TextPosition);
@@ -662,6 +713,9 @@ public class crawlAcDbHatch : crawlEntity
 
     public crawlAcDbHatch(Hatch hatch)
     {
+        Entity ent = (Entity)hatch;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Area = hatch.Area;
         this.Layer = hatch.Layer;
         this.Linetype = hatch.Linetype;
@@ -742,6 +796,9 @@ public class crawlAcDbSpline : crawlEntity
 
     public crawlAcDbSpline(Spline spline)
     {
+        Entity ent = (Entity)spline;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Area = spline.Area;
 
         this.Layer = spline.Layer;
@@ -751,6 +808,7 @@ public class crawlAcDbSpline : crawlEntity
 
         Vertixes = getSplinePoints(spline);
     }
+
     private List<crawlPoint3d> getSplinePoints(Spline spline)
     {
         List<crawlPoint3d> result = new List<crawlPoint3d>();
@@ -795,6 +853,9 @@ public class crawlAcDbPoint : crawlEntity
 
     public crawlAcDbPoint(DBPoint pnt)
     {
+        Entity ent = (Entity)pnt;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Position = new crawlPoint3d(pnt.Position);
 
         this.Layer = pnt.Layer;
@@ -823,6 +884,9 @@ public class crawlAcDbBlockReference : crawlEntity
 
     public crawlAcDbBlockReference(BlockReference blk)
     {
+        Entity ent = (Entity)blk;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Position = new crawlPoint3d(blk.Position);
 
         this.Layer = blk.Layer;
@@ -858,6 +922,9 @@ public class crawlAcDbAttributeReference : crawlEntity
 
     public crawlAcDbAttributeReference(AttributeReference attRef)
     {
+        Entity ent = (Entity)attRef;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Tag = attRef.Tag;
         this.TextString = attRef.TextString;
         this.Color = attRef.Color.ToString();
@@ -877,6 +944,9 @@ public class crawlAcDbProxyEntity : crawlEntity
 
     public crawlAcDbProxyEntity(ProxyEntity prxy)
     {
+        Entity ent = (Entity)prxy;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Layer = prxy.Layer;
         this.Linetype = prxy.Linetype;
         this.LineWeight = prxy.LineWeight.ToString();
@@ -889,6 +959,8 @@ public class crawlAcDbBlockTableRecord
 {
     [DataMember]
     string ClassName = "AcDbBlockTableRecord";
+
+
     [DataMember]
     string Name;
     [DataMember]
@@ -898,6 +970,8 @@ public class crawlAcDbBlockTableRecord
     public string FileId;
     [DataMember]
     public string BlockId;
+    [DataMember]
+    public string ObjectId;
 
     public crawlAcDbBlockTableRecord() { }
 
@@ -905,8 +979,8 @@ public class crawlAcDbBlockTableRecord
     {
         this.Name = btr.Name;
         this.FilePath = filePath;
+        this.ObjectId = btr.ObjectId.ToString();
     }
-
 }
 
 [DataContract]
@@ -927,6 +1001,9 @@ public class crawlAcDbSolid : crawlEntity
 
     public crawlAcDbSolid(Solid solid)
     {
+        Entity ent = (Entity)solid;
+        this.ObjectId = ent.ObjectId.ToString();
+
         this.Layer = solid.Layer;
         this.Linetype = solid.Linetype;
         this.LineWeight = solid.LineWeight.ToString();
@@ -971,6 +1048,8 @@ public class crawlAcDbLayerTableRecord
     public string LineWeight;
     [DataMember]
     public string Color;
+    [DataMember]
+    public string ObjectId;
 
     public crawlAcDbLayerTableRecord() { }
 
@@ -987,6 +1066,8 @@ public class crawlAcDbLayerTableRecord
         this.IsOff = layerRecord.IsOff;
         this.IsPlottable = layerRecord.IsPlottable;
         this.Color = layerRecord.Color.ToString();
+
+        this.ObjectId = layerRecord.ObjectId.ToString();
     }
 
 }
