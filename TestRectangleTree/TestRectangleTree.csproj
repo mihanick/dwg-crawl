@@ -56,9 +56,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NanoDwgCrawler\NanoDwgCrawler.csproj">
-      <Project>{cf276394-892c-4117-b42c-370cf97cfa32}</Project>
-      <Name>NanoDwgCrawler</Name>
+    <ProjectReference Include="..\DatabaseMongo\DatabaseMongo.csproj">
+      <Project>{eebc657a-08ae-4c9a-9242-c1d1649ed884}</Project>
+      <Name>DatabaseMongo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RectangleTree\RectangleTree.csproj">
+      <Project>{90909af6-627e-4720-b900-579a9afb21a9}</Project>
+      <Name>RectangleTree</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

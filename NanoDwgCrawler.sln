@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestMongoDb", "TestMongoDb\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RectangleTree", "RectangleTree\RectangleTree.csproj", "{90909AF6-627E-4720-B900-579A9AFB21A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMongo", "DatabaseMongo\DatabaseMongo.csproj", "{EEBC657A-08AE-4C9A-9242-C1D1649ED884}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -85,6 +87,16 @@ Global
 		{90909AF6-627E-4720-B900-579A9AFB21A9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{90909AF6-627E-4720-B900-579A9AFB21A9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{90909AF6-627E-4720-B900-579A9AFB21A9}.Release|x86.ActiveCfg = Release|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{EEBC657A-08AE-4C9A-9242-C1D1649ED884}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

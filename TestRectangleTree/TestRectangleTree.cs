@@ -154,12 +154,11 @@
         {
             Rectangle searchedArea = new Rectangle(new crawlPoint3d(-24, -34, 0), new crawlPoint3d(401, 74, 0));
 
-            SqlDb sqlDB = new SqlDb(@"C:\Data\rectangle.sdf");
+            DbMongo sqlDB = new DbMongo("rectangles");
             List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
 
             foreach (string jsonLine in jsonOfLines)
             {
-                crawlAcDbLine line = jsonHelper.From<crawlAcDbLine>(jsonLine);
                 // Limiting all junk small lines
                 if (line.Length > 10)
                 {

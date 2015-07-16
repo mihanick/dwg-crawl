@@ -142,24 +142,14 @@
         [TestMethod]
         public void TestBigClusterTree()
         {
-            SqlDb sqlDB = new SqlDb(@"C:\Data\SingleFile.sdf");
-            List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
-
+            DbMongo sqlDB = new DbMongo();
             List<Rectangle> rects = new List<Rectangle>();
-
-            foreach (string jsonLine in jsonOfLines)
+            List<string> coords = sqlDB.GetRectanglesFromLines();
+            foreach (string coord in coords)
             {
-                try
-                {
-                    crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
-                    if (cLine.Length > 0)
-                    {
-                        Rectangle rec = new Rectangle(cLine.StartPoint, cLine.EndPoint);
-                        rects.Add(rec);
-                    }
-                }
-                catch { }
+                rects.Add(new Rectangle(coord));
             }
+
 
             Stopwatch timer = Stopwatch.StartNew();
             ClusterTree ct = new ClusterTree(rects.ToArray());

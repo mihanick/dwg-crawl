@@ -170,7 +170,31 @@
         {
             // Required by child classes
         }
-        
+
+        /// <summary>
+        /// Initializes a Rectangle from the string of coordinates
+        /// </summary>
+        /// <param name="stringCoords">string like 'x1;y1;z1;x2;y2;z2'</param>
+        public Rectangle(string stringCoords)
+        {
+            try
+            {
+                string[] xyz = stringCoords.Split(';');
+                if (xyz.Length != 6) throw new System.Exception("Wrong input");
+                double x1 = double.Parse(xyz[0]);
+                double y1 = double.Parse(xyz[1]);
+
+                double x2 = double.Parse(xyz[3]);
+                double y2 = double.Parse(xyz[4]);
+
+                this.pointA = new crawlPoint3d(pointAx, pointAy, 0);
+                this.pointC = new crawlPoint3d(pointCx, pointCy, 0);
+            }
+            catch
+            {
+                // Initialization failed
+            }
+        }
 
         public Rectangle(double pointAx, double pointAy, double pointCx, double pointCy)
         {

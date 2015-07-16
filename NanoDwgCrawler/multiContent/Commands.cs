@@ -83,7 +83,7 @@ namespace Crawl
         public static void Clusters()
         {
             // SqlDb sqlDB = new SqlDb(@"c:\Data\rectangle.sdf");
-            SqlDb sqlDB = new SqlDb(@"c:\Data\SingleFile.sdf");
+            DbMongo sqlDB = new DbMongo(@"c:\Data\SingleFile.sdf");
             List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
             List<Rectangle> rectangles = new List<Rectangle>();
 

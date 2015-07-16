@@ -6,6 +6,7 @@
     using MongoDB.Driver.Builders;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     public class DbMongo
     {
@@ -145,7 +146,7 @@
             }
             catch (System.Exception e)
             {
-                cDebug.WriteLine(e.Message);
+                Debug.WriteLine(e.Message);
             }
         }
 
@@ -201,12 +202,6 @@
                 result.Hash = file["Hash"].ToString();
                 result.Path = file["Path"].ToString();
                 result.Scanned = file["Scanned"].ToBoolean();
-
-                // Check db size is close to maximum
-                // FileInfo Fi = new FileInfo(dbPath);
-                // long maxsize = 2000*1024*1024;
-                // if (Fi.Length > maxsize)
-                // return null;
 
                 resultList.Add(result);
             }
@@ -264,6 +259,39 @@
             var objJsons = DatabaseMongo.GetCollection("objects").Find(filter);
 
             return objJsons.Count() > 0;
+        }
+
+        /// <summary>
+        /// Retrives list points in a string
+        /// </summary>
+        /// <returns>Two points coded as 'x1,y1,z1,x2,y2,z2'</returns>
+        public List<string> GetRectanglesFromLines()
+        {
+            List<string> jsonOfLines = GetObjectJsonByClassName("AcDbLine");
+
+            List<string> rects = new List<string>();
+
+            foreach (string jsonLine in jsonOfLines)
+            {
+                try
+                {
+                    BsonDocument doc = BsonDocument.Parse(jsonLine);
+
+                    if (doc["Length"].ToDouble() > 0)
+                    {
+                        string rec = 
+                            doc["StartPoint"]["X"].ToString()+","+
+                            doc["StartPoint"]["Y"].ToString()+","+
+                            doc["StartPoint"]["Z"].ToString()+","+
+                            doc["EndPoint"]["X"].ToString()+","+
+                            doc["EndPoint"]["Y"].ToString()+","+
+                            doc["EndPoint"]["Z"].ToString();
+                        rects.Add(rec);
+                    }
+                }
+                catch { }
+            }
+            return rects;
         }
     }
 }
