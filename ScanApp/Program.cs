@@ -13,20 +13,24 @@ namespace Crawl
     {
         static void Main(string[] args)
         {
-            Scan();
-        }
-
-        static void Scan()
-        {
-            //Открыть папку, выбрать все файлы двг из нее
             //string dir = @"C:\svn\Help\MCS10\OgpUtils\OgpUtils\multiContent\testSamples";
             string dir = @"U:\#АРХИВ 2014\Объекты";
             //string dir = @"D:\Documents\Desktop\rectangles";
+            //string dir = @"D:\Documents\Desktop\SingleFile";
             //string dir = @"D:\Documents\Dropbox\CrawlDwgs";
+
+            string dbName = "geometry";
+
+            Scan(dir,dbName);
+        }
+
+        static void Scan(string dir, string dbName)
+        {
+            //Открыть папку, выбрать все файлы двг из нее
             string dataDir = @"c:\Data\";
 
             string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
-            DbMongo db = new DbMongo();
+            DbMongo db = new DbMongo(dbName);
 
             foreach (string dwgFile in dwgFiles)
             {
@@ -35,23 +39,24 @@ namespace Crawl
                 db.InsertIntoFiles(cDoc);
             }
 
+            /*
             //Запуситить процессы по числу ядер процессоров каждый на своем ядре
             int numCores = 4;
             for (int i = 0; i < numCores; i++)
             {
                 //crawlinNano();
                 //http://cplus.about.com/od/learnc/a/multi-threading-using-task-parallel-library.htm
-                //Task.Factory.StartNew(() => crawlinNano());
-            }
-
+               Task.Factory.StartNew(() => crawlinNano());
             //Процесс выбирает из базы случайным образом непросканированный файл и сканирует его в Json
             //Это пока выполняется вручным запуском нанокадов
             //Если файл изменился, то записывается его новый hash
+            }
+            */
         }
 
         static void crawlinNano()
         {
-            //ExecuteCommandLine(@"C:\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\nCad.exe");
+            ExecuteCommandLine(@"C:\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\nCad.exe");
         }
 
         static Process ExecuteCommandLine(string exePath, string arguments = "")

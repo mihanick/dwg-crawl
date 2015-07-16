@@ -1,6 +1,8 @@
 ﻿namespace Crawl
 {
     using System;
+    using System.Diagnostics;
+    using System.Globalization;
     using System.Runtime.Serialization;
 
     [DataContract]
@@ -41,39 +43,11 @@
         }
     }
 
-
-
-
     /// <summary>
     /// Represents rectangle ABCD counter-clockwise
     /// </summary>
     public class Rectangle
     {
-        /*
-        public crawlAcDbLine line1;
-        public crawlAcDbLine line2;
-        public crawlAcDbLine line3;
-        public crawlAcDbLine line4;
-
-        public Rectangle Rectangle1;
-        public Rectangle Rectangle2;
-
-        public double IntersectionAreaPercent1
-        {
-            get
-            {
-                return this.Area / this.Rectangle1.Area;
-            }
-        }
-
-        public double IntersectionAreaPercent2
-        {
-            get
-            {
-                return this.Area / this.Rectangle2.Area;
-            }
-        }
-       */
 
         public crawlPoint3d pointA;
         public crawlPoint3d pointC;
@@ -180,15 +154,23 @@
             try
             {
                 string[] xyz = stringCoords.Split(';');
-                if (xyz.Length != 6) throw new System.Exception("Wrong input");
-                double x1 = double.Parse(xyz[0]);
-                double y1 = double.Parse(xyz[1]);
+                if (xyz.Length != 6)
+                    Debug.WriteLine("Wrong input in rectangle constructor from string coordinates");
 
-                double x2 = double.Parse(xyz[3]);
-                double y2 = double.Parse(xyz[4]);
+                double x1;
+                TryParse(xyz[0],out x1);
 
-                this.pointA = new crawlPoint3d(pointAx, pointAy, 0);
-                this.pointC = new crawlPoint3d(pointCx, pointCy, 0);
+                double y1;
+                TryParse(xyz[1], out y1);
+
+                double x2;
+                TryParse(xyz[3], out x2);
+
+                double y2;
+                TryParse(xyz[4], out y2);
+
+                this.pointA = new crawlPoint3d(x1, y1, 0);
+                this.pointC = new crawlPoint3d(x2, y2, 0);
             }
             catch
             {
@@ -304,6 +286,32 @@
         {
             return string.Format("({0}, {1}), ({2}, {3})", this.MinPoint.X.ToString(), this.MinPoint.Y.ToString(), this.MaxPoint.X.ToString(), this.MaxPoint.Y.ToString());
         }
+
+        /// <summary>
+        /// Функция парсит строку в double с учетом текущих настроек десятчиного разделителя
+        /// </summary>
+        /// <param name="stringValue">Исходная строка</param>
+        /// <param name="doubleValue">Возвращаемое значение, если не удалось преобразовать - будет 0.0</param>
+        /// <returns>true, если исходная строка может быть преобразована к double</returns>
+        private static bool TryParse(string stringValue, out double doubleValue)
+        {
+            string trimmed = stringValue.Trim();
+
+            double l2 = 0.0;
+            if (double.TryParse(trimmed, System.Globalization.NumberStyles.Float, CultureInfo.InvariantCulture, out l2)
+                 || double.TryParse(trimmed, NumberStyles.Float, CultureInfo.CurrentCulture, out l2)
+                    || double.TryParse(trimmed.Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out l2))
+            {
+                doubleValue = l2;
+                return true;
+            }
+            else
+            {
+                doubleValue = l2;
+                return false;
+            }
+        }
+
         #endregion
     }
     

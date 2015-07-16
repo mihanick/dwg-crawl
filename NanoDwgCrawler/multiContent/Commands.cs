@@ -65,7 +65,7 @@ namespace Crawl
 
         public static void Crawl(bool closeAfterComplete = true)
         {
-            DbMongo sqlDB = new DbMongo();
+            DbMongo sqlDB = new DbMongo("SingleFile");
             //While Get random dwg from database that not scanned
             CrawlDocument crawlDoc = sqlDB.GetNewRandomUnscannedDocument();
             while (crawlDoc != null)
@@ -83,6 +83,7 @@ namespace Crawl
         public static void Clusters()
         {
             // SqlDb sqlDB = new SqlDb(@"c:\Data\rectangle.sdf");
+            // TODО: Переделать
             DbMongo sqlDB = new DbMongo(@"c:\Data\SingleFile.sdf");
             List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
             List<Rectangle> rectangles = new List<Rectangle>();

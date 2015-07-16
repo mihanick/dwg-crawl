@@ -14,23 +14,48 @@
         private MongoClient ClientMongo;
         private MongoDatabase DatabaseMongo;
 
+        private MongoCollection<BsonDocument> files;
+        private MongoCollection<BsonDocument> objects;
+
         public DbMongo()
         {
-            DbName = "geometry";
-            ClientMongo = new MongoClient();
-            DatabaseMongo = ClientMongo.GetServer().GetDatabase(DbName);
+            this.DbName = "geometry";
+            this.Create();
         }
 
         public DbMongo(string dbName)
         {
             if (string.IsNullOrEmpty(dbName))
-                DbName = "geometry";
+                this.DbName = "geometry";
             else
-                DbName = dbName;
+                this.DbName = dbName;
 
+            Create();
+        }
+
+        private void Create()
+        {
             ClientMongo = new MongoClient();
-            DatabaseMongo = ClientMongo.GetServer().GetDatabase(DbName);
-       }
+            DatabaseMongo = ClientMongo.GetServer().GetDatabase(this.DbName);
+
+            if (!DatabaseMongo.CollectionExists("files"))
+                DatabaseMongo.CreateCollection("files");
+
+            files = DatabaseMongo.GetCollection<BsonDocument>("files");
+
+            files.CreateIndex("FileId");
+            files.CreateIndex("BlockId");
+            files.CreateIndex("ClassName");
+
+            if (!DatabaseMongo.CollectionExists("objects"))
+                DatabaseMongo.CreateCollection("objects");
+
+            objects = DatabaseMongo.GetCollection<BsonDocument>("objects");
+
+            objects.CreateIndex("ClassName");
+            objects.CreateIndex("ObjectId");
+            objects.CreateIndex("FileId");
+        }
 
         public void Clear()
         {
@@ -48,7 +73,7 @@
                 // Seed with object data
                 var collection = DatabaseMongo.GetCollection<BsonDocument>("objects");
 
-                string objJson  =
+                string objJson =
                 @"{
                 'ObjectId': '12345678',
                 'FileId':'7ad00d95-f663-4db9-b379-1ff0f30a616d',
@@ -96,8 +121,8 @@
         public void InsertIntoFiles(string docJson)
         {
             var files = DatabaseMongo.GetCollection<BsonDocument>("files");
-            
-            BsonDocument doc =BsonDocument.Parse(docJson);
+
+            BsonDocument doc = BsonDocument.Parse(docJson);
             bool docIsAFile = doc["ClassName"].ToString() == "File";
 
             if (docIsAFile)
@@ -124,7 +149,6 @@
 
         public void InsertIntoFiles(CrawlDocument crawlDocument)
         {
-            var files = DatabaseMongo.GetCollection<BsonDocument>("files");
             BsonDocument doc = crawlDocument.ToBsonDocument();
 
             var filter = new QueryDocument("Hash", crawlDocument.Hash);
@@ -152,7 +176,7 @@
 
         public CrawlDocument GetNewRandomUnscannedDocument()
         {
-            var files = DatabaseMongo.GetCollection<BsonDocument>("files");
+
             QueryDocument filter = new QueryDocument();
             filter.Add("Scanned", false);
             filter.Add("ClassName", "File");
@@ -167,6 +191,7 @@
             foreach (var file in allFiles)
             {
                 CrawlDocument result = new CrawlDocument();
+                result.ClassName = "File";
                 result.FileId = file["FileId"].ToString();
                 result.Hash = file["Hash"].ToString();
                 result.Path = file["Path"].ToString();
@@ -213,7 +238,7 @@
         {
             var files = DatabaseMongo.GetCollection<BsonDocument>("files");
             var filter = new QueryDocument("FileId", fileId);
-            var update = MongoDB.Driver.Builders.Update.Set("Scanned",true);
+            var update = MongoDB.Driver.Builders.Update.Set("Scanned", true);
             var result = files.Update(filter, update);
         }
 
@@ -264,27 +289,36 @@
         /// <summary>
         /// Retrives list points in a string
         /// </summary>
-        /// <returns>Two points coded as 'x1,y1,z1,x2,y2,z2'</returns>
+        /// <returns>Two points coded as 'x1;y1;z1;x2;y2;z2'</returns>
         public List<string> GetRectanglesFromLines()
         {
-            List<string> jsonOfLines = GetObjectJsonByClassName("AcDbLine");
+            QueryDocument filter = new QueryDocument("ClassName", "AcDbLine");
+            var objJsons = objects.Find(filter).SetLimit(100000);
 
             List<string> rects = new List<string>();
 
-            foreach (string jsonLine in jsonOfLines)
+            foreach (var doc in objJsons)
             {
                 try
                 {
-                    BsonDocument doc = BsonDocument.Parse(jsonLine);
+                    string fileId = doc["FileId"].ToString();
+                    var fileFileter = new QueryDocument("FileId", fileId);
+                    var fileDoc = files.FindOne(fileFileter);
+                    // Check the document exists
+                    if (fileDoc == null)
+                        continue;
+                    // Check the document is a file (not a block o proxy)
+                    if (fileDoc["ClassName"].ToString() != "File")
+                        continue;
 
                     if (doc["Length"].ToDouble() > 0)
                     {
-                        string rec = 
-                            doc["StartPoint"]["X"].ToString()+","+
-                            doc["StartPoint"]["Y"].ToString()+","+
-                            doc["StartPoint"]["Z"].ToString()+","+
-                            doc["EndPoint"]["X"].ToString()+","+
-                            doc["EndPoint"]["Y"].ToString()+","+
+                        string rec =
+                            doc["StartPoint"]["X"].ToString() + ";" +
+                            doc["StartPoint"]["Y"].ToString() + ";" +
+                            doc["StartPoint"]["Z"].ToString() + ";" +
+                            doc["EndPoint"]["X"].ToString() + ";" +
+                            doc["EndPoint"]["Y"].ToString() + ";" +
                             doc["EndPoint"]["Z"].ToString();
                         rects.Add(rec);
                     }

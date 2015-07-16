@@ -173,10 +173,9 @@
             for (int i = 0; i < numRecords; i++)
             {
                 CrawlDocument cd = new CrawlDocument();
-                cd.FileId = Guid.NewGuid().ToString();
                 cd.Hash = Guid.NewGuid().ToString();
                 cd.Path = i.ToString();
-                cd.Scanned = false;
+                cd.ClassName = "File";
                 db.InsertIntoFiles(cd);
             }
 

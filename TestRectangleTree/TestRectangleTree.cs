@@ -155,22 +155,18 @@
             Rectangle searchedArea = new Rectangle(new crawlPoint3d(-24, -34, 0), new crawlPoint3d(401, 74, 0));
 
             DbMongo sqlDB = new DbMongo("rectangles");
-            List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
+            List<string> coords = sqlDB.GetRectanglesFromLines();
 
-            foreach (string jsonLine in jsonOfLines)
+            foreach (string coord in coords)
             {
-                // Limiting all junk small lines
-                if (line.Length > 10)
-                {
-                    Rectangle rec = new Rectangle(line.StartPoint, line.EndPoint);
-                    rt.Add(rec);
-                }
+                Rectangle rec = new Rectangle(coord);
+                rt.Add(rec);
             }
 
             Stopwatch timer = Stopwatch.StartNew();
             List<Rectangle> result = rt.Inclusions(searchedArea);
             timer.Stop();
-            Assert.IsTrue(timer.ElapsedMilliseconds < Math.Log(jsonOfLines.Count));
+            Assert.IsTrue(timer.ElapsedMilliseconds < Math.Log(coords.Count));
 
             Assert.AreEqual(2, result.Count);
 
@@ -191,61 +187,48 @@
         {
             Rectangle searchedArea = new Rectangle(new crawlPoint3d(115184, 29374, 0), new crawlPoint3d(133962, 35634, 0));
 
-            SqlDb sqlDB = new SqlDb(@"C:\Data\SingleFile.sdf");
-            List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
+            DbMongo sqlDB = new DbMongo("SingleFile");
+            List<string> recsCoords = sqlDB.GetRectanglesFromLines();
 
             int numberOfLinesInsideSearchedArea = 0;
 
-            foreach (string jsonLine in jsonOfLines)
+            foreach (string coords in recsCoords)
             {
-                crawlAcDbLine line = jsonHelper.From<crawlAcDbLine>(jsonLine);
-                // Limiting all junk small lines
-                if (line.Length > 0)
-                {
-                    Rectangle rec = new Rectangle(line.StartPoint, line.EndPoint);
-                    rt.Add(rec);
+                Rectangle rec = new Rectangle(coords);
+                crawlPoint3d pntA = rec.pointA;
+                crawlPoint3d pntC = rec.pointC;
 
-                    if (searchedArea.Includes(line.StartPoint) && searchedArea.Includes(line.EndPoint))
-                        numberOfLinesInsideSearchedArea++;
-                }
+                rt.Add(rec);
+
+                // Counting lines fully included in searched area
+                if (searchedArea.Includes(pntA) && searchedArea.Includes(pntC))
+                    numberOfLinesInsideSearchedArea++;
             }
 
             Stopwatch timer = Stopwatch.StartNew();
             List<Rectangle> result = rt.Inclusions(searchedArea);
             timer.Stop();
-            Assert.IsTrue(timer.ElapsedMilliseconds < Math.Log(jsonOfLines.Count));
 
             Assert.AreEqual(numberOfLinesInsideSearchedArea, result.Count);
+            Assert.IsTrue(timer.ElapsedMilliseconds < Math.Log(recsCoords.Count));
         }
 
         [TestMethod]
         public void TestCreateBigTree()
         {
-            SqlDb sqlDB = new SqlDb(@"C:\Data\crawl2.sdf");
-            List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
-
-            List<crawlAcDbLine> lines = new List<crawlAcDbLine>();
-
-            foreach (string jsonLine in jsonOfLines)
-            {
-                try
-                {
-                    crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
-                    lines.Add(cLine);
-                }
-                catch { }
-            }
+            DbMongo sqlDB = new DbMongo("geometry");
+            List<string> RectanglesCoords = sqlDB.GetRectanglesFromLines();
 
             Stopwatch timer = Stopwatch.StartNew();
-            foreach (var line in lines)
+            foreach (string coords in RectanglesCoords)
             {
-                Rectangle rec = new Rectangle(line.StartPoint, line.EndPoint);
+                Rectangle rec = new Rectangle(coords);
                 rt.Add(rec);
             }
 
             timer.Stop();
-            Assert.IsTrue(timer.ElapsedMilliseconds < lines.Count);
-            Debug.WriteLine("Number of lines " + lines.Count);
+            Assert.IsTrue(timer.ElapsedMilliseconds < RectanglesCoords.Count);
+            Debug.WriteLine("Number of lines " + RectanglesCoords.Count);
         }
     }
 }

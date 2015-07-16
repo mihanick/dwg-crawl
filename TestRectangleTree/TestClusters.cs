@@ -142,14 +142,11 @@
         [TestMethod]
         public void TestBigClusterTree()
         {
-            DbMongo sqlDB = new DbMongo();
+            DbMongo sqlDB = new DbMongo("SingleFile");
             List<Rectangle> rects = new List<Rectangle>();
             List<string> coords = sqlDB.GetRectanglesFromLines();
             foreach (string coord in coords)
-            {
                 rects.Add(new Rectangle(coord));
-            }
-
 
             Stopwatch timer = Stopwatch.StartNew();
             ClusterTree ct = new ClusterTree(rects.ToArray());

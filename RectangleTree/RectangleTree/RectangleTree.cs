@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     public class RectangleTree
     {
@@ -182,7 +183,7 @@
         private void AddContents(Rectangle rec)
         {
             if (rec == null)
-                throw new NullReferenceException("Нельзя добавлять пустой прямоугольник");
+                Debug.WriteLine("Error: null rectangle was added to RectangleTree - skipped");
 
             // If it's the first rectangle to add
             if (this.Root == null)
