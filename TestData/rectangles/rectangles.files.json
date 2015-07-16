@@ -1,0 +1,58 @@
+{
+	"ClassName": "File",
+	"FileId": "e85744fe-0095-48d5-9261-98380542ec01",
+	"Hash": "580cc16251aa438c189d21033475ee01",
+	"Path": "D:\\Documents\\Desktop\\rectangles\\rectangles.dwg",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a731dcf80dc712e03075cd"
+	}
+}
+{
+	"BlockId": "30b4641b-4532-45bb-a2dd-19d00e6f3725",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "e85744fe-0095-48d5-9261-98380542ec01",
+	"FilePath": "D:\\Documents\\Desktop\\rectangles\\rectangles.dwg",
+	"Name": "_ARCHTICK",
+	"ObjectId": "550314024",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a73204f80dc71c08f5d094"
+	}
+}
+{
+	"BlockId": "34b7873e-6e02-4d84-815a-518777f15022",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "e85744fe-0095-48d5-9261-98380542ec01",
+	"FilePath": "D:\\Documents\\Desktop\\rectangles\\rectangles.dwg",
+	"Name": "_OPEN30",
+	"ObjectId": "550340064",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a73204f80dc71c08f5d096"
+	}
+}
+{
+	"BlockId": "a738bb18-ab61-49d4-ac73-e07fd6807f95",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "e85744fe-0095-48d5-9261-98380542ec01",
+	"FilePath": "D:\\Documents\\Desktop\\rectangles\\rectangles.dwg",
+	"Name": "_DOT",
+	"ObjectId": "550317744",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a73204f80dc71c08f5d09a"
+	}
+}
+{
+	"BlockId": "f6252045-103b-4343-a538-0b7e312809f3",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "e85744fe-0095-48d5-9261-98380542ec01",
+	"FilePath": "D:\\Documents\\Desktop\\rectangles\\rectangles.dwg",
+	"Name": "_OBLIQUE",
+	"ObjectId": "550354104",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a73204f80dc71c08f5d09d"
+	}
+}

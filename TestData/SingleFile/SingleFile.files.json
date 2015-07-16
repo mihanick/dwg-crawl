@@ -1,0 +1,190 @@
+{
+	"ClassName": "File",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"Hash": "822fe7b1690cb61f848f6be3e09939b0",
+	"Path": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a74a63f80dc70ed8a95d50"
+	}
+}
+{
+	"BlockId": "de58893b-669d-4217-bff5-a3fc78642203",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "_ArchTick",
+	"ObjectId": "123230984",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc72610078373"
+	}
+}
+{
+	"BlockId": "80a6a6b7-89f1-435a-9d02-afe7b246f731",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "_NONE",
+	"ObjectId": "126242688",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc72610078375"
+	}
+}
+{
+	"BlockId": "1e00fc04-c5a8-49fa-a79e-072e742b12fb",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "Шов",
+	"ObjectId": "123345392",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc72610078377"
+	}
+}
+{
+	"BlockId": "487acca2-94ee-4daf-b931-68f4409ad752",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "Монтажный Шов",
+	"ObjectId": "126229408",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc7261007837b"
+	}
+}
+{
+	"BlockId": "42a3252a-4214-4d3e-965e-1e2ef405d7e2",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "_Разрыв",
+	"ObjectId": "553536304",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc7261007837e"
+	}
+}
+{
+	"BlockId": "9c1e6bf4-58d3-47e7-a2ce-90ab45e68c41",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "СТО АСЧМ 20-93 Колонные двутавры",
+	"ObjectId": "126235328",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc72610078384"
+	}
+}
+{
+	"BlockId": "3a796374-bd5b-4ea9-a0f5-9093989babd5",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "ГОСТ 26020-83 Колонные двутавры",
+	"ObjectId": "552806640",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc72610078385"
+	}
+}
+{
+	"BlockId": "10d9b590-0bba-43ef-b0f8-63038b344732",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "ГОСТ 30245-2003 ПРОФИЛИ СТАЛЬНЫЕ ГНУТЫЕ ЗАМКНУТЫЕ СВАРНЫЕ КВАДРАТНЫЕ  И ПРЯМОУГОЛЬНЫЕ ДЛЯ СТРОИТЕЛЬНЫХ КОНСТРУКЦИЙ",
+	"ObjectId": "553718216",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504df80dc72610078386"
+	}
+}
+{
+	"BlockId": "6d499c8e-2c84-4018-bfb9-40a4f76f26fb",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "Малуш Андрей Александрович",
+	"ObjectId": "554451888",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504ef80dc726100784bd"
+	}
+}
+{
+	"BlockId": "69a70f02-3baa-4ba4-b22c-959d482ecaa1",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "Жданова Анна Олеговна",
+	"ObjectId": "554452328",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504ef80dc726100784c5"
+	}
+}
+{
+	"BlockId": "ca6706fb-d37e-44e0-923e-9faa4a5a7cf5",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "Кононов_Валерий_Германович",
+	"ObjectId": "554452848",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504ef80dc726100784cb"
+	}
+}
+{
+	"BlockId": "992ed627-d9e4-466a-9543-d0431a463f88",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "Ларичкин_Петр_Петрович",
+	"ObjectId": "554453408",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504ef80dc726100784d2"
+	}
+}
+{
+	"BlockId": "3b7d5dda-ae47-4948-ac5a-f68d14931924",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "Иванова Валентина Васильевна",
+	"ObjectId": "554453608",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504ef80dc726100784d4"
+	}
+}
+{
+	"BlockId": "22a3232b-1e00-4fb2-8ab9-722ab9ed0676",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "_Open30",
+	"ObjectId": "554458608",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504ef80dc726100784d6"
+	}
+}
+{
+	"BlockId": "7450835c-570f-46fa-9a76-89bb6d633b9b",
+	"ClassName": "AcDbBlockTableRecord",
+	"FileId": "3c1c68e6-00d8-4b0d-931b-cba70f10aedf",
+	"FilePath": "D:\\Documents\\Desktop\\SingleFile\\bec51d36-78fb-4ea0-8fbd-03387d149e35.dwg",
+	"Name": "_Dot",
+	"ObjectId": "554458848",
+	"Scanned": true,
+	"_id": {
+		"$oid": "55a7504ef80dc726100784da"
+	}
+}
