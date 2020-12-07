@@ -1,27 +1,15 @@
-﻿using System;
-using Teigha.Runtime;
+﻿using DwgDump.Db;
 using HostMgd.ApplicationServices;
-using System.IO;
-using System.Windows.Forms;
-using System.Data.SqlServerCe;
-using Teigha.DatabaseServices;
-using Teigha.Geometry;
-
-using System.Diagnostics;
-
 // Не работает вместе c Multicad.Runtime
 using HostMgd.EditorInput;
+using Teigha.DatabaseServices;
+using Teigha.Geometry;
+using Teigha.Runtime;
 using Platform = HostMgd;
 using PlatformDb = Teigha;
-
 //Использование определенных типов, которые определены и в платформе и в мультикаде
-using Hatch = Teigha.DatabaseServices.Hatch;
 using Point3d = Teigha.Geometry.Point3d;
-using Polyline3d = Teigha.DatabaseServices.Polyline3d;
-
 using TeighaApp = HostMgd.ApplicationServices.Application;
-using System.Collections.Generic;
-
 
 public class App : IExtensionApplication
 {//http://through-the-interface.typepad.com/through_the_interface/2013/01/displaying-a-dialog-on-autocad-startup-using-net.html
@@ -43,78 +31,35 @@ public class App : IExtensionApplication
     }
 }
 
-namespace Crawl
+namespace DwgDump
+
 {
-    public partial class Commands
+	public partial class Commands
     {
         Database acCurDb = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
         Document acCurDoc = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
         Editor ed = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
 
-        [CommandMethod("ogpTestDWGcrawl")]
-        public static void ogpTestDWGcrawl()
+        [CommandMethod("Dump2db")]
+        public static void Dump2db()
         {
-            //Показать диалог открытия папки
-            //            FolderBrowserDialog fd = new FolderBrowserDialog();
-            //            fd.RootFolder = Environment.SpecialFolder.Desktop;
-
-            // if (fd.ShowDialog() == DialogResult.OK)
-            Crawl(false);
-
+            WriteDocuments(false);
         }
 
-        public static void Crawl(bool closeAfterComplete = true)
+        public static void WriteDocuments(bool closeAfterComplete = true)
         {
-            DbMongo sqlDB = new DbMongo("SingleFile");
+            DbMongo db = new DbMongo("SingleFile");
             //While Get random dwg from database that not scanned
-            CrawlDocument crawlDoc = sqlDB.GetNewRandomUnscannedDocument();
+            CrawlDocument crawlDoc = db.GetNewRandomUnscannedDocument();
             while (crawlDoc != null)
             {
                 crawlAcDbDocument cDoc = new crawlAcDbDocument(crawlDoc);
-                cDoc.sqlDB = sqlDB;
+                cDoc.sqlDB = db;
                 cDoc.ScanDocument();
-                crawlDoc = sqlDB.GetNewRandomUnscannedDocument();
+                crawlDoc = db.GetNewRandomUnscannedDocument();
             }
             if (closeAfterComplete)
                 HostMgd.ApplicationServices.Application.Quit();
-        }
-
-        [CommandMethod("Clusters")]
-        public static void Clusters()
-        {
-            // SqlDb sqlDB = new SqlDb(@"c:\Data\rectangle.sdf");
-            // TODО: Переделать
-            DbMongo sqlDB = new DbMongo(@"c:\Data\SingleFile.sdf");
-            List<string> jsonOfLines = sqlDB.GetObjectJsonByClassName("AcDbLine");
-            List<Rectangle> rectangles = new List<Rectangle>();
-
-            int i = 0;
-            foreach (string jsonLine in jsonOfLines)
-            {
-                crawlAcDbLine cLine = jsonHelper.From<crawlAcDbLine>(jsonLine);
-                if (cLine.Length > 0)
-                {
-                    Rectangle rec = new Rectangle(cLine.StartPoint, cLine.EndPoint);
-                    rectangles.Add(rec);
-                    DrawLine(cLine.StartPoint.X, cLine.StartPoint.Y, cLine.EndPoint.X, cLine.EndPoint.Y);
-                }
-                i++;
-            }
-
-            ClusterTree ct = new ClusterTree(rectangles.ToArray());
-
-            foreach (ClusterTree.Cluster cluster in ct.Clusters)
-            {
-                if (cluster.Count > 2)
-                    DrawRectangle(cluster.BoundBox.MinPoint.X, cluster.BoundBox.MinPoint.Y, cluster.BoundBox.MaxPoint.X, cluster.BoundBox.MaxPoint.Y);
-            }
-
-        }
-
-        [CommandMethod("DrawRectangletest")]
-        public static void DrawRectangletest()
-        {
-            DrawRectangle(0, 0, 1000, 1000);
         }
 
         private static void DrawRectangle(double x1, double y1, double x2, double y2, string text = "")

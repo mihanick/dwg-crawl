@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
   </PropertyGroup>
@@ -11,9 +11,9 @@
     <ProjectGuid>{CF276394-892C-4117-B42C-370CF97CFA32}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Crawl</RootNamespace>
-    <AssemblyName>NanoDwgCrawler</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <RootNamespace>DwgDump</RootNamespace>
+    <AssemblyName>DwgDump</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -22,11 +22,12 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Program Files %28x86%29\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,15 +36,18 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="hostdbmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\hostdbmgd.dll</HintPath>
+      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.0\bin\hostdbmgd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="hostmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Nanosoft\nanoCAD СПДС Железобетон 2.4\bin\hostmgd.dll</HintPath>
+      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.0\bin\hostmgd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -59,10 +63,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="multiContent\cDebug.cs" />
+    <Compile Include="multiContent\CrawlDebug.cs" />
     <Compile Include="multiContent\cJson.cs" />
     <Compile Include="multiContent\Commands.cs" />
     <Compile Include="multiContent\crawlAcDbDocument.cs" />
+    <Compile Include="multiContent\CrawlPont3d.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -70,10 +75,7 @@
     <ProjectReference Include="..\DatabaseMongo\DatabaseMongo.csproj">
       <Project>{eebc657a-08ae-4c9a-9242-c1d1649ed884}</Project>
       <Name>DatabaseMongo</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RectangleTree\RectangleTree.csproj">
-      <Project>{90909af6-627e-4720-b900-579a9afb21a9}</Project>
-      <Name>RectangleTree</Name>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

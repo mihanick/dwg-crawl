@@ -1,7 +1,7 @@
 ﻿using HostMgd.ApplicationServices;
 
 
-namespace Crawl
+namespace DwgDump.Util
 {
     using System;
     using System.Diagnostics;
@@ -10,7 +10,7 @@ namespace Crawl
     /// <summary>
     /// Вывод сообщений в командную строку или DEBUG
     /// </summary>
-    public static class cDebug
+    public static class CrawlDebug
     {
         public enum DebugMessageWriteMedia
         {
@@ -29,7 +29,7 @@ namespace Crawl
         {
             if (Media == DebugMessageWriteMedia.Debug)
             {
-                Debug.WriteLine(Message);
+				System.Diagnostics.Debug.WriteLine(Message);
             }
             if (Media == DebugMessageWriteMedia.CommandLine)
             {
@@ -49,7 +49,7 @@ namespace Crawl
                 }
                 catch (System.Exception ex)
                 {
-                    cDebug.WriteLine(ex.Message);
+                    CrawlDebug.WriteLine(ex.Message);
                 }
             }
         }

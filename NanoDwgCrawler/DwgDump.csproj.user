@@ -5,6 +5,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartAction>Program</StartAction>
-    <StartProgram>C:\Program Files %28x86%29\Nanosoft\nanoCAD СПДС Железобетон 2.4\nCad.exe</StartProgram>
+    <StartProgram>C:\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\nCadS.exe</StartProgram>
+    <StartArguments>-b nSPDSComp -r SPDS -a nanoCAD_x64_SPDS_20.0</StartArguments>
+    <StartWorkingDirectory>C:\git\dwg-crawl\</StartWorkingDirectory>
   </PropertyGroup>
 </Project>

@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using System.IO;
 
-namespace Crawl
+namespace DwgDump
 {
     [DataContract]
     public class CrawlDocument
@@ -24,7 +24,7 @@ namespace Crawl
             this.Path = dwgPath;
             if (File.Exists(dwgPath))
             {
-                this.Hash = Crawl.UtilityHash.HashFile(dwgPath);
+                this.Hash = DwgDump.Util.UtilityHash.HashFile(dwgPath);
                 this.ClassName = "File";
             }
 

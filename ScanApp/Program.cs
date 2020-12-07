@@ -6,6 +6,8 @@ using System.IO;
 using Crawl;
 //using System.Threading.Tasks;
 using System.Diagnostics;
+using DwgDump.Db;
+using DwgDump;
 
 namespace Crawl
 {
