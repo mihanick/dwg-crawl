@@ -36,7 +36,7 @@
         private void Create()
         {
             ClientMongo = new MongoClient();
-            DatabaseMongo = ClientMongo.GetServer().GetDatabase(this.DbName);
+            DatabaseMongo = (MongoDatabase)ClientMongo.GetDatabase(this.DbName);
 
             if (!DatabaseMongo.CollectionExists("files"))
                 DatabaseMongo.CreateCollection("files");
@@ -59,9 +59,8 @@
 
         public void Clear()
         {
-            ClientMongo.GetServer().GetDatabase(DbName).DropCollection("objects");
-            ClientMongo.GetServer().GetDatabase(DbName).DropCollection("files");
-            //clientMongo.GetServer().GetDatabase(DbName).Drop();
+            ClientMongo.GetDatabase(DbName).DropCollection("objects");
+            ClientMongo.GetDatabase(DbName).DropCollection("files");
         }
 
         public void Seed()
