@@ -7,7 +7,7 @@ namespace DwgDump.Enitites
 	public class crawlPoint3d
 	{
 		[DataMember]
-		string ClassName = "Point3D";
+		public const string ClassName = "Point3D";
 
 		[DataMember]
 		public double X;

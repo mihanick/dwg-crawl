@@ -27,7 +27,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbLine : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbLine";
+		public const string ClassName = "AcDbLine";
 
 		[DataMember]
 		public crawlPoint3d EndPoint { get; set; }
@@ -60,7 +60,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbPolyline : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbPolyline";
+		public const string ClassName = "AcDbPolyline";
 
 		[DataMember]
 		public double Length;
@@ -157,7 +157,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbText : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbText";
+		public const string ClassName = "AcDbText";
 
 		[DataMember]
 		public crawlPoint3d Position { get; set; }
@@ -186,7 +186,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbMText : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbMText";
+		public const string ClassName = "AcDbMText";
 
 		[DataMember]
 		public crawlPoint3d Position { get; set; }
@@ -214,7 +214,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbAttributeDefinition : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbAttributeDefinition";
+		public const string ClassName = "AcDbAttributeDefinition";
 
 		[DataMember]
 		public crawlPoint3d Position { get; set; }
@@ -253,7 +253,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbArc : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbArc";
+		public const string ClassName = "AcDbArc";
 
 		[DataMember]
 		public crawlPoint3d Center { get; set; }
@@ -296,7 +296,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbCircle : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbCircle";
+		public const string ClassName = "AcDbCircle";
 
 		[DataMember]
 		public crawlPoint3d Center { get; set; }
@@ -337,7 +337,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbEllipse : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbEllipse";
+		public const string ClassName = "AcDbEllipse";
 
 		[DataMember]
 		public crawlPoint3d Center { get; set; }
@@ -372,7 +372,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbAlignedDimension : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbAlignedDimension";
+		public const string ClassName = "AcDbAlignedDimension";
 
 		[DataMember]
 		public crawlPoint3d XLine1Point { get; set; }
@@ -414,7 +414,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbRotatedDimension : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbRotatedDimension";
+		public const string ClassName = "AcDbRotatedDimension";
 
 		[DataMember]
 		public crawlPoint3d XLine1Point { get; set; }
@@ -456,7 +456,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbPoint3AngularDimension : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbPoint3AngularDimension";
+		public const string ClassName = "AcDbPoint3AngularDimension";
 
 		[DataMember]
 		public crawlPoint3d XLine1Point { get; set; }
@@ -498,7 +498,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbLineAngularDimension2 : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbLineAngularDimension2";
+		public const string ClassName = "AcDbLineAngularDimension2";
 
 		[DataMember]
 		public crawlPoint3d XLine1Start { get; set; }
@@ -546,7 +546,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbDiametricDimension : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbDiametricDimension";
+		public const string ClassName = "AcDbDiametricDimension";
 
 		[DataMember]
 		public crawlPoint3d FarChordPoint { get; set; }
@@ -585,7 +585,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbArcDimension : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbArcDimension";
+		public const string ClassName = "AcDbArcDimension";
 
 		[DataMember]
 		public crawlPoint3d XLine1Point { get; set; }
@@ -627,7 +627,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbRadialDimension : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbRadialDimension";
+		public const string ClassName = "AcDbRadialDimension";
 
 		[DataMember]
 		public crawlPoint3d Center { get; set; }
@@ -666,7 +666,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbHatch : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbHatch";
+		public const string ClassName = "AcDbHatch";
 
 		[DataMember]
 		double Area;
@@ -751,7 +751,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbSpline : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbSpline";
+		public const string ClassName = "AcDbSpline";
 
 		[DataMember]
 		double Area;
@@ -811,7 +811,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbPoint : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbPoint";
+		public const string ClassName = "AcDbPoint";
 
 		[DataMember]
 		public crawlPoint3d Position { get; set; }
@@ -836,7 +836,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbBlockReference : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbBlockReference";
+		public const string ClassName = "AcDbBlockReference";
 
 		[DataMember]
 		public crawlPoint3d Position { get; set; }
@@ -878,7 +878,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbAttributeReference : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbAttributeReference";
+		public const string ClassName = "AcDbAttributeReference";
 
 		[DataMember]
 		string Tag;
@@ -902,7 +902,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbProxyEntity : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbProxyEntity";
+		public const string ClassName = "AcDbProxyEntity";
 
 		[DataMember]
 		public string BlockId;
@@ -925,7 +925,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbBlockTableRecord
 	{
 		[DataMember]
-		string ClassName = "AcDbBlockTableRecord";
+		public const string ClassName = "AcDbBlockTableRecord";
 
 
 		[DataMember]
@@ -954,7 +954,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbSolid : crawlEntity
 	{
 		[DataMember]
-		string ClassName = "AcDbSolid";
+		public const string ClassName = "AcDbSolid";
 
 		[DataMember]
 		public string FileId;
@@ -997,7 +997,7 @@ namespace DwgDump.Enitites
 	public class crawlAcDbLayerTableRecord
 	{
 		[DataMember]
-		string ClassName = "AcDbLayerTableRecord";
+		public const string ClassName = "AcDbLayerTableRecord";
 
 		[DataMember]
 		string Name;
