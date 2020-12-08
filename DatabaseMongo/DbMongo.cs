@@ -9,27 +9,27 @@ namespace DwgDump.Db
 {
 	public class DbMongo
 	{
-		private string DbName;
+		private readonly string dbName;
 		private MongoClient client;
 		private IMongoDatabase db;
 
 		private IMongoCollection<BsonDocument> files;
 		private IMongoCollection<BsonDocument> objects;
 
-		private const string DefaultDatabaseName = "geometry";
+		public const string DefaultDatabaseName = "geometry";
 
 		public DbMongo()
 		{
-			this.DbName = "geometry";
+			this.dbName = "geometry";
 			this.Create();
 		}
 
 		public DbMongo(string dbName)
 		{
 			if (string.IsNullOrEmpty(dbName))
-				this.DbName = DefaultDatabaseName;
+				this.dbName = DefaultDatabaseName;
 			else
-				this.DbName = dbName;
+				this.dbName = dbName;
 
 			Create();
 		}
@@ -49,7 +49,7 @@ namespace DwgDump.Db
 		{
 			client = new MongoClient();
 
-			db = client.GetDatabase(this.DbName);
+			db = client.GetDatabase(this.dbName);
 
 			// files = DatabaseMongo.GetCollection<BsonDocument>("files");
 
@@ -74,8 +74,8 @@ namespace DwgDump.Db
 
 		public void Clear()
 		{
-			client.GetDatabase(DbName).DropCollection("objects");
-			client.GetDatabase(DbName).DropCollection("files");
+			client.GetDatabase(dbName).DropCollection("objects");
+			client.GetDatabase(dbName).DropCollection("files");
 		}
 
 		public void InsertIntoFiles(string docJson)

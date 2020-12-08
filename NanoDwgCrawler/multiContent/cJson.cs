@@ -4,7 +4,7 @@ using System;
 using System.Diagnostics;
 
 [DebuggerStepThrough]
-public class jsonHelper
+public class JsonHelper
 {
 	public static string To<T>(T obj)
 	{

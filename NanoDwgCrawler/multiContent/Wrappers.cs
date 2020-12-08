@@ -922,7 +922,7 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbBlockTableRecord
+	public class CrawlAcDbBlockTableRecord
 	{
 		[DataMember]
 		public const string ClassName = "AcDbBlockTableRecord";
@@ -940,9 +940,9 @@ namespace DwgDump.Enitites
 		[DataMember]
 		public string ObjectId;
 
-		public crawlAcDbBlockTableRecord() { }
+		public CrawlAcDbBlockTableRecord() { }
 
-		public crawlAcDbBlockTableRecord(BlockTableRecord btr, string filePath)
+		public CrawlAcDbBlockTableRecord(BlockTableRecord btr, string filePath)
 		{
 			this.Name = btr.Name;
 			this.FilePath = filePath;

@@ -66,7 +66,7 @@
     <Compile Include="multiContent\CrawlDebug.cs" />
     <Compile Include="multiContent\cJson.cs" />
     <Compile Include="multiContent\Commands.cs" />
-    <Compile Include="multiContent\crawlAcDbDocument.cs" />
+    <Compile Include="multiContent\CrawlAcDbDocument.cs" />
     <Compile Include="multiContent\CrawlPont3d.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

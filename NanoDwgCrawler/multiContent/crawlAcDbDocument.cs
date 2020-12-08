@@ -12,21 +12,21 @@ using TeighaApp = HostMgd.ApplicationServices.Application;
 
 namespace DwgDump
 {
-	class crawlAcDbDocument
+	class CrawlAcDbDocument
 	{
-		private string _dataDir = @"C:\git\dwg-crawl\Data";
+		private readonly string dataDir = @"C:\git\dwg-crawl\Data";
 
-		string FullPath;
-		string FileId;
+		private readonly string fullPath;
+		private readonly string fileId;
 
-		Document teighaDocument;
+		private readonly Document teighaDocument;
 		public DbMongo db;
 
-		public crawlAcDbDocument(CrawlDocument crawlDoc)
+		public CrawlAcDbDocument(CrawlDocument crawlDoc)
 		{
-			this.FullPath = crawlDoc.Path;
-			this.FileId = crawlDoc.FileId;
-			this.teighaDocument = TeighaApp.DocumentManager.Open(Path.Combine(_dataDir, crawlDoc.FileId + ".dwg"));
+			this.fullPath = crawlDoc.Path;
+			this.fileId = crawlDoc.FileId;
+			this.teighaDocument = TeighaApp.DocumentManager.Open(Path.Combine(dataDir, crawlDoc.FileId + ".dwg"));
 		}
 
 		public void DumpDocument()
@@ -47,7 +47,7 @@ namespace DwgDump
 					string objectClass = obj.ObjectId.ObjectClass.Name;
 
 					if (!string.IsNullOrEmpty(objectJson))
-						this.db.SaveObjectData(objectJson, this.FileId);
+						this.db.SaveObjectData(objectJson, this.fileId);
 				}
 
 				// also run all blocks
@@ -55,7 +55,7 @@ namespace DwgDump
 				foreach (ObjectId btrId in blocks)
 				{
 					BlockTableRecord btr = (BlockTableRecord)btrId.GetObject(OpenMode.ForRead);
-					DocumentFromBlockOrProxy(btrId, this.FileId);
+					DocumentFromBlockOrProxy(btrId, this.fileId);
 				}
 
 				// all layer definitions
@@ -68,16 +68,16 @@ namespace DwgDump
 					LayerTableRecord layerTblRec = (LayerTableRecord)ltr.GetObject(OpenMode.ForRead);
 
 					crawlAcDbLayerTableRecord cltr = new crawlAcDbLayerTableRecord(layerTblRec);
-					string objectJson = jsonHelper.To<crawlAcDbLayerTableRecord>(cltr);
+					string objectJson = JsonHelper.To<crawlAcDbLayerTableRecord>(cltr);
 
-					this.db.SaveObjectData(objectJson, this.FileId);
+					this.db.SaveObjectData(objectJson, this.fileId);
 				}
 
 				// Run all xefs
 				List<CrawlDocument> xrefs = GetXrefs(this.teighaDocument);
 				foreach (CrawlDocument theXref in xrefs)
 				{
-					crawlAcDbDocument cDoc = new crawlAcDbDocument(theXref);
+					CrawlAcDbDocument cDoc = new CrawlAcDbDocument(theXref);
 					db.InsertIntoFiles(theXref);
 
 					cDoc.db = db;
@@ -86,7 +86,7 @@ namespace DwgDump
 			}
 			this.teighaDocument.CloseAndDiscard();
 
-			db.SetDocumentScanned(this.FileId);
+			db.SetDocumentScanned(this.fileId);
 		}
 
 		private void DocumentFromBlockOrProxy(ObjectId objId, string parentFileId)
@@ -97,11 +97,13 @@ namespace DwgDump
 			if (objId.ObjectClass.Name == "AcDbBlockTableRecord")
 			{
 				BlockTableRecord btr = (BlockTableRecord)objId.GetObject(OpenMode.ForRead);
-				crawlAcDbBlockTableRecord cBtr = new crawlAcDbBlockTableRecord(btr, this.FullPath);
+				CrawlAcDbBlockTableRecord cBtr = new CrawlAcDbBlockTableRecord(btr, this.fullPath)
+				{
+					BlockId = Guid.NewGuid().ToString(),
+					FileId = parentFileId
+				};
 
-				cBtr.BlockId = Guid.NewGuid().ToString();
-				cBtr.FileId = parentFileId;
-				string blockJson = jsonHelper.To<crawlAcDbBlockTableRecord>(cBtr);
+				string blockJson = JsonHelper.To<CrawlAcDbBlockTableRecord>(cBtr);
 
 				this.db.InsertIntoFiles(blockJson);
 
@@ -110,7 +112,7 @@ namespace DwgDump
 					foreach (ObjectId obj in btr)
 					{
 						string objectJson = DumpEntity2json(obj);
-						string objectClass = obj.ObjectClass.Name;
+						// string objectClass = obj.ObjectClass.Name;
 
 						this.db.SaveObjectData(objectJson, cBtr.BlockId);
 					}
@@ -122,19 +124,20 @@ namespace DwgDump
 				DBObjectCollection dbo = new DBObjectCollection();
 				ent.Explode(dbo);
 
-				crawlAcDbProxyEntity cPxy = new crawlAcDbProxyEntity((ProxyEntity)ent);
+				crawlAcDbProxyEntity cPxy = new crawlAcDbProxyEntity((ProxyEntity)ent)
+				{
+					BlockId = Guid.NewGuid().ToString(),
+					FileId = parentFileId
+				};
 
-				cPxy.BlockId = Guid.NewGuid().ToString();
-				cPxy.FileId = parentFileId;
-
-				string pxyJson = jsonHelper.To<crawlAcDbProxyEntity>(cPxy);
+				string pxyJson = JsonHelper.To<crawlAcDbProxyEntity>(cPxy);
 
 				this.db.InsertIntoFiles(pxyJson);
 
 				foreach (ObjectId obj in dbo)
 				{
 					string objectJson = DumpEntity2json(obj);
-					string objectClass = obj.ObjectClass.Name;
+					// string objectClass = obj.ObjectClass.Name;
 
 					this.db.SaveObjectData(objectJson, cPxy.BlockId);
 				}
@@ -157,21 +160,21 @@ namespace DwgDump
 				{
 					// Если объект - отрезок (line)
 					crawlAcDbLine kline = new crawlAcDbLine((Line)ent); //Преобразуем к типу линия
-					result = jsonHelper.To<crawlAcDbLine>(kline);
+					result = JsonHelper.To<crawlAcDbLine>(kline);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbPolyline")
 				{
 					// Если объект - полилиния
 					Polyline kpLine = (Polyline)ent;
 					crawlAcDbPolyline jpline = new crawlAcDbPolyline(kpLine);
-					result = jsonHelper.To<crawlAcDbPolyline>(jpline);
+					result = JsonHelper.To<crawlAcDbPolyline>(jpline);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDb2dPolyline")
 				{
 					// 2D полилиния - такие тоже попадаются
 					Polyline2d kpLine = (Polyline2d)ent;
 					crawlAcDbPolyline jpline = new crawlAcDbPolyline(kpLine);
-					result = jsonHelper.To<crawlAcDbPolyline>(jpline);
+					result = JsonHelper.To<crawlAcDbPolyline>(jpline);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDb3dPolyline")
 				{
@@ -179,42 +182,42 @@ namespace DwgDump
 					Polyline3d kpLine = (Polyline3d)ent;
 
 					crawlAcDbPolyline jpline = new crawlAcDbPolyline(kpLine);
-					result = jsonHelper.To<crawlAcDbPolyline>(jpline);
+					result = JsonHelper.To<crawlAcDbPolyline>(jpline);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbText")
 				{
 					// Текст
 					DBText dbtxt = (DBText)ent;
 					crawlAcDbText jtext = new crawlAcDbText(dbtxt);
-					result = jsonHelper.To<crawlAcDbText>(jtext);
+					result = JsonHelper.To<crawlAcDbText>(jtext);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbMText")
 				{
 					// Мтекст
 					MText mtxt = (MText)ent;
 					crawlAcDbMText jtext = new crawlAcDbMText(mtxt);
-					result = jsonHelper.To<crawlAcDbMText>(jtext);
+					result = JsonHelper.To<crawlAcDbMText>(jtext);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbArc")
 				{
 					// Дуга
 					Arc arc = (Arc)ent;
 					crawlAcDbArc cArc = new crawlAcDbArc(arc);
-					result = jsonHelper.To<crawlAcDbArc>(cArc);
+					result = JsonHelper.To<crawlAcDbArc>(cArc);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbCircle")
 				{
 					// Окружность
 					Circle circle = (Circle)ent;
 					crawlAcDbCircle cCircle = new crawlAcDbCircle(circle);
-					result = jsonHelper.To<crawlAcDbCircle>(cCircle);
+					result = JsonHelper.To<crawlAcDbCircle>(cCircle);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbEllipse")
 				{
 					// Эллипс
 					Ellipse el = (Ellipse)ent;
 					crawlAcDbEllipse cEll = new crawlAcDbEllipse(el);
-					result = jsonHelper.To<crawlAcDbEllipse>(cEll);
+					result = JsonHelper.To<crawlAcDbEllipse>(cEll);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbAlignedDimension")
 				{
@@ -222,7 +225,7 @@ namespace DwgDump
 					AlignedDimension dim = (AlignedDimension)ent;
 
 					crawlAcDbAlignedDimension rDim = new crawlAcDbAlignedDimension(dim);
-					result = jsonHelper.To<crawlAcDbAlignedDimension>(rDim);
+					result = JsonHelper.To<crawlAcDbAlignedDimension>(rDim);
 				}
 
 				else if (id_platf.ObjectClass.Name == "AcDbRotatedDimension")
@@ -231,7 +234,7 @@ namespace DwgDump
 					RotatedDimension dim = (RotatedDimension)ent;
 
 					crawlAcDbRotatedDimension rDim = new crawlAcDbRotatedDimension(dim);
-					result = jsonHelper.To<crawlAcDbRotatedDimension>(rDim);
+					result = JsonHelper.To<crawlAcDbRotatedDimension>(rDim);
 				}
 
 				else if (id_platf.ObjectClass.Name == "AcDbPoint3AngularDimension")
@@ -240,7 +243,7 @@ namespace DwgDump
 					Point3AngularDimension dim = (Point3AngularDimension)ent;
 
 					crawlAcDbPoint3AngularDimension rDim = new crawlAcDbPoint3AngularDimension(dim);
-					result = jsonHelper.To<crawlAcDbPoint3AngularDimension>(rDim);
+					result = JsonHelper.To<crawlAcDbPoint3AngularDimension>(rDim);
 				}
 
 				else if (id_platf.ObjectClass.Name == "AcDbLineAngularDimension2")
@@ -248,21 +251,21 @@ namespace DwgDump
 					LineAngularDimension2 dim = (LineAngularDimension2)ent;
 
 					crawlAcDbLineAngularDimension2 rDim = new crawlAcDbLineAngularDimension2(dim);
-					result = jsonHelper.To<crawlAcDbLineAngularDimension2>(rDim);
+					result = JsonHelper.To<crawlAcDbLineAngularDimension2>(rDim);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbDiametricDimension")
 				{
 					// Размер диаметра окружности
 					DiametricDimension dim = (DiametricDimension)ent;
 					crawlAcDbDiametricDimension rDim = new crawlAcDbDiametricDimension(dim);
-					result = jsonHelper.To<crawlAcDbDiametricDimension>(rDim);
+					result = JsonHelper.To<crawlAcDbDiametricDimension>(rDim);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbArcDimension")
 				{
 					// Дуговой размер
 					ArcDimension dim = (ArcDimension)ent;
 					crawlAcDbArcDimension rDim = new crawlAcDbArcDimension(dim);
-					result = jsonHelper.To<crawlAcDbArcDimension>(rDim);
+					result = JsonHelper.To<crawlAcDbArcDimension>(rDim);
 
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbRadialDimension")
@@ -270,7 +273,7 @@ namespace DwgDump
 					// Радиальный размер
 					RadialDimension dim = (RadialDimension)ent;
 					crawlAcDbRadialDimension rDim = new crawlAcDbRadialDimension(dim);
-					result = jsonHelper.To<crawlAcDbRadialDimension>(rDim);
+					result = JsonHelper.To<crawlAcDbRadialDimension>(rDim);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbAttributeDefinition")
 				{
@@ -278,7 +281,7 @@ namespace DwgDump
 					AttributeDefinition ad = (AttributeDefinition)ent;
 
 					crawlAcDbAttributeDefinition atd = new crawlAcDbAttributeDefinition(ad);
-					result = jsonHelper.To<crawlAcDbAttributeDefinition>(atd);
+					result = JsonHelper.To<crawlAcDbAttributeDefinition>(atd);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbHatch")
 				{
@@ -286,7 +289,7 @@ namespace DwgDump
 					Teigha.DatabaseServices.Hatch htch = ent as Teigha.DatabaseServices.Hatch;
 
 					crawlAcDbHatch cHtch = new crawlAcDbHatch(htch);
-					result = jsonHelper.To<crawlAcDbHatch>(cHtch);
+					result = JsonHelper.To<crawlAcDbHatch>(cHtch);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbSpline")
 				{
@@ -294,14 +297,14 @@ namespace DwgDump
 					Spline spl = ent as Spline;
 
 					crawlAcDbSpline cScpline = new crawlAcDbSpline(spl);
-					result = jsonHelper.To<crawlAcDbSpline>(cScpline);
+					result = JsonHelper.To<crawlAcDbSpline>(cScpline);
 				}
 				else if (id_platf.ObjectClass.Name == "AcDbPoint")
 				{
 					// Точка
 					DBPoint Pnt = ent as DBPoint;
 					crawlAcDbPoint pt = new crawlAcDbPoint(Pnt);
-					result = jsonHelper.To<crawlAcDbPoint>(pt);
+					result = JsonHelper.To<crawlAcDbPoint>(pt);
 				}
 
 				else if (id_platf.ObjectClass.Name == "AcDbBlockReference")
@@ -310,7 +313,7 @@ namespace DwgDump
 					BlockReference blk = ent as BlockReference;
 					crawlAcDbBlockReference cBlk = new crawlAcDbBlockReference(blk);
 
-					result = jsonHelper.To<crawlAcDbBlockReference>(cBlk);
+					result = JsonHelper.To<crawlAcDbBlockReference>(cBlk);
 
 					//newDocument(id_platf, result);
 				}
@@ -321,7 +324,7 @@ namespace DwgDump
 
 					crawlAcDbProxyEntity cBlk = new crawlAcDbProxyEntity(pxy);
 
-					result = jsonHelper.To<crawlAcDbProxyEntity>(cBlk);
+					result = JsonHelper.To<crawlAcDbProxyEntity>(cBlk);
 
 					DocumentFromBlockOrProxy(id_platf, result);
 				}
@@ -333,7 +336,7 @@ namespace DwgDump
 
 					crawlAcDbSolid cSld = new crawlAcDbSolid(solid);
 
-					result = jsonHelper.To<crawlAcDbSolid>(cSld);
+					result = JsonHelper.To<crawlAcDbSolid>(cSld);
 
 				}
 				/*

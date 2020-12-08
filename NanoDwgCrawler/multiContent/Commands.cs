@@ -33,10 +33,6 @@ namespace DwgDump
 
 	public class Commands
 	{
-		Database acCurDb = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Database;
-		Document acCurDoc = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument;
-		Editor ed = Platform.ApplicationServices.Application.DocumentManager.MdiActiveDocument.Editor;
-
 		[CommandMethod("Dump2db")]
 		public static void Dump2db()
 		{
@@ -50,8 +46,10 @@ namespace DwgDump
 			CrawlDocument crawlDoc = db.GetNewRandomUnscannedDocument();
 			while (crawlDoc != null)
 			{
-				crawlAcDbDocument cDoc = new crawlAcDbDocument(crawlDoc);
-				cDoc.db = db;
+				CrawlAcDbDocument cDoc = new CrawlAcDbDocument(crawlDoc)
+				{
+					db = db
+				};
 				cDoc.DumpDocument();
 				crawlDoc = db.GetNewRandomUnscannedDocument();
 			}
