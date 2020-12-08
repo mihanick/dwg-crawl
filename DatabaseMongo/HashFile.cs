@@ -2,6 +2,7 @@
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+
 namespace DwgDump.Util
 {
     //http://stackoverflow.com/questions/2150455/how-do-i-create-an-md5-hash-digest-from-a-text-file
