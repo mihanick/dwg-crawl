@@ -24,6 +24,8 @@ namespace DwgDump
 			{
 				initCount++;
 			}
+			if (initCount == 1)
+				Commands.WriteDocuments(true);
 		}
 
 		public void Terminate()

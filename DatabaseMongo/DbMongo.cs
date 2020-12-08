@@ -112,9 +112,8 @@ namespace DwgDump.Db
 			BsonDocument doc = crawlDocument.ToBsonDocument();
 
 			var filter = new QueryDocument("Hash", crawlDocument.Hash);
-			var qryResult = files.Find(filter);
-			// if hash exist - we should skip insertion
-			if (qryResult == null)
+			
+			if (files.Find(filter).CountDocuments() == 0)
 				// Check hash already exists, if no - insert
 				files.InsertOne(doc);
 		}
@@ -123,8 +122,12 @@ namespace DwgDump.Db
 		{
 			try
 			{
+				if (string.IsNullOrEmpty(objJson))
+					return;
+
 				BsonDocument doc = BsonDocument.Parse(objJson);
-				doc.Add("FileId", fileId);
+				doc["FileId"] = fileId;
+				//doc.Add("FileId", fileId);
 				objects.InsertOne(doc);
 			}
 			catch (System.Exception e)
@@ -145,11 +148,13 @@ namespace DwgDump.Db
 			// http://stackoverflow.com/questions/3975290/produce-a-random-number-in-a-range-using-c-sharp
 			// Get random document
 			Random r = new Random((int)DateTime.Now.Ticks);
-			long num = files.Find(filter).CountDocuments();//Max range
+			long num = files.CountDocuments(filter);//Max range
 			int x = r.Next((int)num);
-			var aFile = files.Find(filter).Skip(x).Limit(1);
+			var aFile = files.Find<BsonDocument>(filter).Skip(x).Limit(1);
+			if (aFile.CountDocuments() == 0)
+				return null;
 
-			var file = aFile.ToBsonDocument();
+			var file = aFile.FirstOrDefault().ToBsonDocument();
 			CrawlDocument result = new CrawlDocument
 			{
 				ClassName = "File",

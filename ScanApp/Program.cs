@@ -4,6 +4,7 @@ using System;
 //using System.Threading.Tasks;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace DwgDump
 {
@@ -12,6 +13,9 @@ namespace DwgDump
 		static void Main(string[] args)
 		{
 			string dir = @"C:\git\dwg-crawl\TestData";
+			if (args.Length == 1)
+				if (Directory.Exists(args[0]))
+					dir = args[0];
 
 			string dbName = "geometry";
 
@@ -20,9 +24,10 @@ namespace DwgDump
 
 		static void Scan(string dir, string dbName)
 		{
-			//Открыть папку, выбрать все файлы двг из нее
+			// Папка куда сохраняются все dwg
 			string dataDir = @"C:\git\dwg-crawl\Data";
 
+			//Открыть папку, выбрать все файлы двг из нее
 			string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
 			DbMongo db = new DbMongo(dbName);
 
@@ -33,24 +38,23 @@ namespace DwgDump
 				db.InsertIntoFiles(cDoc);
 			}
 
-			/*
-            //Запуситить процессы по числу ядер процессоров каждый на своем ядре
-            int numCores = 4;
-            for (int i = 0; i < numCores; i++)
-            {
-                //crawlinNano();
-                //http://cplus.about.com/od/learnc/a/multi-threading-using-task-parallel-library.htm
-               Task.Factory.StartNew(() => crawlinNano());
-            //Процесс выбирает из базы случайным образом непросканированный файл и сканирует его в Json
-            //Это пока выполняется вручным запуском нанокадов
-            //Если файл изменился, то записывается его новый hash
-            }
-            */
+
+			//Запуситить процессы по числу ядер процессоров каждый на своем ядре
+			int numCores = 4;
+			for (int i = 0; i < numCores; i++)
+			{
+				//crawlinNano();
+				//http://cplus.about.com/od/learnc/a/multi-threading-using-task-parallel-library.htm
+				Task.Factory.StartNew(() => CrawlinNano());
+				//Процесс выбирает из базы случайным образом непросканированный файл и сканирует его в Json
+				//Это пока выполняется вручным запуском нанокадов
+				//Если файл изменился, то записывается его новый hash
+			}
 		}
 
-		static void crawlinNano()
+		static void CrawlinNano()
 		{
-			ExecuteCommandLine(@"C:\Program Files (x86)\Nanosoft\nanoCAD СПДС Железобетон 2.4\nCad.exe");
+			ExecuteCommandLine(@"C:\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\nCadS.exe", @" -b nSPDSComp -r SPDS -a nanoCAD_x64_SPDS_20.0");
 		}
 
 		static Process ExecuteCommandLine(string exePath, string arguments = "")
@@ -117,7 +121,7 @@ namespace DwgDump
 			try
 			{
 				FileAttributes fileAttributes = File.GetAttributes(targetFilePath);
-				fileAttributes = fileAttributes & ~FileAttributes.ReadOnly;
+				fileAttributes &= ~FileAttributes.ReadOnly;
 				File.SetAttributes(targetFilePath, fileAttributes);
 			}
 			catch (System.Exception e)
