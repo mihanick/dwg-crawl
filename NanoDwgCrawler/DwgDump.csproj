@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="multiContent\CrawlDebug.cs" />
     <Compile Include="multiContent\cJson.cs" />
     <Compile Include="multiContent\Commands.cs" />

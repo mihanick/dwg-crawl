@@ -8,7 +8,7 @@ using DwgDump.Util;
 namespace DwgDump.Enitites
 {
 	[DataContract]
-	public class crawlEntity
+	public class CrawlEntity
 	{
 		[DataMember]
 		public string ObjectId;
@@ -24,29 +24,29 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbLine : crawlEntity
+	public class CrawlAcDbLine : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbLine";
+		public string ClassName = "AcDbLine";
 
 		[DataMember]
-		public crawlPoint3d EndPoint { get; set; }
+		public CrawlPoint3d EndPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d StartPoint { get; set; }
+		public CrawlPoint3d StartPoint { get; set; }
 		[DataMember]
 		public double Length;
 
-		public crawlAcDbLine()
+		public CrawlAcDbLine()
 		{
 		}
 
-		public crawlAcDbLine(Line line)
+		public CrawlAcDbLine(Line line)
 		{
 			Entity ent = (Entity)line;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.EndPoint = new crawlPoint3d(line.EndPoint.X, line.EndPoint.Y, line.EndPoint.Z);
-			this.StartPoint = new crawlPoint3d(line.StartPoint.X, line.StartPoint.Y, line.StartPoint.Z);
+			this.EndPoint = new CrawlPoint3d(line.EndPoint.X, line.EndPoint.Y, line.EndPoint.Z);
+			this.StartPoint = new CrawlPoint3d(line.StartPoint.X, line.StartPoint.Y, line.StartPoint.Z);
 			this.Layer = line.Layer;
 			this.Linetype = line.Linetype;
 			this.LineWeight = line.LineWeight.ToString();
@@ -57,10 +57,10 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbPolyline : crawlEntity
+	public class CrawlAcDbPolyline : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbPolyline";
+		public string ClassName = "AcDbPolyline";
 
 		[DataMember]
 		public double Length;
@@ -68,11 +68,11 @@ namespace DwgDump.Enitites
 		public double Area;
 
 		[DataMember]
-		List<crawlPoint3d> Vertixes;
+		public List<CrawlPoint3d> Vertixes;
 
-		public crawlAcDbPolyline() { }
+		public CrawlAcDbPolyline() { }
 
-		public crawlAcDbPolyline(Polyline polyline)
+		public CrawlAcDbPolyline(Polyline polyline)
 		{
 			Entity ent = (Entity)polyline;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -85,7 +85,7 @@ namespace DwgDump.Enitites
 			this.LineWeight = polyline.LineWeight.ToString();
 			this.Color = polyline.Color.ToString();
 
-			Vertixes = new List<crawlPoint3d>();
+			Vertixes = new List<CrawlPoint3d>();
 
 			// Use a for loop to get each vertex, one by one
 			int vn = polyline.NumberOfVertices;
@@ -94,11 +94,11 @@ namespace DwgDump.Enitites
 				double x = polyline.GetPoint3dAt(i).X;
 				double y = polyline.GetPoint3dAt(i).Y;
 				double z = polyline.GetPoint3dAt(i).Z;
-				Vertixes.Add(new crawlPoint3d(x, y, z));
+				Vertixes.Add(new CrawlPoint3d(x, y, z));
 			}
 		}
 
-		public crawlAcDbPolyline(Polyline2d polyline)
+		public CrawlAcDbPolyline(Polyline2d polyline)
 		{
 			Entity ent = (Entity)polyline;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -109,7 +109,7 @@ namespace DwgDump.Enitites
 			this.LineWeight = polyline.LineWeight.ToString();
 			this.Color = polyline.Color.ToString();
 
-			Vertixes = new List<crawlPoint3d>();
+			Vertixes = new List<CrawlPoint3d>();
 
 			// Use foreach to get each contained vertex
 			foreach (ObjectId vId in polyline)
@@ -122,11 +122,11 @@ namespace DwgDump.Enitites
 				double x = v2d.Position.X;
 				double y = v2d.Position.Y;
 				double z = v2d.Position.Z;
-				Vertixes.Add(new crawlPoint3d(x, y, z));
+				Vertixes.Add(new CrawlPoint3d(x, y, z));
 			}
 		}
 
-		public crawlAcDbPolyline(Polyline3d polyline)
+		public CrawlAcDbPolyline(Polyline3d polyline)
 		{
 			Entity ent = (Entity)polyline;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -137,7 +137,7 @@ namespace DwgDump.Enitites
 			this.LineWeight = polyline.LineWeight.ToString();
 			this.Color = polyline.Color.ToString();
 
-			Vertixes = new List<crawlPoint3d>();
+			Vertixes = new List<CrawlPoint3d>();
 
 			// Use foreach to get each contained vertex
 			foreach (ObjectId vId in polyline)
@@ -148,30 +148,30 @@ namespace DwgDump.Enitites
 				double x = v3d.Position.X;
 				double y = v3d.Position.Y;
 				double z = v3d.Position.Z;
-				Vertixes.Add(new crawlPoint3d(x, y, z));
+				Vertixes.Add(new CrawlPoint3d(x, y, z));
 			}
 		}
 	}
 
 	[DataContract]
-	public class crawlAcDbText : crawlEntity
+	public class CrawlAcDbText : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbText";
+		public string ClassName = "AcDbText";
 
 		[DataMember]
-		public crawlPoint3d Position { get; set; }
+		public CrawlPoint3d Position { get; set; }
 		[DataMember]
 		public string TextString;
 
-		public crawlAcDbText() { }
+		public CrawlAcDbText() { }
 
-		public crawlAcDbText(DBText text)
+		public CrawlAcDbText(DBText text)
 		{
 			Entity ent = (Entity)text;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.Position = new crawlPoint3d(text.Position.X, text.Position.Y, text.Position.Z);
+			this.Position = new CrawlPoint3d(text.Position.X, text.Position.Y, text.Position.Z);
 
 			this.Layer = text.Layer;
 			this.Linetype = text.Linetype;
@@ -183,24 +183,24 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbMText : crawlEntity
+	public class CrawlAcDbMText : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbMText";
+		public string ClassName = "AcDbMText";
 
 		[DataMember]
-		public crawlPoint3d Position { get; set; }
+		public CrawlPoint3d Position { get; set; }
 		[DataMember]
 		public string TextString;
 
-		public crawlAcDbMText() { }
+		public CrawlAcDbMText() { }
 
-		public crawlAcDbMText(MText text)
+		public CrawlAcDbMText(MText text)
 		{
 			Entity ent = (Entity)text;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.Position = new crawlPoint3d(text.Location.X, text.Location.Y, text.Location.Z);
+			this.Position = new CrawlPoint3d(text.Location.X, text.Location.Y, text.Location.Z);
 			this.Layer = text.Layer;
 			this.Linetype = text.Linetype;
 			this.LineWeight = text.LineWeight.ToString();
@@ -211,13 +211,13 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbAttributeDefinition : crawlEntity
+	public class CrawlAcDbAttributeDefinition : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbAttributeDefinition";
+		public string ClassName = "AcDbAttributeDefinition";
 
 		[DataMember]
-		public crawlPoint3d Position { get; set; }
+		public CrawlPoint3d Position { get; set; }
 		[DataMember]
 		public string TextString;
 
@@ -227,16 +227,16 @@ namespace DwgDump.Enitites
 		public string Tag;
 
 		[DataMember]
-		public crawlAcDbMText MTextAttributeDefinition;
+		public CrawlAcDbMText MTextAttributeDefinition;
 
-		public crawlAcDbAttributeDefinition() { }
+		public CrawlAcDbAttributeDefinition() { }
 
-		public crawlAcDbAttributeDefinition(AttributeDefinition att)
+		public CrawlAcDbAttributeDefinition(AttributeDefinition att)
 		{
 			Entity ent = (Entity)att;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.Position = new crawlPoint3d(att.Position.X, att.Position.Y, att.Position.Z);
+			this.Position = new CrawlPoint3d(att.Position.X, att.Position.Y, att.Position.Z);
 			this.Layer = att.Layer;
 			this.Linetype = att.Linetype;
 			this.LineWeight = att.LineWeight.ToString();
@@ -245,22 +245,23 @@ namespace DwgDump.Enitites
 			this.Prompt = att.Prompt;
 			this.Tag = att.Tag;
 
-			this.MTextAttributeDefinition = new crawlAcDbMText(att.MTextAttributeDefinition);
+			if (att.MTextAttributeDefinition != null)
+				this.MTextAttributeDefinition = new CrawlAcDbMText(att.MTextAttributeDefinition);
 		}
 	}
 
 	[DataContract]
-	public class crawlAcDbArc : crawlEntity
+	public class CrawlAcDbArc : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbArc";
+		public string ClassName = "AcDbArc";
 
 		[DataMember]
-		public crawlPoint3d Center { get; set; }
+		public CrawlPoint3d Center { get; set; }
 		[DataMember]
-		public crawlPoint3d StartPoint { get; set; }
+		public CrawlPoint3d StartPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d EndPoint { get; set; }
+		public CrawlPoint3d EndPoint { get; set; }
 
 		[DataMember]
 		public double Length;
@@ -269,16 +270,16 @@ namespace DwgDump.Enitites
 		[DataMember]
 		public double Radius;
 
-		public crawlAcDbArc() { }
+		public CrawlAcDbArc() { }
 
-		public crawlAcDbArc(Arc arc)
+		public CrawlAcDbArc(Arc arc)
 		{
 			Entity ent = (Entity)arc;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.EndPoint = new crawlPoint3d(arc.EndPoint.X, arc.EndPoint.Y, arc.EndPoint.Z);
-			this.StartPoint = new crawlPoint3d(arc.StartPoint.X, arc.StartPoint.Y, arc.StartPoint.Z);
-			this.Center = new crawlPoint3d(arc.Center.X, arc.Center.Y, arc.Center.Z);
+			this.EndPoint = new CrawlPoint3d(arc.EndPoint.X, arc.EndPoint.Y, arc.EndPoint.Z);
+			this.StartPoint = new CrawlPoint3d(arc.StartPoint.X, arc.StartPoint.Y, arc.StartPoint.Z);
+			this.Center = new CrawlPoint3d(arc.Center.X, arc.Center.Y, arc.Center.Z);
 
 			this.Layer = arc.Layer;
 			this.Linetype = arc.Linetype;
@@ -293,17 +294,17 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbCircle : crawlEntity
+	public class CrawlAcDbCircle : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbCircle";
+		public string ClassName = "AcDbCircle";
 
 		[DataMember]
-		public crawlPoint3d Center { get; set; }
+		public CrawlPoint3d Center { get; set; }
 		[DataMember]
-		public crawlPoint3d StartPoint { get; set; }
+		public CrawlPoint3d StartPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d EndPoint { get; set; }
+		public CrawlPoint3d EndPoint { get; set; }
 
 		[DataMember]
 		public double Length;
@@ -312,16 +313,16 @@ namespace DwgDump.Enitites
 		[DataMember]
 		public double Radius;
 
-		public crawlAcDbCircle() { }
+		public CrawlAcDbCircle() { }
 
-		public crawlAcDbCircle(Circle circle)
+		public CrawlAcDbCircle(Circle circle)
 		{
 			Entity ent = (Entity)circle;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.EndPoint = new crawlPoint3d(circle.EndPoint.X, circle.EndPoint.Y, circle.EndPoint.Z);
-			this.StartPoint = new crawlPoint3d(circle.StartPoint.X, circle.StartPoint.Y, circle.StartPoint.Z);
-			this.Center = new crawlPoint3d(circle.Center.X, circle.Center.Y, circle.Center.Z);
+			this.EndPoint = new CrawlPoint3d(circle.EndPoint.X, circle.EndPoint.Y, circle.EndPoint.Z);
+			this.StartPoint = new CrawlPoint3d(circle.StartPoint.X, circle.StartPoint.Y, circle.StartPoint.Z);
+			this.Center = new CrawlPoint3d(circle.Center.X, circle.Center.Y, circle.Center.Z);
 
 			this.Layer = circle.Layer;
 			this.Linetype = circle.Linetype;
@@ -334,31 +335,31 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbEllipse : crawlEntity
+	public class CrawlAcDbEllipse : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbEllipse";
+		public string ClassName = "AcDbEllipse";
 
 		[DataMember]
-		public crawlPoint3d Center { get; set; }
+		public CrawlPoint3d Center { get; set; }
 		[DataMember]
-		public crawlPoint3d StartPoint { get; set; }
+		public CrawlPoint3d StartPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d EndPoint { get; set; }
+		public CrawlPoint3d EndPoint { get; set; }
 
 		[DataMember]
 		public double Length;
 
-		public crawlAcDbEllipse() { }
+		public CrawlAcDbEllipse() { }
 
-		public crawlAcDbEllipse(Ellipse ellipse)
+		public CrawlAcDbEllipse(Ellipse ellipse)
 		{
 			Entity ent = (Entity)ellipse;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.EndPoint = new crawlPoint3d(ellipse.EndPoint.X, ellipse.EndPoint.Y, ellipse.EndPoint.Z);
-			this.StartPoint = new crawlPoint3d(ellipse.StartPoint.X, ellipse.StartPoint.Y, ellipse.StartPoint.Z);
-			this.Center = new crawlPoint3d(ellipse.Center.X, ellipse.Center.Y, ellipse.Center.Z);
+			this.EndPoint = new CrawlPoint3d(ellipse.EndPoint.X, ellipse.EndPoint.Y, ellipse.EndPoint.Z);
+			this.StartPoint = new CrawlPoint3d(ellipse.StartPoint.X, ellipse.StartPoint.Y, ellipse.StartPoint.Z);
+			this.Center = new CrawlPoint3d(ellipse.Center.X, ellipse.Center.Y, ellipse.Center.Z);
 
 			this.Layer = ellipse.Layer;
 			this.Linetype = ellipse.Linetype;
@@ -369,36 +370,36 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbAlignedDimension : crawlEntity
+	public class CrawlAcDbAlignedDimension : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbAlignedDimension";
+		public string ClassName = "AcDbAlignedDimension";
 
 		[DataMember]
-		public crawlPoint3d XLine1Point { get; set; }
+		public CrawlPoint3d XLine1Point { get; set; }
 		[DataMember]
-		public crawlPoint3d XLine2Point { get; set; }
+		public CrawlPoint3d XLine2Point { get; set; }
 		[DataMember]
-		public crawlPoint3d DimLinePoint { get; set; }
+		public CrawlPoint3d DimLinePoint { get; set; }
 		[DataMember]
-		public crawlPoint3d TextPosition { get; set; }
+		public CrawlPoint3d TextPosition { get; set; }
 
 		[DataMember]
 		public string DimensionText;
 		[DataMember]
 		public string DimensionStyleName;
 
-		public crawlAcDbAlignedDimension() { }
+		public CrawlAcDbAlignedDimension() { }
 
-		public crawlAcDbAlignedDimension(AlignedDimension dim)
+		public CrawlAcDbAlignedDimension(AlignedDimension dim)
 		{
 			Entity ent = (Entity)dim;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
-			this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
-			this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint.X, dim.DimLinePoint.Y, dim.DimLinePoint.Z);
-			this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
+			this.XLine1Point = new CrawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
+			this.XLine2Point = new CrawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+			this.DimLinePoint = new CrawlPoint3d(dim.DimLinePoint.X, dim.DimLinePoint.Y, dim.DimLinePoint.Z);
+			this.TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
 			this.Layer = dim.Layer;
 			this.Linetype = dim.Linetype;
@@ -411,36 +412,36 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbRotatedDimension : crawlEntity
+	public class CrawlAcDbRotatedDimension : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbRotatedDimension";
+		public string ClassName = "AcDbRotatedDimension";
 
 		[DataMember]
-		public crawlPoint3d XLine1Point { get; set; }
+		public CrawlPoint3d XLine1Point { get; set; }
 		[DataMember]
-		public crawlPoint3d XLine2Point { get; set; }
+		public CrawlPoint3d XLine2Point { get; set; }
 		[DataMember]
-		public crawlPoint3d DimLinePoint { get; set; }
+		public CrawlPoint3d DimLinePoint { get; set; }
 		[DataMember]
-		public crawlPoint3d TextPosition { get; set; }
+		public CrawlPoint3d TextPosition { get; set; }
 
 		[DataMember]
 		public string DimensionText;
 		[DataMember]
 		public string DimensionStyleName;
 
-		public crawlAcDbRotatedDimension() { }
+		public CrawlAcDbRotatedDimension() { }
 
-		public crawlAcDbRotatedDimension(RotatedDimension dim)
+		public CrawlAcDbRotatedDimension(RotatedDimension dim)
 		{
 			Entity ent = (Entity)dim;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
-			this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
-			this.DimLinePoint = new crawlPoint3d(dim.DimLinePoint.X, dim.DimLinePoint.Y, dim.DimLinePoint.Z);
-			this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
+			this.XLine1Point = new CrawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
+			this.XLine2Point = new CrawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+			this.DimLinePoint = new CrawlPoint3d(dim.DimLinePoint.X, dim.DimLinePoint.Y, dim.DimLinePoint.Z);
+			this.TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
 			this.Layer = dim.Layer;
 			this.Linetype = dim.Linetype;
@@ -453,36 +454,36 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbPoint3AngularDimension : crawlEntity
+	public class CrawlAcDbPoint3AngularDimension : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbPoint3AngularDimension";
+		public string ClassName = "AcDbPoint3AngularDimension";
 
 		[DataMember]
-		public crawlPoint3d XLine1Point { get; set; }
+		public CrawlPoint3d XLine1Point { get; set; }
 		[DataMember]
-		public crawlPoint3d XLine2Point { get; set; }
+		public CrawlPoint3d XLine2Point { get; set; }
 		[DataMember]
-		public crawlPoint3d CenterPoint { get; set; }
+		public CrawlPoint3d CenterPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d TextPosition { get; set; }
+		public CrawlPoint3d TextPosition { get; set; }
 
 		[DataMember]
 		public string DimensionText;
 		[DataMember]
 		public string DimensionStyleName;
 
-		public crawlAcDbPoint3AngularDimension() { }
+		public CrawlAcDbPoint3AngularDimension() { }
 
-		public crawlAcDbPoint3AngularDimension(Point3AngularDimension dim)
+		public CrawlAcDbPoint3AngularDimension(Point3AngularDimension dim)
 		{
 			Entity ent = (Entity)dim;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
-			this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
-			this.CenterPoint = new crawlPoint3d(dim.CenterPoint.X, dim.CenterPoint.Y, dim.CenterPoint.Z);
-			this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
+			this.XLine1Point = new CrawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
+			this.XLine2Point = new CrawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+			this.CenterPoint = new CrawlPoint3d(dim.CenterPoint.X, dim.CenterPoint.Y, dim.CenterPoint.Z);
+			this.TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
 			this.Layer = dim.Layer;
 			this.Linetype = dim.Linetype;
@@ -495,42 +496,42 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbLineAngularDimension2 : crawlEntity
+	public class CrawlAcDbLineAngularDimension2 : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbLineAngularDimension2";
+		public string ClassName = "AcDbLineAngularDimension2";
 
 		[DataMember]
-		public crawlPoint3d XLine1Start { get; set; }
+		public CrawlPoint3d XLine1Start { get; set; }
 		[DataMember]
-		public crawlPoint3d XLine1End { get; set; }
+		public CrawlPoint3d XLine1End { get; set; }
 		[DataMember]
-		public crawlPoint3d XLine2Start { get; set; }
+		public CrawlPoint3d XLine2Start { get; set; }
 		[DataMember]
-		public crawlPoint3d XLine2End { get; set; }
+		public CrawlPoint3d XLine2End { get; set; }
 		[DataMember]
-		public crawlPoint3d ArcPoint { get; set; }
+		public CrawlPoint3d ArcPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d TextPosition { get; set; }
+		public CrawlPoint3d TextPosition { get; set; }
 
 		[DataMember]
 		public string DimensionText;
 		[DataMember]
 		public string DimensionStyleName;
 
-		public crawlAcDbLineAngularDimension2() { }
+		public CrawlAcDbLineAngularDimension2() { }
 
-		public crawlAcDbLineAngularDimension2(LineAngularDimension2 dim)
+		public CrawlAcDbLineAngularDimension2(LineAngularDimension2 dim)
 		{
 			Entity ent = (Entity)dim;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.XLine1Start = new crawlPoint3d(dim.XLine1Start.X, dim.XLine1Start.Y, dim.XLine1Start.Z);
-			this.XLine1End = new crawlPoint3d(dim.XLine1End.X, dim.XLine1End.Y, dim.XLine1End.Z);
-			this.XLine2Start = new crawlPoint3d(dim.XLine2Start.X, dim.XLine2Start.Y, dim.XLine2Start.Z);
-			this.XLine2End = new crawlPoint3d(dim.XLine2End.X, dim.XLine2End.Y, dim.XLine2End.Z);
-			this.ArcPoint = new crawlPoint3d(dim.ArcPoint.X, dim.ArcPoint.Y, dim.ArcPoint.Z);
-			this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
+			this.XLine1Start = new CrawlPoint3d(dim.XLine1Start.X, dim.XLine1Start.Y, dim.XLine1Start.Z);
+			this.XLine1End = new CrawlPoint3d(dim.XLine1End.X, dim.XLine1End.Y, dim.XLine1End.Z);
+			this.XLine2Start = new CrawlPoint3d(dim.XLine2Start.X, dim.XLine2Start.Y, dim.XLine2Start.Z);
+			this.XLine2End = new CrawlPoint3d(dim.XLine2End.X, dim.XLine2End.Y, dim.XLine2End.Z);
+			this.ArcPoint = new CrawlPoint3d(dim.ArcPoint.X, dim.ArcPoint.Y, dim.ArcPoint.Z);
+			this.TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
 			this.Layer = dim.Layer;
 			this.Linetype = dim.Linetype;
@@ -543,33 +544,33 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbDiametricDimension : crawlEntity
+	public class CrawlAcDbDiametricDimension : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbDiametricDimension";
+		public string ClassName = "AcDbDiametricDimension";
 
 		[DataMember]
-		public crawlPoint3d FarChordPoint { get; set; }
+		public CrawlPoint3d FarChordPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d ChordPoint { get; set; }
+		public CrawlPoint3d ChordPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d TextPosition { get; set; }
+		public CrawlPoint3d TextPosition { get; set; }
 
 		[DataMember]
 		public string DimensionText;
 		[DataMember]
 		public string DimensionStyleName;
 
-		public crawlAcDbDiametricDimension() { }
+		public CrawlAcDbDiametricDimension() { }
 
-		public crawlAcDbDiametricDimension(DiametricDimension dim)
+		public CrawlAcDbDiametricDimension(DiametricDimension dim)
 		{
 			Entity ent = (Entity)dim;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.FarChordPoint = new crawlPoint3d(dim.FarChordPoint.X, dim.FarChordPoint.Y, dim.FarChordPoint.Z);
-			this.ChordPoint = new crawlPoint3d(dim.ChordPoint.X, dim.ChordPoint.Y, dim.ChordPoint.Z);
-			this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
+			this.FarChordPoint = new CrawlPoint3d(dim.FarChordPoint.X, dim.FarChordPoint.Y, dim.FarChordPoint.Z);
+			this.ChordPoint = new CrawlPoint3d(dim.ChordPoint.X, dim.ChordPoint.Y, dim.ChordPoint.Z);
+			this.TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
 			this.Layer = dim.Layer;
 			this.Linetype = dim.Linetype;
@@ -582,36 +583,36 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbArcDimension : crawlEntity
+	public class CrawlAcDbArcDimension : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbArcDimension";
+		public string ClassName = "AcDbArcDimension";
 
 		[DataMember]
-		public crawlPoint3d XLine1Point { get; set; }
+		public CrawlPoint3d XLine1Point { get; set; }
 		[DataMember]
-		public crawlPoint3d XLine2Point { get; set; }
+		public CrawlPoint3d XLine2Point { get; set; }
 		[DataMember]
-		public crawlPoint3d ArcPoint { get; set; }
+		public CrawlPoint3d ArcPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d TextPosition { get; set; }
+		public CrawlPoint3d TextPosition { get; set; }
 
 		[DataMember]
 		public string DimensionText;
 		[DataMember]
 		public string DimensionStyleName;
 
-		public crawlAcDbArcDimension() { }
+		public CrawlAcDbArcDimension() { }
 
-		public crawlAcDbArcDimension(ArcDimension dim)
+		public CrawlAcDbArcDimension(ArcDimension dim)
 		{
 			Entity ent = (Entity)dim;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.XLine1Point = new crawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
-			this.XLine2Point = new crawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
-			this.ArcPoint = new crawlPoint3d(dim.ArcPoint.X, dim.ArcPoint.Y, dim.ArcPoint.Z);
-			this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
+			this.XLine1Point = new CrawlPoint3d(dim.XLine1Point.X, dim.XLine1Point.Y, dim.XLine1Point.Z);
+			this.XLine2Point = new CrawlPoint3d(dim.XLine2Point.X, dim.XLine2Point.Y, dim.XLine2Point.Z);
+			this.ArcPoint = new CrawlPoint3d(dim.ArcPoint.X, dim.ArcPoint.Y, dim.ArcPoint.Z);
+			this.TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
 			this.Layer = dim.Layer;
 			this.Linetype = dim.Linetype;
@@ -624,33 +625,33 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbRadialDimension : crawlEntity
+	public class CrawlAcDbRadialDimension : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbRadialDimension";
+		public string ClassName = "AcDbRadialDimension";
 
 		[DataMember]
-		public crawlPoint3d Center { get; set; }
+		public CrawlPoint3d Center { get; set; }
 		[DataMember]
-		public crawlPoint3d ChordPoint { get; set; }
+		public CrawlPoint3d ChordPoint { get; set; }
 		[DataMember]
-		public crawlPoint3d TextPosition { get; set; }
+		public CrawlPoint3d TextPosition { get; set; }
 
 		[DataMember]
 		public string DimensionText;
 		[DataMember]
 		public string DimensionStyleName;
 
-		public crawlAcDbRadialDimension() { }
+		public CrawlAcDbRadialDimension() { }
 
-		public crawlAcDbRadialDimension(RadialDimension dim)
+		public CrawlAcDbRadialDimension(RadialDimension dim)
 		{
 			Entity ent = (Entity)dim;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.Center = new crawlPoint3d(dim.Center.X, dim.Center.Y, dim.Center.Z);
-			this.ChordPoint = new crawlPoint3d(dim.ChordPoint.X, dim.ChordPoint.Y, dim.ChordPoint.Z);
-			this.TextPosition = new crawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
+			this.Center = new CrawlPoint3d(dim.Center.X, dim.Center.Y, dim.Center.Z);
+			this.ChordPoint = new CrawlPoint3d(dim.ChordPoint.X, dim.ChordPoint.Y, dim.ChordPoint.Z);
+			this.TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z);
 
 			this.Layer = dim.Layer;
 			this.Linetype = dim.Linetype;
@@ -663,22 +664,22 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbHatch : crawlEntity
+	public class CrawlAcDbHatch : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbHatch";
+		public string ClassName = "AcDbHatch";
 
 		[DataMember]
-		double Area;
+		public double Area;
 		[DataMember]
-		string PatternName;
+		public string PatternName;
 
 		[DataMember]
-		List<crawlAcDbPolyline> Loops;
+		public List<CrawlAcDbPolyline> Loops;
 
-		public crawlAcDbHatch() { }
+		public CrawlAcDbHatch() { }
 
-		public crawlAcDbHatch(Hatch hatch)
+		public CrawlAcDbHatch(Hatch hatch)
 		{
 			Entity ent = (Entity)hatch;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -699,9 +700,9 @@ namespace DwgDump.Enitites
 		/// </summary>
 		/// <param name="hatchId">ObjectId штриховки Hatch</param>
 		/// <returns>Список crawlAcDbPolyline - перечень контуров штриховки</returns>
-		private List<crawlAcDbPolyline> HatchToPolylines(ObjectId hatchId)
+		private List<CrawlAcDbPolyline> HatchToPolylines(ObjectId hatchId)
 		{
-			List<crawlAcDbPolyline> result = new List<crawlAcDbPolyline>();
+			List<CrawlAcDbPolyline> result = new List<CrawlAcDbPolyline>();
 
 			//Исходный код для AutoCAD .Net
 			//http://forums.autodesk.com/t5/NET/Restore-hatch-boundaries-if-they-have-been-lost-with-NET/m-p/3779514#M33429
@@ -727,7 +728,7 @@ namespace DwgDump.Enitites
 								{
 									poly.AddVertexAt(iVertex++, bv.Vertex, bv.Bulge, 0.0, 0.0);
 								}
-								result.Add(new crawlAcDbPolyline(poly));
+								result.Add(new CrawlAcDbPolyline(poly));
 							}
 						}
 						else
@@ -748,20 +749,20 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbSpline : crawlEntity
+	public class CrawlAcDbSpline : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbSpline";
+		public string ClassName = "AcDbSpline";
 
 		[DataMember]
-		double Area;
+		public double Area;
 
 		[DataMember]
-		List<crawlPoint3d> Vertixes;
+		public List<CrawlPoint3d> Vertixes;
 
-		public crawlAcDbSpline() { }
+		public CrawlAcDbSpline() { }
 
-		public crawlAcDbSpline(Spline spline)
+		public CrawlAcDbSpline(Spline spline)
 		{
 			Entity ent = (Entity)spline;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -773,12 +774,12 @@ namespace DwgDump.Enitites
 			this.LineWeight = spline.LineWeight.ToString();
 			this.Color = spline.Color.ToString();
 
-			Vertixes = getSplinePoints(spline);
+			Vertixes = GetSplinePoints(spline);
 		}
 
-		private List<crawlPoint3d> getSplinePoints(Spline spline)
+		private List<CrawlPoint3d> GetSplinePoints(Spline spline)
 		{
-			List<crawlPoint3d> result = new List<crawlPoint3d>();
+			List<CrawlPoint3d> result = new List<CrawlPoint3d>();
 
 			//Исходный пример из AutoCAD:
 			//http://through-the-interface.typepad.com/through_the_interface/2007/04/iterating_throu.html
@@ -796,7 +797,7 @@ namespace DwgDump.Enitites
 					// Could also get the 3D point here
 					Point3d pt = spline.GetControlPointAt(i);
 
-					result.Add(new crawlPoint3d(pt.X, pt.Y, pt.Z));
+					result.Add(new CrawlPoint3d(pt.X, pt.Y, pt.Z));
 				}
 			}
 			catch
@@ -808,22 +809,22 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbPoint : crawlEntity
+	public class CrawlAcDbPoint : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbPoint";
+		public string ClassName = "AcDbPoint";
 
 		[DataMember]
-		public crawlPoint3d Position { get; set; }
+		public CrawlPoint3d Position { get; set; }
 
-		public crawlAcDbPoint() { }
+		public CrawlAcDbPoint() { }
 
-		public crawlAcDbPoint(DBPoint pnt)
+		public CrawlAcDbPoint(DBPoint pnt)
 		{
 			Entity ent = (Entity)pnt;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.Position = new crawlPoint3d(pnt.Position.X, pnt.Position.Y, pnt.Position.Z);
+			this.Position = new CrawlPoint3d(pnt.Position.X, pnt.Position.Y, pnt.Position.Z);
 
 			this.Layer = pnt.Layer;
 			this.Linetype = pnt.Linetype;
@@ -833,28 +834,28 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbBlockReference : crawlEntity
+	public class CrawlAcDbBlockReference : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbBlockReference";
+		public string ClassName = "AcDbBlockReference";
 
 		[DataMember]
-		public crawlPoint3d Position { get; set; }
+		public CrawlPoint3d Position { get; set; }
 
 		[DataMember]
-		string Name;
+		public string Name;
 
 		[DataMember]
-		List<crawlAcDbAttributeReference> Attributes;
+		public List<CrawlAcDbAttributeReference> Attributes;
 
-		public crawlAcDbBlockReference() { }
+		public CrawlAcDbBlockReference() { }
 
-		public crawlAcDbBlockReference(BlockReference blk)
+		public CrawlAcDbBlockReference(BlockReference blk)
 		{
 			Entity ent = (Entity)blk;
 			this.ObjectId = ent.ObjectId.ToString();
 
-			this.Position = new crawlPoint3d(blk.Position.X, blk.Position.Y, blk.Position.Z);
+			this.Position = new CrawlPoint3d(blk.Position.X, blk.Position.Y, blk.Position.Z);
 
 			this.Layer = blk.Layer;
 			this.Linetype = blk.Linetype;
@@ -863,31 +864,31 @@ namespace DwgDump.Enitites
 
 			this.Name = blk.Name;
 
-			Attributes = new List<crawlAcDbAttributeReference>();
+			Attributes = new List<CrawlAcDbAttributeReference>();
 
 			//http://through-the-interface.typepad.com/through_the_interface/2007/07/updating-a-spec.html
 			foreach (ObjectId attId in blk.AttributeCollection)
 			{
 				AttributeReference attRef = (AttributeReference)attId.GetObject(OpenMode.ForRead);
-				this.Attributes.Add(new crawlAcDbAttributeReference(attRef));
+				this.Attributes.Add(new CrawlAcDbAttributeReference(attRef));
 			}
 		}
 	}
 
 	[DataContract]
-	public class crawlAcDbAttributeReference : crawlEntity
+	public class CrawlAcDbAttributeReference : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbAttributeReference";
+		public string ClassName = "AcDbAttributeReference";
 
 		[DataMember]
-		string Tag;
+		public string Tag;
 		[DataMember]
-		string TextString;
+		public string TextString;
 
-		public crawlAcDbAttributeReference() { }
+		public CrawlAcDbAttributeReference() { }
 
-		public crawlAcDbAttributeReference(AttributeReference attRef)
+		public CrawlAcDbAttributeReference(AttributeReference attRef)
 		{
 			Entity ent = (Entity)attRef;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -899,17 +900,17 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbProxyEntity : crawlEntity
+	public class CrawlAcDbProxyEntity : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbProxyEntity";
+		public string ClassName = "AcDbProxyEntity";
 
 		[DataMember]
 		public string BlockId;
 		[DataMember]
 		public string FileId;
 
-		public crawlAcDbProxyEntity(ProxyEntity prxy)
+		public CrawlAcDbProxyEntity(ProxyEntity prxy)
 		{
 			Entity ent = (Entity)prxy;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -925,13 +926,13 @@ namespace DwgDump.Enitites
 	public class CrawlAcDbBlockTableRecord
 	{
 		[DataMember]
-		public const string ClassName = "AcDbBlockTableRecord";
+		public string ClassName = "AcDbBlockTableRecord";
 
 
 		[DataMember]
-		string Name;
+		public string Name;
 		[DataMember]
-		string FilePath;
+		public string FilePath;
 
 		[DataMember]
 		public string FileId;
@@ -951,22 +952,23 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbSolid : crawlEntity
+	public class CrawlAcDbSolid : CrawlEntity
 	{
 		[DataMember]
-		public const string ClassName = "AcDbSolid";
+		public string ClassName = "AcDbSolid";
 
 		[DataMember]
 		public string FileId;
+
 		[DataMember]
 		public string ParentFileId;
 
 		[DataMember]
-		List<crawlPoint3d> Vertices;
+		public List<CrawlPoint3d> Vertices;
 
-		public crawlAcDbSolid() { }
+		public CrawlAcDbSolid() { }
 
-		public crawlAcDbSolid(Solid solid)
+		public CrawlAcDbSolid(Solid solid)
 		{
 			Entity ent = (Entity)solid;
 			this.ObjectId = ent.ObjectId.ToString();
@@ -976,14 +978,14 @@ namespace DwgDump.Enitites
 			this.LineWeight = solid.LineWeight.ToString();
 			this.Color = solid.Color.ToString();
 
-			Vertices = new List<crawlPoint3d>();
+			Vertices = new List<CrawlPoint3d>();
 			short i = 0;
 			Point3d pt = solid.GetPointAt(i);
 			try
 			{
 				while (pt != null)
 				{
-					Vertices.Add(new crawlPoint3d(pt.X, pt.Y, pt.Z));
+					Vertices.Add(new CrawlPoint3d(pt.X, pt.Y, pt.Z));
 					i++;
 					pt = solid.GetPointAt(i);
 				}
@@ -994,23 +996,23 @@ namespace DwgDump.Enitites
 	}
 
 	[DataContract]
-	public class crawlAcDbLayerTableRecord
+	public class CrawlAcDbLayerTableRecord
 	{
 		[DataMember]
-		public const string ClassName = "AcDbLayerTableRecord";
+		public string ClassName = "AcDbLayerTableRecord";
 
 		[DataMember]
-		string Name;
+		public string Name;
 		[DataMember]
 		public string Linetype;
 		[DataMember]
-		bool IsFrozen;
+		public bool IsFrozen;
 		[DataMember]
-		bool IsHidden;
+		public bool IsHidden;
 		[DataMember]
-		bool IsOff;
+		public bool IsOff;
 		[DataMember]
-		bool IsPlottable;
+		public bool IsPlottable;
 		[DataMember]
 		public string LineWeight;
 		[DataMember]
@@ -1018,9 +1020,9 @@ namespace DwgDump.Enitites
 		[DataMember]
 		public string ObjectId;
 
-		public crawlAcDbLayerTableRecord() { }
+		public CrawlAcDbLayerTableRecord() { }
 
-		public crawlAcDbLayerTableRecord(LayerTableRecord layerRecord)
+		public CrawlAcDbLayerTableRecord(LayerTableRecord layerRecord)
 		{
 			Name = layerRecord.Name;
 
