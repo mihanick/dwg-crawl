@@ -29,25 +29,31 @@ namespace DwgDump
 
 			//Открыть папку, выбрать все файлы двг из нее
 			string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
-			DbMongo db = new DbMongo(dbName);
+			Console.WriteLine("Db admin paswword please:");
+			var password = Console.ReadLine();
+			DbMongo db = new DbMongo(dbName, password);
 
+			int numFiles2Process = 10;
+			int n = 0;
 			foreach (string dwgFile in dwgFiles)
 			{
 				CrawlDocument cDoc = new CrawlDocument(dwgFile);
 				FileCopy(dwgFile, Path.Combine(dataDir, cDoc.FileId + ".dwg"));
 				db.InsertIntoFiles(cDoc);
+				n++;
+				if (n > numFiles2Process)
+					break;
 			}
 
-
 			//Запуситить процессы по числу ядер процессоров каждый на своем ядре
-			int numCores = 4;
-			for (int i = 0; i < numCores; i++)
+			int numProcesses = 2;
+			for (int i = 0; i < numProcesses; i++)
 			{
 				//crawlinNano();
 				//http://cplus.about.com/od/learnc/a/multi-threading-using-task-parallel-library.htm
 				Task.Factory.StartNew(() => CrawlinNano());
 				//Процесс выбирает из базы случайным образом непросканированный файл и сканирует его в Json
-				//Это пока выполняется вручным запуском нанокадов
+				//Это пока выполняется ручным запуском нанокадов
 				//Если файл изменился, то записывается его новый hash
 			}
 		}
@@ -71,6 +77,7 @@ namespace DwgDump
 			p.StartInfo.Arguments = arguments;
 
 			p.Start();
+			p.WaitForExit();
 			return p;
 		}
 

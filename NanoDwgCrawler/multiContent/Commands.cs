@@ -52,6 +52,7 @@ namespace DwgDump
 				{
 					db = db
 				};
+
 				cDoc.DumpDocument();
 				crawlDoc = db.GetNewRandomUnscannedDocument();
 			}

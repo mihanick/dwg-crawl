@@ -4,9 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Authentication;
 
 namespace DwgDump.Db
 {
+	// first we need to setup remote access to database
+	// https://medium.com/founding-ithaka/setting-up-and-connecting-to-a-remote-mongodb-database-5df754a4da89
 	public class DbMongo
 	{
 		private readonly string dbName;
@@ -24,14 +27,14 @@ namespace DwgDump.Db
 			this.Create();
 		}
 
-		public DbMongo(string dbName)
+		public DbMongo(string dbName, string password)
 		{
 			if (string.IsNullOrEmpty(dbName))
 				this.dbName = DefaultDatabaseName;
 			else
 				this.dbName = dbName;
 
-			Create();
+			Create(password);
 		}
 
 		// StackOverflow
@@ -45,9 +48,26 @@ namespace DwgDump.Db
 			return database.ListCollectionNames(options).Any();
 		}
 
-		private void Create()
+		private void Create(string password)
 		{
-			client = new MongoClient();
+			// https://stackoverflow.com/questions/44513786/error-on-mongodb-authentication
+			MongoClientSettings settings = new MongoClientSettings();
+			settings.Server = new MongoServerAddress("localhost",27017);
+
+			settings.UseTls = false;
+			settings.SslSettings = new SslSettings();
+			settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
+
+			MongoIdentity identity = new MongoInternalIdentity("admin", "admin");
+			MongoIdentityEvidence evidence = new PasswordEvidence(password);
+
+			settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
+
+			
+			if (string.IsNullOrEmpty(password))
+				client = new MongoClient();
+			else
+				client = new MongoClient(settings);
 
 			db = client.GetDatabase(this.dbName);
 
@@ -112,7 +132,7 @@ namespace DwgDump.Db
 			BsonDocument doc = crawlDocument.ToBsonDocument();
 
 			var filter = new QueryDocument("Hash", crawlDocument.Hash);
-			
+
 			if (files.Find(filter).CountDocuments() == 0)
 				// Check hash already exists, if no - insert
 				files.InsertOne(doc);
@@ -207,14 +227,14 @@ namespace DwgDump.Db
 		public bool HasFileId(string FileId)
 		{
 			QueryDocument filter = new QueryDocument("FileId", FileId);
-			
+
 			return files.Find(filter).CountDocuments() > 0;
 		}
 
 		public bool HasFileHash(string FileHash)
 		{
 			QueryDocument filter = new QueryDocument("Hash", FileHash);
-			
+
 			return files.Find(filter).CountDocuments() > 0;
 		}
 
