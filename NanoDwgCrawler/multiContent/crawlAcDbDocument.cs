@@ -1,4 +1,4 @@
-﻿using DwgDump.Db;
+﻿using DwgDump.Data;
 using DwgDump.Enitites;
 using DwgDump.Util;
 using HostMgd.ApplicationServices;
@@ -14,12 +14,12 @@ namespace DwgDump
 {
 	class CrawlAcDbDocument
 	{
-		private readonly string dataDir = Main.DwgDir;
-
 		private readonly string fullPath;
 		private readonly string fileId;
 
 		private readonly Document teighaDocument;
+
+		private DbMongo Db => DbMongo.Instance;
 
 		// https://stackoverflow.com/questions/2987559/check-if-a-file-is-open
 		private bool IsFileinUse(FileInfo file)
@@ -51,7 +51,7 @@ namespace DwgDump
 		{
 			this.fullPath = crawlDoc.Path;
 			this.fileId = crawlDoc.FileId;
-			var path = Path.Combine(dataDir, crawlDoc.FileId + ".dwg");
+			string path = Path.Combine(DbMongo.Instance.DataDir, crawlDoc.FileId + ".dwg");
 			FileInfo info = new FileInfo(path);
 			if (!IsFileinUse(info))
 				this.teighaDocument = TeighaApp.DocumentManager.Open(path);
@@ -75,7 +75,7 @@ namespace DwgDump
 					string objectClass = obj.ObjectId.ObjectClass.Name;
 
 					if (!string.IsNullOrEmpty(objectJson))
-						this.db.SaveObjectData(objectJson, this.fileId);
+						this.Db.SaveObjectData(objectJson, this.fileId);
 				}
 
 				// also run all blocks
@@ -98,7 +98,7 @@ namespace DwgDump
 					CrawlAcDbLayerTableRecord cltr = new CrawlAcDbLayerTableRecord(layerTblRec);
 					string objectJson = JsonHelper.To<CrawlAcDbLayerTableRecord>(cltr);
 
-					this.db.SaveObjectData(objectJson, this.fileId);
+					this.Db.SaveObjectData(objectJson, this.fileId);
 				}
 
 				// Run all xefs
@@ -106,15 +106,13 @@ namespace DwgDump
 				foreach (CrawlDocument theXref in xrefs)
 				{
 					CrawlAcDbDocument cDoc = new CrawlAcDbDocument(theXref);
-					db.InsertIntoFiles(theXref);
-
-					cDoc.db = db;
+					Db.InsertIntoFiles(theXref);
 					cDoc.DumpDocument();
 				}
 			}
 			this.teighaDocument.CloseAndDiscard();
 
-			db.SetDocumentScanned(this.fileId);
+			Db.SetDocumentScanned(this.fileId);
 		}
 
 		private void DocumentFromBlockOrProxy(ObjectId objId, string parentFileId)
@@ -133,7 +131,7 @@ namespace DwgDump
 
 				string blockJson = JsonHelper.To<CrawlAcDbBlockTableRecord>(cBtr);
 
-				this.db.InsertIntoFiles(blockJson);
+				this.Db.InsertIntoFiles(blockJson);
 
 				using (Transaction tr = aDoc.TransactionManager.StartTransaction())
 				{
@@ -142,7 +140,7 @@ namespace DwgDump
 						string objectJson = DumpEntity2json(obj);
 						// string objectClass = obj.ObjectClass.Name;
 
-						this.db.SaveObjectData(objectJson, cBtr.BlockId);
+						this.Db.SaveObjectData(objectJson, cBtr.BlockId);
 					}
 				}
 			}
@@ -161,7 +159,7 @@ namespace DwgDump
 
 					string pxyJson = JsonHelper.To<CrawlAcDbProxyEntity>(cPxy);
 
-					this.db.InsertIntoFiles(pxyJson);
+					this.Db.InsertIntoFiles(pxyJson);
 
 					for (int i = 0; i < dbo.Count; i++)
 					{
@@ -173,7 +171,7 @@ namespace DwgDump
 						// BUG: Exploded ids will be null
 						string objectJson = DumpEntity2json(obj.Id);
 
-						this.db.SaveObjectData(objectJson, cPxy.BlockId);
+						this.Db.SaveObjectData(objectJson, cPxy.BlockId);
 					}
 				}
 			}

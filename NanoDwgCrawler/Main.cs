@@ -1,15 +1,6 @@
-﻿using DwgDump.Db;
-using HostMgd.ApplicationServices;
-// Не работает вместе c Multicad.Runtime
-using HostMgd.EditorInput;
-using Teigha.DatabaseServices;
-using Teigha.Geometry;
+﻿using DwgDump.Data;
 using Teigha.Runtime;
-using Platform = HostMgd;
-using PlatformDb = Teigha;
-//Использование определенных типов, которые определены и в платформе и в мультикаде
-using Point3d = Teigha.Geometry.Point3d;
-using TeighaApp = HostMgd.ApplicationServices.Application;
+
 
 namespace DwgDump
 {
@@ -48,10 +39,7 @@ namespace DwgDump
 			CrawlDocument crawlDoc = db.GetNewRandomUnscannedDocument();
 			while (crawlDoc != null)
 			{
-				CrawlAcDbDocument cDoc = new CrawlAcDbDocument(crawlDoc)
-				{
-					db = db
-				};
+				CrawlAcDbDocument cDoc = new CrawlAcDbDocument(crawlDoc);
 
 				cDoc.DumpDocument();
 				crawlDoc = db.GetNewRandomUnscannedDocument();

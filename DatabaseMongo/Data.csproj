@@ -7,8 +7,8 @@
     <ProjectGuid>{EEBC657A-08AE-4C9A-9242-C1D1649ED884}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DatabaseMongo</RootNamespace>
-    <AssemblyName>DatabaseMongo</AssemblyName>
+    <RootNamespace>DwgDump.Data</RootNamespace>
+    <AssemblyName>DwgDump.Data</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -126,6 +126,7 @@
   <ItemGroup>
     <Compile Include="CrawlDocument.cs" />
     <Compile Include="DbMongo.cs" />
+    <Compile Include="DirectoryScanner.cs" />
     <Compile Include="HashFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

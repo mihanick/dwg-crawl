@@ -217,3 +217,4 @@ pip-log.txt
 packages/*
 Data/*
 TestData/*
+DatabaseMongo/DbCredentials.txt

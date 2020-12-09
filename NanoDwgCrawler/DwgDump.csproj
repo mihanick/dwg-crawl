@@ -66,21 +66,20 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="multiContent\CrawlDebug.cs" />
     <Compile Include="multiContent\cJson.cs" />
-    <Compile Include="multiContent\Commands.cs" />
+    <Compile Include="Main.cs" />
     <Compile Include="multiContent\CrawlAcDbDocument.cs" />
     <Compile Include="multiContent\CrawlPont3d.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DatabaseMongo\DatabaseMongo.csproj">
-      <Project>{eebc657a-08ae-4c9a-9242-c1d1649ed884}</Project>
-      <Name>DatabaseMongo</Name>
-      <Private>True</Private>
-    </ProjectReference>
+    <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <ProjectReference Include="..\DatabaseMongo\Data.csproj">
+      <Project>{eebc657a-08ae-4c9a-9242-c1d1649ed884}</Project>
+      <Name>Data</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

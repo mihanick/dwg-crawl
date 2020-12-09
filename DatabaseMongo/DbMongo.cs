@@ -6,35 +6,68 @@ using System.Diagnostics;
 using System.Linq;
 using System.Security.Authentication;
 
-namespace DwgDump.Db
+// 1) Setup Mongodb
+// 2) Setup remote access to mongo database
+// https://medium.com/founding-ithaka/setting-up-and-connecting-to-a-remote-mongodb-database-5df754a4da89
+
+namespace DwgDump.Data
 {
-	// first we need to setup remote access to database
-	// https://medium.com/founding-ithaka/setting-up-and-connecting-to-a-remote-mongodb-database-5df754a4da89
 	public class DbMongo
 	{
-		private readonly string dbName;
+		// Папка куда сохраняются все dwg
+		public string DataDir = @"C:\git\dwg-crawl\Data";
+
+		private string server = "mihanick.mcad.local";
+		private int port = 27017;
+		private string user = "admin";
+		private string securityDbName = "admin";
+		private string dbName = "geometry";
+
+		private static DbMongo instance;
+		public static DbMongo Instance
+		{
+			get
+			{
+				if (instance == null)
+					instance = new DbMongo();
+
+				return instance;
+			}
+		}
+
 		private MongoClient client;
 		private IMongoDatabase db;
 
 		private IMongoCollection<BsonDocument> files;
 		private IMongoCollection<BsonDocument> objects;
 
-		public const string DefaultDatabaseName = "geometry";
-
 		public DbMongo()
 		{
-			this.dbName = "geometry";
-			this.Create();
+			Connect();
+
+			Init();
 		}
 
-		public DbMongo(string dbName, string password)
+		private void Connect()
 		{
-			if (string.IsNullOrEmpty(dbName))
-				this.dbName = DefaultDatabaseName;
-			else
-				this.dbName = dbName;
+			string password = System.IO.File.ReadAllText(@"C:\git\dwg-crawl\DatabaseMongo\DbCredentials.txt");
 
-			Create(password);
+			// https://stackoverflow.com/questions/44513786/error-on-mongodb-authentication
+			MongoClientSettings settings = new MongoClientSettings();
+			settings.Server = new MongoServerAddress(this.server, this.port);
+
+			settings.UseTls = false;
+			settings.SslSettings = new SslSettings();
+			settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
+
+			MongoIdentity identity = new MongoInternalIdentity(this.securityDbName, this.user);
+			MongoIdentityEvidence evidence = new PasswordEvidence(password);
+
+			settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
+
+			client = new MongoClient(settings);
+
+			db = client.GetDatabase(this.dbName);
 		}
 
 		// StackOverflow
@@ -48,30 +81,12 @@ namespace DwgDump.Db
 			return database.ListCollectionNames(options).Any();
 		}
 
-		private void Create(string password)
+		private void Init()
 		{
-			// https://stackoverflow.com/questions/44513786/error-on-mongodb-authentication
-			MongoClientSettings settings = new MongoClientSettings();
-			settings.Server = new MongoServerAddress("localhost",27017);
-
-			settings.UseTls = false;
-			settings.SslSettings = new SslSettings();
-			settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
-
-			MongoIdentity identity = new MongoInternalIdentity("admin", "admin");
-			MongoIdentityEvidence evidence = new PasswordEvidence(password);
-
-			settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
-
-			
-			if (string.IsNullOrEmpty(password))
-				client = new MongoClient();
-			else
-				client = new MongoClient(settings);
-
-			db = client.GetDatabase(this.dbName);
-
-			// files = DatabaseMongo.GetCollection<BsonDocument>("files");
+			// Sometimes we need to wipe data
+			bool clearOnDebug = false;
+			if (clearOnDebug)
+				Clear();
 
 			if (!CollectionExists(db, "files"))
 				db.CreateCollection("files");
@@ -90,9 +105,10 @@ namespace DwgDump.Db
 			//objects.CreateIndex("ClassName");
 			//objects.CreateIndex("ObjectId");
 			//objects.CreateIndex("FileId");
+		
 		}
 
-		public void Clear()
+		private void Clear()
 		{
 			client.GetDatabase(dbName).DropCollection("objects");
 			client.GetDatabase(dbName).DropCollection("files");

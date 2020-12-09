@@ -2,7 +2,7 @@
 using System.Runtime.Serialization;
 using System.IO;
 
-namespace DwgDump
+namespace DwgDump.Data
 {
     [DataContract]
     public class CrawlDocument

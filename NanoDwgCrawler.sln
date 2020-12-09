@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DwgDump", "NanoDwgCrawler\D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScanApp", "ScanApp\ScanApp.csproj", "{F378EC4A-5C42-47E6-9A3F-49F83923AE80}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseMongo", "DatabaseMongo\DatabaseMongo.csproj", "{EEBC657A-08AE-4C9A-9242-C1D1649ED884}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data", "DatabaseMongo\Data.csproj", "{EEBC657A-08AE-4C9A-9242-C1D1649ED884}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

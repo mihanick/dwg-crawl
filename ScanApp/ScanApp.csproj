@@ -51,10 +51,9 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DatabaseMongo\DatabaseMongo.csproj">
+    <ProjectReference Include="..\DatabaseMongo\Data.csproj">
       <Project>{eebc657a-08ae-4c9a-9242-c1d1649ed884}</Project>
-      <Name>DatabaseMongo</Name>
-      <Private>True</Private>
+      <Name>Data</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
