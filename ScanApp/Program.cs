@@ -20,6 +20,8 @@ namespace DwgDump
 			string dbName = "geometry";
 
 			Scan(dir, dbName);
+			Console.WriteLine("Wait for nano to close:");
+			Console.ReadKey();
 		}
 
 		static void Scan(string dir, string dbName)

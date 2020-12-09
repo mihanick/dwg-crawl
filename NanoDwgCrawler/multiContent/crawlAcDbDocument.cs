@@ -14,19 +14,47 @@ namespace DwgDump
 {
 	class CrawlAcDbDocument
 	{
-		private readonly string dataDir = @"C:\git\dwg-crawl\Data";
+		private readonly string dataDir = Main.DwgDir;
 
 		private readonly string fullPath;
 		private readonly string fileId;
 
 		private readonly Document teighaDocument;
-		public DbMongo db;
+
+		// https://stackoverflow.com/questions/2987559/check-if-a-file-is-open
+		private bool IsFileinUse(FileInfo file)
+		{
+			FileStream stream = null;
+
+			try
+			{
+				stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+			}
+			catch (IOException)
+			{
+				//the file is unavailable because it is:
+				//still being written to
+				//or being processed by another thread
+				//or does not exist (has already been processed)
+				return true;
+			}
+			finally
+			{
+				if (stream != null)
+					stream.Close();
+			}
+
+			return false;
+		}
 
 		public CrawlAcDbDocument(CrawlDocument crawlDoc)
 		{
 			this.fullPath = crawlDoc.Path;
 			this.fileId = crawlDoc.FileId;
-			this.teighaDocument = TeighaApp.DocumentManager.Open(Path.Combine(dataDir, crawlDoc.FileId + ".dwg"));
+			var path = Path.Combine(dataDir, crawlDoc.FileId + ".dwg");
+			FileInfo info = new FileInfo(path);
+			if (!IsFileinUse(info))
+				this.teighaDocument = TeighaApp.DocumentManager.Open(path);
 		}
 
 		public void DumpDocument()
