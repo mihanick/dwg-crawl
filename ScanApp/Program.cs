@@ -12,7 +12,7 @@ namespace DwgDump
 	{
 		static void Main(string[] args)
 		{
-			string dir = @"C:\git\dwg-crawl\TestData";
+			string dir = @"H:\Примеры проектов";
 			if (args.Length == 1)
 				if (Directory.Exists(args[0]))
 					dir = args[0];
@@ -27,7 +27,7 @@ namespace DwgDump
 		static void Scan(string dir, string dbName)
 		{
 			// Папка куда сохраняются все dwg
-			string dataDir = @"C:\git\dwg-crawl\Data";
+			string dataDir = @"C:\dwg-crawl\Data";
 
 			//Открыть папку, выбрать все файлы двг из нее
 			string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
