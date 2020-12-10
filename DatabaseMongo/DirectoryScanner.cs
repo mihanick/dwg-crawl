@@ -30,11 +30,12 @@ namespace DwgDump.Data
 				CrawlDocument cDoc = new CrawlDocument(dwgFile);
 
 				// Do not process already processed files
-				if (!db.HasFileHash(cDoc.Hash))
-				{
-					FileCopy(dwgFile, Path.Combine(db.DataDir, cDoc.FileId + ".dwg"));
-					db.InsertIntoFiles(cDoc);
-				}
+				if (!string.IsNullOrWhiteSpace(cDoc.Hash))
+					if (!db.HasFileHash(cDoc.Hash))
+					{
+						FileCopy(dwgFile, Path.Combine(db.DataDir, cDoc.FileId + ".dwg"));
+						db.InsertIntoFiles(cDoc);
+					}
 
 				n++;
 				if (n > numFiles2Process)
