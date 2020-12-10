@@ -63,56 +63,66 @@ namespace DwgDump
 			if (this.teighaDocument == null)
 				return;
 
-			using (Transaction tr = this.teighaDocument.TransactionManager.StartTransaction())
-			{
-				PromptSelectionResult r = this.teighaDocument.Editor.SelectAll();
-
-				// for all entities in drawing
-				foreach (SelectedObject obj in r.Value)
-				{
-					string objId = obj.ObjectId.ToString();
-					string objectJson = DumpEntity2json(obj.ObjectId);
-					string objectClass = obj.ObjectId.ObjectClass.Name;
-
-					if (!string.IsNullOrEmpty(objectJson))
-						this.Db.SaveObjectData(objectJson, this.fileId);
-				}
-
-				// also run all blocks
-				List<ObjectId> blocks = GetBlocks(this.teighaDocument);
-				foreach (ObjectId btrId in blocks)
-				{
-					BlockTableRecord btr = (BlockTableRecord)btrId.GetObject(OpenMode.ForRead);
-					DocumentFromBlockOrProxy(btrId, this.fileId);
-				}
-
-				// all layer definitions
-				// http://forums.autodesk.com/t5/net/how-to-get-all-names-of-layers-in-a-drawing-by-traversal-layers/td-p/3371751
-				LayerTable lt = (LayerTable)this.teighaDocument.Database.LayerTableId.GetObject(OpenMode.ForRead);
-				foreach (ObjectId ltr in lt)
-				{
-					string objId = ltr.ToString();
-					string objectClass = ltr.ObjectClass.Name;
-					LayerTableRecord layerTblRec = (LayerTableRecord)ltr.GetObject(OpenMode.ForRead);
-
-					CrawlAcDbLayerTableRecord cltr = new CrawlAcDbLayerTableRecord(layerTblRec);
-					string objectJson = JsonHelper.To<CrawlAcDbLayerTableRecord>(cltr);
-
-					this.Db.SaveObjectData(objectJson, this.fileId);
-				}
-
-				// Run all xefs
-				List<CrawlDocument> xrefs = GetXrefs(this.teighaDocument);
-				foreach (CrawlDocument theXref in xrefs)
-				{
-					CrawlAcDbDocument cDoc = new CrawlAcDbDocument(theXref);
-					Db.InsertIntoFiles(theXref);
-					cDoc.DumpDocument();
-				}
-			}
-			this.teighaDocument.CloseAndDiscard();
-
+			// nanoCAD can crash, or exception or whatever...
+			// so there will be only one try per document
+			// so we first set document scanned, 
+			// than try to process it
 			Db.SetDocumentScanned(this.fileId);
+			try
+			{
+				using (Transaction tr = this.teighaDocument.TransactionManager.StartTransaction())
+				{
+					PromptSelectionResult r = this.teighaDocument.Editor.SelectAll();
+
+					// for all entities in drawing
+					foreach (SelectedObject obj in r.Value)
+					{
+						string objId = obj.ObjectId.ToString();
+						string objectJson = DumpEntity2json(obj.ObjectId);
+						string objectClass = obj.ObjectId.ObjectClass.Name;
+
+						if (!string.IsNullOrEmpty(objectJson))
+							this.Db.SaveObjectData(objectJson, this.fileId);
+					}
+
+					// also run all blocks
+					List<ObjectId> blocks = GetBlocks(this.teighaDocument);
+					foreach (ObjectId btrId in blocks)
+					{
+						BlockTableRecord btr = (BlockTableRecord)btrId.GetObject(OpenMode.ForRead);
+						DocumentFromBlockOrProxy(btrId, this.fileId);
+					}
+
+					// all layer definitions
+					// http://forums.autodesk.com/t5/net/how-to-get-all-names-of-layers-in-a-drawing-by-traversal-layers/td-p/3371751
+					LayerTable lt = (LayerTable)this.teighaDocument.Database.LayerTableId.GetObject(OpenMode.ForRead);
+					foreach (ObjectId ltr in lt)
+					{
+						string objId = ltr.ToString();
+						string objectClass = ltr.ObjectClass.Name;
+						LayerTableRecord layerTblRec = (LayerTableRecord)ltr.GetObject(OpenMode.ForRead);
+
+						CrawlAcDbLayerTableRecord cltr = new CrawlAcDbLayerTableRecord(layerTblRec);
+						string objectJson = JsonHelper.To<CrawlAcDbLayerTableRecord>(cltr);
+
+						this.Db.SaveObjectData(objectJson, this.fileId);
+					}
+
+					// Run all xefs
+					List<CrawlDocument> xrefs = GetXrefs(this.teighaDocument);
+					foreach (CrawlDocument theXref in xrefs)
+					{
+						CrawlAcDbDocument cDoc = new CrawlAcDbDocument(theXref);
+						Db.InsertIntoFiles(theXref);
+						cDoc.DumpDocument();
+					}
+				}
+				this.teighaDocument.CloseAndDiscard();
+			}
+			catch (Exception er)
+			{
+				CrawlDebug.WriteLine(er.Message);
+			}
 		}
 
 		private void DocumentFromBlockOrProxy(ObjectId objId, string parentFileId)
