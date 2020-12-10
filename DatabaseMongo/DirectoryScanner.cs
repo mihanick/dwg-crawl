@@ -12,17 +12,30 @@ namespace DwgDump.Data
 	{
 		public static void Scan(string dir)
 		{
-			//Открыть папку, выбрать все файлы двг из нее
-			string[] dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
+			// Select all dwg from folder
+			IEnumerable<string> dwgFiles = Directory.GetFiles(dir, "*.dwg", SearchOption.AllDirectories);
+
+			// we don't want same files to be processed over and over, so
+			// we shuffle the list of files
+			// https://stackoverflow.com/questions/19201489/correctly-using-linq-to-shuffle-a-deck
+			var random = new Random();
+			dwgFiles = dwgFiles.OrderBy((file) => random.Next());
+
 			DbMongo db = DbMongo.Instance;
 
-			int numFiles2Process = 10;
+			int numFiles2Process = 100000;
 			int n = 0;
 			foreach (string dwgFile in dwgFiles)
 			{
 				CrawlDocument cDoc = new CrawlDocument(dwgFile);
-				FileCopy(dwgFile, Path.Combine(db.DataDir, cDoc.FileId + ".dwg"));
-				db.InsertIntoFiles(cDoc);
+
+				// Do not process already processed files
+				if (!db.HasFileHash(cDoc.Hash))
+				{
+					FileCopy(dwgFile, Path.Combine(db.DataDir, cDoc.FileId + ".dwg"));
+					db.InsertIntoFiles(cDoc);
+				}
+
 				n++;
 				if (n > numFiles2Process)
 					break;

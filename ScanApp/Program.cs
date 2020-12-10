@@ -17,7 +17,6 @@ namespace DwgDump
 					dir = args[0];
 
 			DwgDump.Data.DirectoryScanner.Scan(dir);
-			
 
 			//Запуситить процессы по числу ядер процессоров каждый на своем ядре
 			int numProcesses = 2;
@@ -26,21 +25,26 @@ namespace DwgDump
 				//crawlinNano();
 				//http://cplus.about.com/od/learnc/a/multi-threading-using-task-parallel-library.htm
 				Task.Factory.StartNew(() => CrawlinNano());
-				//Процесс выбирает из базы случайным образом непросканированный файл и сканирует его в Json
-				//Это пока выполняется ручным запуском нанокадов
-				//Если файл изменился, то записывается его новый hash
+				// DwgDump module on startup
+				// select random unscanned file
+				// scns it and writes to db
+				// so we just manually start nanoCAD
 			}
-
-
-			Console.WriteLine("Wait for nano to close:");
-			Console.ReadKey();
 		}
 
 		static void CrawlinNano()
 		{
-			ExecuteCommandLine(@"C:\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\nCadS.exe", @" -b nSPDSComp -r SPDS -a nanoCAD_x64_SPDS_20.0");
+			var exePath = @"C:\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\nCadS.exe";
+			var args = @" -b nSPDSComp -r SPDS -a nanoCAD_x64_SPDS_20.0";
+			ExecuteCommandLine(exePath, args);
 		}
 
+		/// <summary>
+		/// Starts new process with arguments
+		/// </summary>
+		/// <param name="exePath"></param>
+		/// <param name="arguments"></param>
+		/// <returns></returns>
 		static Process ExecuteCommandLine(string exePath, string arguments = "")
 		{
 			//http://stackoverflow.com/questions/206323/how-to-execute-command-line-in-c-get-std-out-results
