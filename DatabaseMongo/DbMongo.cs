@@ -240,16 +240,16 @@ namespace DwgDump.Data
 			files.UpdateOne(filter, update);
 		}
 
-		public bool HasFileId(string FileId)
+		public bool HasFileId(string fileId)
 		{
-			QueryDocument filter = new QueryDocument("FileId", FileId);
+			QueryDocument filter = new QueryDocument("FileId", fileId);
 
 			return files.Find(filter).CountDocuments() > 0;
 		}
 
-		public bool HasFileHash(string FileHash)
+		public bool HasFileHash(string fileHash)
 		{
-			QueryDocument filter = new QueryDocument("Hash", FileHash);
+			QueryDocument filter = new QueryDocument("Hash", fileHash);
 
 			return files.Find(filter).CountDocuments() > 0;
 		}

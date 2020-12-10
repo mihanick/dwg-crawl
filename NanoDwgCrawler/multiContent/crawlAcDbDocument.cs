@@ -59,15 +59,16 @@ namespace DwgDump
 
 		public void DumpDocument()
 		{
-			// If document wasn't loaded correctly
-			if (this.teighaDocument == null)
-				return;
-
 			// nanoCAD can crash, or exception or whatever...
 			// so there will be only one try per document
 			// so we first set document scanned, 
 			// than try to process it
 			Db.SetDocumentScanned(this.fileId);
+
+			// If document wasn't loaded correctly
+			if (this.teighaDocument == null)
+				return;
+
 			try
 			{
 				using (Transaction tr = this.teighaDocument.TransactionManager.StartTransaction())
