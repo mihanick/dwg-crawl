@@ -218,3 +218,6 @@ packages/*
 Data/*
 TestData/*
 DatabaseMongo/DbCredentials.txt
+/JupyterNotebooks/img/*.png
+/JupyterNotebooks/img/*.svg
+/JupyterNotebooks/.ipynb_checkpoints
