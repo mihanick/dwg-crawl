@@ -9,6 +9,16 @@ from pymongo import MongoClient
 # sudo apt-get install libcairo2
 import drawSvg as draw
 
+def generate_image_by_id(collection, fileId):
+    data = query_collection_to_dataframe(collection, fileId)
+    cols_to_expand = ['XLine1Point', 'XLine2Point','StartPoint','EndPoint','Position']
+    data = expand_columns(data, cols_to_expand)
+    data = normalize(data, to_size = 400)
+    generate_file(data)
+    
+    filename = 'img/' + fileId + '.png'
+    return filename  
+
 def query_collection_to_dataframe(mongo_collection, fileId):
     query = {
         '$or':[
@@ -34,70 +44,6 @@ def query_collection_to_dataframe(mongo_collection, fileId):
     df = pd.DataFrame(list(mongo_collection.find(query)))
     return df
 
-def generate_file(group, verbose = False, entities_limit = 1e9):
-    fileid = group['FileId'].any()
-    filename = fileid +'.png'
-    d = draw.Drawing(800, 400, origin=(0,0), displayInline = False)
-    
-    # skip small drawings
-    #if (len(group)<100):
-    #    continue
-    
-    entscount = 0
-    for row_index, row in group.iterrows():
-        if verbose:
-            print(row)
-        if row['ClassName'] == 'AcDbLine':
-            d.append(
-                draw.Lines(
-                    row['StartPoint']['X'],
-                    row['StartPoint']['Y'],
-                    row['EndPoint']['X'],
-                    row['EndPoint']['Y'],
-                    close = False,
-                    fill='#eeee00',
-                    stroke = 'black'))
-            entscount = entscount + 1
-        # https://github.com/cduck/drawSvg/blob/master/drawSvg/elements.py
-        if row['ClassName'] == 'AcDbText':
-            d.append(
-                draw.Text(
-                    row['TextString'],
-                    6,
-                    row['Position']['X'],
-                    row['Position']['Y'],
-                    center = False
-                )
-            )
-            entscount = entscount + 1
-        if row['ClassName'] == 'AcDbRotatedDimension':
-
-            dim = draw.Lines(
-                    row['XLine1Point']['X'],
-                    row['XLine1Point']['Y'],
-                    row['XLine2Point']['X'],
-                    row['XLine2Point']['Y'],
-                    close = False,
-                    fill='#eeee00',
-                    stroke = 'blue',
-                    stroke_width = '1'
-            )
-            
-            # https://github.com/cduck/drawSvg
-            dim.appendTitle(row['DimensionText'])
-            d.append(dim)
-            entscount = entscount + 1    
-        if entscount > entities_limit:
-            break
-            
-    print('id:',fileid,'entities:', entscount)        
-    #https://pypi.org/project/drawSvg/
-    d.setPixelScale(2)
-    r = d.rasterize()
-    
-    d.savePng(filename)
-    #d.saveSvg(filename+'.svg')
-    
 def normalize(df, to_size = 100):
     cols = []
     for column in df.columns:
@@ -124,7 +70,7 @@ def normalize(df, to_size = 100):
         
     return  df
 
-def generate_file2(group, verbose = False, entities_limit = 1e9):
+def generate_file(group, verbose = False, entities_limit = 1e9):
     # print(group.info())
     
     # skip small drawings
@@ -135,7 +81,7 @@ def generate_file2(group, verbose = False, entities_limit = 1e9):
     if len(fileid) == 0:
         return
     
-    filename = fileid +'.png'
+    filename = 'img/' + fileid + '.png'
     d = draw.Drawing(800, 400, origin=(0,0), displayInline = False)
     
     entscount = 0
