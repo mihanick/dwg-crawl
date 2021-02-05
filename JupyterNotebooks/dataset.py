@@ -2,9 +2,6 @@
 import pandas as pd
 import numpy as np
 
-import pymongo
-from pymongo import MongoClient
-
 import torch
 from torch.utils.data import Dataset, SubsetRandomSampler
 
