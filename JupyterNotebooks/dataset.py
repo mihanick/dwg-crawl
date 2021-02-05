@@ -37,13 +37,15 @@ class EntityDataset(Dataset):
         
         x = self.groupped.get_group(self.keys[index])[self.x_columns]
         x = x.dropna( how ='all')
+        x = x.fillna(0.0)
         y = self.groupped.get_group(self.keys[index])[self.y_columns]
         y = y.dropna(how = 'all')
+        y = y.fillna(0.0)
         #print(self.keys[index])
         # if not y.empty:
         #    print(x, y)
         
-        return torch.tensor(np.array(x.values)), torch.tensor(np.array(y.values))
+        return torch.FloatTensor(np.array(x.values)), torch.FloatTensor(np.array(y.values))
 
 class DwgDataset:
     def __init__(self, pickle_file, batch_size = 2):
