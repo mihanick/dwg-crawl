@@ -11,7 +11,7 @@ device = torch.device("cpu")
 if torch.cuda.is_available():
     device = torch.device("cuda")
 
-dwg_dataset = DwgDataset(pickle_file = 'test_dataset.pickle', batch_size = batch_size)
+dwg_dataset = DwgDataset(pickle_file='test_dataset.pickle', batch_size=batch_size)
 
 train_loader = dwg_dataset.train_loader
 val_loader   = dwg_dataset.val_loader
@@ -29,8 +29,8 @@ from chamfer_distance_loss import MyChamferDistance
 
 loss = MyChamferDistance()
 
-lr = 1e-4
-epochs = 13
+lr = 1e-5
+epochs = 5
 decoder_optimizer = torch.optim.Adam(rnn_decoder.parameters(), lr=lr)
 encoder_optimizer = torch.optim.Adam(rnn_encoder.parameters(), lr=lr)
 

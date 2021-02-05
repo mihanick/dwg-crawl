@@ -224,3 +224,5 @@ DatabaseMongo/DbCredentials.txt
 /JupyterNotebooks/*.pickle
 JupyterNotebooks/.vscode/.ropeproject/objectdb
 JupyterNotebooks/.vscode/.ropeproject/config.py
+*.ipynb_checkpoints/
+JupyterNotebooks/tests/.ipynb_checkpoints/*

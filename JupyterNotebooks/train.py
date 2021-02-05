@@ -14,13 +14,15 @@ def calculate_accuracy(dim_outputs, y):
         actual_dim_number = y[batch_no].shape[0]
         predicted_dim_number = dim_outputs[batch_no].shape[0]
         acc = 0
-        if actual_dim_number == 0:
-            acc = np.abs(actual_dim_number - predicted_dim_number)
+        if actual_dim_number == 0 and predicted_dim_number == 0:
+            acc = 1
         else:
-            acc = np.abs(actual_dim_number - predicted_dim_number) / actual_dim_number
-        accuracies.append(acc)
+            acc =  np.abs(actual_dim_number - predicted_dim_number) / (actual_dim_number + predicted_dim_number)
 
-    return np.mean(accuracies)
+        accuracies.append(acc)
+    result = np.mean(accuracies)
+    # assert result > 0, "Accuracy should be positive"    
+    return result
 
 def plot_history(loss_history, train_history, val_history):
     '''
@@ -76,7 +78,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt,en
             
             train_accuracy = calculate_accuracy(decoded, y)
 
-            print('[{0}-{1} @ {2:.1f} sec] Loss: {3:4f} Train err: {4:2.2f}%'. format(
+            print('[{0}-{1} @ {2:.1f} sec] Loss: {3:2f} Train err: {4:2.1f}%'. format(
                 epoch,
                 i,
                 time.time() - start,
@@ -99,7 +101,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt,en
             val_acc = calculate_accuracy(dim_predictions, y)
             val_accuracies.append(val_acc)
         val_accurcy = np.mean(val_accuracies)
-        print('Epoch validation accuracy:', val_accurcy)
+        print('Epoch validation accuracy: {0:2.3f}'.format(val_accurcy))
         val_history.append(val_accurcy)
 
     return loss_history, train_history, val_history

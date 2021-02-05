@@ -55,22 +55,26 @@ def my_chamfer_distance(out, y):
 
     for i in range(len(y)):
         # we need extra dimension for batch
-        xxx = torch.unsqueeze(out[i], dim = 0)
-        yyy = torch.unsqueeze(y[i],dim = 0)    
+        a = torch.unsqueeze(out[i], dim = 0)
+        b = torch.unsqueeze(y[i],dim = 0)    
         # print(yyy.shape)
         # print(xxx.shape)    
-
-        if xxx.shape[1] == 0 and yyy.shape[1] == 0:
+        # second dimension is a number of points. if the number of points is 0, htan
+        # it is an empty set
+        
+        # distance between empty sets is 0: just what we need
+        if a.shape[1] == 0 and b.shape[1] == 0:
             # loss += 0
             continue
-        if xxx.shape[1] == 0:
-            #loss = loss + math.inf
-            continue
-        if yyy.shape[1] == 0:
-            #loss = loss - math.inf
-            continue
+        
+        # I assume the distance between empty set and non-empty set is
+        # a distance to a same set with all zeros
+        if a.shape[1] == 0:
+            a = torch.zeros(b.shape)
+        if b.shape[1] == 0:
+            b = torch.zeros(a.shape)
         # https://discuss.pytorch.org/t/leaf-variable-was-used-in-an-inplace-operation/308
-        curr_loss = chamfer_distance_sklearn(xxx.cpu().detach().numpy(), yyy.detach().numpy()).sum()
+        curr_loss = chamfer_distance_sklearn(a.cpu().detach().numpy(), b.detach().numpy()).sum()
         loss = loss + curr_loss
     return loss
 
