@@ -40,14 +40,14 @@ class RnnEncoder(nn.Module):
             inp = f.unsqueeze(1) 
 
             # print(inp.shape, f.shape)
-            outp, h_n = self.rnn(inp)
+            outp, h_n = self.rnn(inp.to(device))
 
             # print('h_N', h_n.shape)
             # print('cell out', outp.shape)
             n = self.fcn(outp)
             
             # https://stackoverflow.com/questions/48005152/extract-the-count-of-positive-and-negative-values-from-an-array
-            cou = np.sum(np.array(n.detach().numpy()) > 0, axis = None)
+            cou = np.sum(np.array(n.cpu().detach().numpy()) > 0, axis = None)
             # print(cou)
 
             outs[j] = cou

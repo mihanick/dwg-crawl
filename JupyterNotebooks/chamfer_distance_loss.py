@@ -64,13 +64,13 @@ def my_chamfer_distance(out, y):
             # loss += 0
             continue
         if xxx.shape[1] == 0:
-            loss = loss + math.inf
+            #loss = loss + math.inf
             continue
         if yyy.shape[1] == 0:
-            loss = loss + math.inf
+            #loss = loss - math.inf
             continue
         # https://discuss.pytorch.org/t/leaf-variable-was-used-in-an-inplace-operation/308
-        curr_loss = chamfer_distance_sklearn(xxx.detach().numpy(), yyy.detach().numpy()).sum()
+        curr_loss = chamfer_distance_sklearn(xxx.cpu().detach().numpy(), yyy.detach().numpy()).sum()
         loss = loss + curr_loss
     return loss
 
