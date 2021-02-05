@@ -63,10 +63,9 @@ class RnnDecoder(nn.Module):
         self.learned_size = learned_size
         self.dim_features = dim_features
         
-    def forward(self, x, out_counts):
+    def forward(self, out_counts, x):
         '''Receives tensor with hidden state and number of dimensions tensor per each file.
             Returns a list of tensors with dimension parameters'''
-        
         
         batch_size = len(x)
         
