@@ -19,7 +19,9 @@ class RnnEncoder(nn.Module):
         self.hidden = None
 
         self.fcn = nn.Sequential(
-            nn.Linear(learned_size, 1),
+            nn.Linear(learned_size, 256),
+            nn.Dropout(0.5),
+            nn.Linear(256, 1),
             nn.ReLU()
         )
         
@@ -53,13 +55,13 @@ class RnnEncoder(nn.Module):
             outs[j] = cou
             hiddens[j] = h_n
 
-        assert outs.shape == (batch_size, 1)        
+        assert outs.shape == (batch_size, 1)
         return outs, hiddens
             
 class RnnDecoder(nn.Module):
     def __init__(self, learned_size, dim_features):
         super(RnnDecoder, self).__init__()
-        self.rnn = nn.RNN(input_size = learned_size, hidden_size = dim_features)
+        self.rnn = nn.RNN(input_size=learned_size, hidden_size=dim_features)
         self.learned_size = learned_size
         self.dim_features = dim_features
         
@@ -71,8 +73,8 @@ class RnnDecoder(nn.Module):
         
         result = []
         for j in range(batch_size):
-            dim_count = out_counts[j]
-            outs = torch.zeros((dim_count, self.dim_features), dtype= torch.int32, device= device)
+            dim_count = out_counts[j].item()
+            outs = torch.zeros((dim_count, self.dim_features), dtype=torch.int32, device=device)
             if dim_count > 0:
                 inp = torch.zeros((dim_count, self.learned_size), dtype=torch.float, device=device)
                 # that is not what supposed to happen, as we are just copying inputs to each dimension output

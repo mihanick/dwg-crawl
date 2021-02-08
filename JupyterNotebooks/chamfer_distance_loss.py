@@ -84,3 +84,20 @@ class MyChamferDistance(nn.Module):
 
     def forward(self, input, target):
         return my_chamfer_distance(input, target)
+
+class MyNumberLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, prediction, expected):
+        a=[]
+        b=[]
+        for p in prediction:
+            a.append(p.shape[0])
+        for e in expected:
+            b.append(e.shape[0])
+        
+        loss = nn.MSELoss()(torch.tensor(a, dtype=torch.float32, requires_grad=True), torch.tensor(b, dtype = torch.float32))
+
+        return loss
+

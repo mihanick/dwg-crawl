@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+from torch import nn
+
 
 def calculate_accuracy(dim_outputs, y):
     '''
@@ -17,12 +19,11 @@ def calculate_accuracy(dim_outputs, y):
         if actual_dim_number == 0 and predicted_dim_number == 0:
             acc = 1
         else:
-            acc =  np.abs(actual_dim_number - predicted_dim_number) / (actual_dim_number + predicted_dim_number)
-
+            acc =  0
+        # print('expected: {0} predicted: {1}'.format(actual_dim_number, predicted_dim_number))
         accuracies.append(acc)
-    result = np.mean(accuracies)
-    # assert result > 0, "Accuracy should be positive"    
-    return result
+        
+    return accuracies
 
 def plot_history(loss_history, train_history, val_history):
     '''
@@ -36,8 +37,8 @@ def plot_history(loss_history, train_history, val_history):
     validation, = plt.plot(val_history)
     validation.set_label("validation")
 
-    loss, = plt.plot(loss_history)
-    loss.set_label("loss")
+    # loss, = plt.plot(loss_history)
+    # loss.set_label("loss")
 
     plt.legend()
     plt.show()
@@ -46,6 +47,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt,en
     '''
     trains model and outputs loss, train and validation history
     '''
+
     start = time.time()
     
     loss_history   = []
@@ -76,7 +78,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt,en
             
             loss_accumulated += loss_value
             
-            train_accuracy = calculate_accuracy(decoded, y)
+            train_accuracy = np.mean(calculate_accuracy(decoded, y))
 
             print('[{0}-{1} @ {2:.1f} sec] Loss: {3:2f} Train err: {4:2.1f}%'. format(
                 epoch,
@@ -98,7 +100,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt,en
             outs, hiddens = encoder(x)
             dim_predictions = decoder(outs, hiddens)
 
-            val_acc = calculate_accuracy(dim_predictions, y)
+            val_acc = np.mean(calculate_accuracy(dim_predictions, y))
             val_accuracies.append(val_acc)
         val_accurcy = np.mean(val_accuracies)
         print('Epoch validation accuracy: {0:2.3f}'.format(val_accurcy))

@@ -45,7 +45,7 @@ class EntityDataset(Dataset):
         return torch.FloatTensor(np.array(x.values)), torch.FloatTensor(np.array(y.values))
 
 class DwgDataset:
-    def __init__(self, pickle_file, batch_size = 2):
+    def __init__(self, pickle_file, batch_size=1):
 
         test_data = pd.read_pickle(pickle_file)
 

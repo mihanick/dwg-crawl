@@ -5,8 +5,9 @@ from dataset import DwgDataset
 # https://stackoverflow.com/questions/20309456/call-a-function-from-another-file
 from train import train_model
 
+from chamfer_distance_loss import MyChamferDistance, MyNumberLoss
 
-batch_size = 2
+batch_size = 4
 device = torch.device("cpu")
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -24,15 +25,13 @@ from model import RnnDecoder, RnnEncoder
 rnn_encoder = RnnEncoder(ent_features, 1024).to(device)
 rnn_decoder = RnnDecoder(1024, dim_features).to(device)
 
+# loss = MyChamferDistance()
+loss = MyNumberLoss()
 
-from chamfer_distance_loss import MyChamferDistance
-
-loss = MyChamferDistance()
-
-lr = 1e-5
-epochs = 5
+lr = 1e-3
+epochs = 11
 decoder_optimizer = torch.optim.Adam(rnn_decoder.parameters(), lr=lr)
-encoder_optimizer = torch.optim.Adam(rnn_encoder.parameters(), lr=lr)
+encoder_optimizer = torch.optim.Adam(rnn_encoder.parameters(), lr=0.1*lr)
 
 
 train_model(
