@@ -37,8 +37,8 @@ def plot_history(loss_history, train_history, val_history):
     validation, = plt.plot(val_history)
     validation.set_label("validation")
 
-    # loss, = plt.plot(loss_history)
-    # loss.set_label("loss")
+    loss, = plt.plot(loss_history)
+    loss.set_label("loss")
 
     plt.legend()
     plt.show()
@@ -80,16 +80,16 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt,en
             
             train_accuracy = np.mean(calculate_accuracy(decoded, y))
 
-            print('[{0}-{1} @ {2:.1f} sec] Loss: {3:2f} Train err: {4:2.1f}%'. format(
+            print('[{0}-{1} @ {2:.1f} sec] Log10 Loss: {3:2f} Train err: {4:2.1f}%'. format(
                 epoch,
                 i,
                 time.time() - start,
-                loss_value.item(),
+                np.log10(float(loss_value)),
                 (1 - train_accuracy) * 100
             ))
 
         train_history.append(train_accuracy)
-        loss_history.append(float(loss_accumulated / epoch))
+        loss_history.append(float(loss_accumulated))
 
         # validation
         encoder.eval()
