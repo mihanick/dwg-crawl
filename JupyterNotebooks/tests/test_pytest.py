@@ -1,25 +1,32 @@
+'''
+Contains tests for input and output of models and also for loss functions
+'''
+
 #https://code.visualstudio.com/docs/python/testing
+import torch
+from chamfer_distance_loss import MyChamferDistance, MyMSELoss
 from dataset import DwgDataset
 from model import RnnDecoder, RnnEncoder
-from chamfer_distance_loss import MyChamferDistance, MyNumberLoss
 from train import calculate_accuracy
-
-import torch
 
 def test_input_output_model():
     '''
     runs all samples throug dataset
     '''
+
+    loss = MyMSELoss(6)
+
     data = DwgDataset('./test_dataset.pickle')
 
-    encoder = RnnEncoder(9,32)
-    decoder = RnnDecoder(32,6)
+    encoder = RnnEncoder(9, 32)
+    decoder = RnnDecoder(32, 6)
 
     i = 0
-    for (x, y) in iter(data.train_loader):
+    for (x, _y) in iter(data.train_loader):
         outs, learned = encoder(x)
-        decoded = decoder(outs, learned)
-
+        _decoded = decoder(outs, learned)
+        loss_v = loss(_decoded, _y)
+        loss_v.backward()
         i += 1
 
 def test_debug_ch_dist():
@@ -28,18 +35,18 @@ def test_debug_ch_dist():
     '''
     data = DwgDataset('./test_dataset.pickle')
 
-    encoder = RnnEncoder(9,32)
-    decoder = RnnDecoder(32,6)
-    loss = MyChamferDistance()
+    encoder = RnnEncoder(9, 32)
+    decoder = RnnDecoder(32, 6)
+    # loss = MyChamferDistance()
+    loss = MyMSELoss(6)
 
     i = 0
     for (x, y) in iter(data.train_loader):
         outs, learned = encoder(x)
         decoded = decoder(outs, learned)
 
-
         lv = loss(decoded, y)
-        print ('loss', lv)
+        print('loss', lv)
 
         acc = calculate_accuracy(decoded, y)
         print('acc', acc)
@@ -55,28 +62,46 @@ def test_debug_ch_dist():
         print(i, '------------------------------')
 
 
+def _check_loss(loss_layer, print_loss=False):
+    loss = loss_layer
+    _a = [torch.randn([3, 6]), torch.randn([2, 6])]
+    _b = [torch.randn([4, 6]), torch.randn([1, 6])]
 
-def test_chamfer_distance():
-    # loss = MyChamferDistance()
-    loss = MyNumberLoss()
-    a = [torch.randn([3,6]), torch.randn([2,6])]
-    b = [torch.randn([4,6]), torch.randn([1,6])]
-    
-    loss_v = loss(a,b)
-    
+    loss_v = loss(_a, _b)
+
     # It can just throw, value 0 doesn't matter
-    assert loss_v.item() != 0 , 'Random set chamfer distance is zero'
+    assert loss_v.item() != 0, 'Random set chamfer distance is zero'
 
     loss_v.backward()
+    if print_loss:
+        print(loss_v)
 
     # проверка расстояний до пустых множеств
-    a = [torch.randn([0, 6]), torch.randn([2, 6])]
-    b = [torch.randn([4, 6]), torch.randn([0, 6])]
+    _a = [torch.randn([0, 6]), torch.randn([2, 6])]
+    _b = [torch.randn([4, 6]), torch.randn([0, 6])]
 
-    loss_v = loss(a, b)
+    loss_v = loss(_a, _b)
     assert loss_v.item() != 0, 'Does not calculate chamfer distance to an empty set'
 
     # RuntimeError: leaf variable has been moved into the graph interior
     # https://stackoverflow.com/questions/64272718/understanding-the-reason-behind-runtimeerror-leaf-variable-has-been-moved-into
 
     loss_v.backward()
+
+def test_chamfer_distance():
+    '''
+    tests chamfer distance loss class
+    '''
+    loss_layer = MyChamferDistance()
+    _check_loss(loss_layer)
+
+def test_mse_distance():
+    '''
+    tests MSE loss class
+    '''
+    try:
+        loss_layer = MyMSELoss(features=6)
+        _check_loss(loss_layer)
+    except Exception as e:
+        print(e)
+        raise e

@@ -1,8 +1,9 @@
+'''
+Train functions to run from console or jupyter
+'''
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from torch import nn
-
 
 def calculate_accuracy(dim_outputs, y):
     '''

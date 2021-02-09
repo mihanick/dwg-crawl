@@ -1,4 +1,3 @@
-# https://stackoverflow.com/questions/16249736/how-to-import-data-from-mongodb-to-pandas
 import numpy as np
 
 # https://blog.floydhub.com/a-beginners-guide-on-recurrent-neural-networks-with-pytorch/
@@ -32,8 +31,8 @@ class RnnEncoder(nn.Module):
         # input of shape (seq_len, batch, input_size)
         batch_size = len(x)
         
-        hiddens = torch.zeros((batch_size, self.learned_size), dtype=torch.float32, device=device)
-        outs = torch.zeros((batch_size, 1), dtype=torch.int32, device=device)
+        hiddens = torch.zeros((batch_size, self.learned_size), dtype=torch.float32, device=device, requires_grad=True)
+        outs = torch.zeros((batch_size, 1), dtype=torch.float32, device=device, requires_grad=True)
 
         for j in range(batch_size):
             f = x[j]
@@ -49,13 +48,16 @@ class RnnEncoder(nn.Module):
             n = self.fcn(outp)
             
             # https://stackoverflow.com/questions/48005152/extract-the-count-of-positive-and-negative-values-from-an-array
-            cou = np.sum(np.array(n.cpu().detach().numpy()) > 0, axis = None)
+            counts = np.sum(np.array(n.cpu().detach().numpy()) > 0, axis=None)
+            conts_outpus = counts
+            # count_outputs = torch.Tensor(counts, requires_grad=True)
             # print(cou)
 
-            outs[j] = cou
+            outs[j] = conts_outpus
             hiddens[j] = h_n
 
         assert outs.shape == (batch_size, 1)
+        
         return outs, hiddens
             
 class RnnDecoder(nn.Module):
@@ -73,8 +75,8 @@ class RnnDecoder(nn.Module):
         
         result = []
         for j in range(batch_size):
-            dim_count = out_counts[j].item()
-            outs = torch.zeros((dim_count, self.dim_features), dtype=torch.int32, device=device)
+            dim_count = int(out_counts[j].item())
+            outs = torch.zeros((dim_count, self.dim_features), dtype=torch.float32, device=device)
             if dim_count > 0:
                 inp = torch.zeros((dim_count, self.learned_size), dtype=torch.float, device=device)
                 # that is not what supposed to happen, as we are just copying inputs to each dimension output

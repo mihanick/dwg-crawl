@@ -1,4 +1,6 @@
-import math
+'''
+Contains functions and modules to calculate chamfer and MeanSquareError
+'''
 import numpy as np
 import numpy.linalg as LA
 from sklearn.neighbors import KDTree
@@ -9,18 +11,18 @@ from torch import nn
 
 def array2samples_distance(array1, array2):
     """
-    arguments: 
+    arguments:
         array1: the array, size: (num_point, num_feature)
         array2: the samples, size: (num_point, num_feature)
     returns:
-        distances: each entry is the distance from a sample to array1 
+        distances: each entry is the distance from a sample to array1
     """
     num_point, num_features = array1.shape
     expanded_array1 = np.tile(array1, (num_point, 1))
     expanded_array2 = np.reshape(
             np.tile(np.expand_dims(array2, 1), 
                     (1, num_point, 1)),
-            (-1, num_features))
+                    (-1, num_features))
     distances = LA.norm(expanded_array1-expanded_array2, axis=1)
     distances = np.reshape(distances, (num_point, num_point))
     distances = np.min(distances, axis=1)
@@ -28,7 +30,7 @@ def array2samples_distance(array1, array2):
     return distances
 
 def chamfer_distance_numpy(array1, array2):
-    batch_size, num_point, num_features = array1.shape
+    batch_size, _num_point, _num_features = array1.shape
     dist = 0
     for i in range(batch_size):
         av_dist1 = array2samples_distance(array1[i], array2[i])
@@ -51,12 +53,12 @@ def chamfer_distance_sklearn(array1,array2):
     return dist
 
 def my_chamfer_distance(out, y):
-    loss = torch.zeros(1, dtype = torch.float32, requires_grad = True)
+    loss = torch.zeros(1, dtype=torch.float32, requires_grad=True)
 
     for i in range(len(y)):
         # we need extra dimension for batch
-        a = torch.unsqueeze(out[i], dim = 0)
-        b = torch.unsqueeze(y[i],dim = 0)    
+        a = torch.unsqueeze(out[i], dim=0)
+        b = torch.unsqueeze(y[i], dim=0)    
         # print(yyy.shape)
         # print(xxx.shape)    
         # second dimension is a number of points. if the number of points is 0, htan
@@ -79,25 +81,33 @@ def my_chamfer_distance(out, y):
     return loss
 
 class MyChamferDistance(nn.Module):
-    def __init__(self):
-        super().__init__()
+    def forward(self, x, target):
+        return my_chamfer_distance(x, target)
 
-    def forward(self, input, target):
-        return my_chamfer_distance(input, target)
-
-class MyNumberLoss(nn.Module):
-    def __init__(self):
+class MyMSELoss(nn.Module):
+    def __init__(self, features):
         super().__init__()
+        self.features = features
 
     def forward(self, prediction, expected):
-        a=[]
-        b=[]
-        for p in prediction:
-            a.append(p.shape[0])
-        for e in expected:
-            b.append(e.shape[0])
+        loss_f = nn.MSELoss()
         
-        loss = nn.MSELoss()(torch.tensor(a, dtype=torch.float32, requires_grad=True), torch.tensor(b, dtype = torch.float32))
+        loss = torch.zeros((1, 1), dtype=torch.float32, requires_grad=True)
+
+        def at_least_one_element(ddd):
+            if len(ddd) == 0:
+                return torch.zeros((1, self.features))
+            else:
+                return ddd
+
+        for i in range(len(prediction)):                
+            for p in at_least_one_element(prediction[i]):
+                for e in at_least_one_element(expected[i]):
+                    # print(i, p, e)
+                    
+                    loss = loss + loss_f(p, e)
+                    
+        # RuntimeError: leaf variable has been moved into the graph interior
+        # UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the gradient for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations.
 
         return loss
-
