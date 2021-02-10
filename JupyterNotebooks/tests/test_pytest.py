@@ -27,6 +27,7 @@ def test_input_output_model():
         _decoded = decoder(outs, learned)
         loss_v = loss(_decoded, _y)
         loss_v.backward()
+        acc = calculate_accuracy(_decoded, _y)
         i += 1
 
 def test_debug_ch_dist():
@@ -45,17 +46,17 @@ def test_debug_ch_dist():
         outs, learned = encoder(x)
         decoded = decoder(outs, learned)
 
-        lv = loss(decoded, y)
-        print('loss', lv)
+        loss_v = loss(decoded, y)
+        print('loss', loss_v)
 
         acc = calculate_accuracy(decoded, y)
-        print('acc', acc)
+        # print('acc', acc)
 
         for batch_no in range(len(y)):
             print('actual number', y[batch_no].shape[0])
             print('predicted number', decoded[batch_no].shape[0])
 
-            print('loss', lv[batch_no])
+            print('loss', loss_v[batch_no])
 
             print('accuracy', acc[batch_no])
         i += 1
@@ -76,6 +77,8 @@ def _check_loss(loss_layer, print_loss=False):
     if print_loss:
         print(loss_v)
 
+    acc = calculate_accuracy(_a, _b)
+
     # проверка расстояний до пустых множеств
     _a = [torch.randn([0, 6]), torch.randn([2, 6])]
     _b = [torch.randn([4, 6]), torch.randn([0, 6])]
@@ -87,6 +90,7 @@ def _check_loss(loss_layer, print_loss=False):
     # https://stackoverflow.com/questions/64272718/understanding-the-reason-behind-runtimeerror-leaf-variable-has-been-moved-into
 
     loss_v.backward()
+    acc = calculate_accuracy(_a, _b)
 
 def test_chamfer_distance():
     '''

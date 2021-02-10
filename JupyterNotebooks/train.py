@@ -10,20 +10,41 @@ def calculate_accuracy(dim_outputs, y):
     '''
     For now we will calculate accuracy by model guessing the right amount of dimensions produced
     '''
+    def calculate_volume(set):
+        size = set.shape[0]
+        features = set.shape[1]
+
+        min_coords = np.zeros((1, features))
+        max_coords = np.zeros((1, features))
+
+        if size != 0:
+            min_coords = np.min(set.detach().cpu().numpy(), axis=0)
+            max_coords = np.max(set.detach().cpu().numpy(), axis=0)
+
+        # if size is 1 difference will be 0 and volume will be 0
+
+        
+        diffs = max_coords - min_coords
+        return np.sum(diffs**2)
 
     accuracies = []
 
     # y, dim_outputs: list len=batch_size of tensors with shape (dim_count, dim_features)
     for batch_no in range(len(y)):
-        actual_dim_number = y[batch_no].shape[0]
-        predicted_dim_number = dim_outputs[batch_no].shape[0]
-        acc = 0
-        if actual_dim_number == 0 and predicted_dim_number == 0:
-            acc = 0
-        else:
+        vol_actual = calculate_volume(y[batch_no])
+        vol_predicted = calculate_volume(dim_outputs[batch_no])
 
-            acc = torch.abs(torch.mean(y[batch_no], dim=0) - torch.mean(dim_outputs[batch_no], dim=0)).detach().cpu().numpy()
-        # print('expected: {0} predicted: {1}'.format(actual_dim_number, predicted_dim_number))
+        acc = 0
+        if vol_actual == vol_predicted:
+            acc = 1
+        elif vol_predicted == 0:
+            acc = 0
+        elif vol_actual != 0:
+            try:
+                acc = 1 - np.abs(np.log10(vol_predicted / vol_actual))
+            except Exception as e:
+                print(vol_actual)
+        
         accuracies.append(acc)
 
     return accuracies
