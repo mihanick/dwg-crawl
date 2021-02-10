@@ -128,5 +128,8 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
         val_accurcy = np.mean(val_accuracies)
         print('Epoch validation accuracy: {0:2.3f}'.format(val_accurcy))
         val_history.append(val_accurcy)
-
+        
+        # early stop
+        if np.log10(float(loss_value)) < 1:
+            break
     return loss_history, train_history, val_history

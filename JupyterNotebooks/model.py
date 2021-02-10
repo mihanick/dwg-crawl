@@ -5,8 +5,8 @@ import torch
 from torch import nn
 
 device = torch.device("cpu")
-if torch.cuda.is_available():
-    device = torch.device("cuda")
+#if torch.cuda.is_available():
+#    device = torch.device("cuda")
 
 class RnnEncoder(nn.Module):
     def __init__(self, ent_features, learned_size):
