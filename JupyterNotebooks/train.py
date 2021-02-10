@@ -28,24 +28,21 @@ def calculate_accuracy(dim_outputs, y):
         return np.sum(diffs**2)
 
     accuracies = []
+    with torch.no_grad():
+        # y, dim_outputs: list len=batch_size of tensors with shape (dim_count, dim_features)
+        for batch_no in range(len(y)):
+            vol_actual = calculate_volume(y[batch_no])
+            vol_predicted = calculate_volume(dim_outputs[batch_no])
 
-    # y, dim_outputs: list len=batch_size of tensors with shape (dim_count, dim_features)
-    for batch_no in range(len(y)):
-        vol_actual = calculate_volume(y[batch_no])
-        vol_predicted = calculate_volume(dim_outputs[batch_no])
-
-        acc = 0
-        if vol_actual == vol_predicted:
-            acc = 1
-        elif vol_predicted == 0:
             acc = 0
-        elif vol_actual != 0:
-            try:
+            if vol_actual == vol_predicted:
+                acc = 1
+            elif vol_predicted == 0:
+                acc = 0
+            elif vol_actual != 0:
                 acc = 1 - np.abs(np.log10(vol_predicted / vol_actual))
-            except Exception as e:
-                print(vol_actual)
-        
-        accuracies.append(acc)
+            
+            accuracies.append(acc)
 
     return accuracies
 
@@ -108,28 +105,29 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
                 i,
                 time.time() - start,
                 np.log10(float(loss_value)),
-                (1 - train_accuracy) * 100
+                100.0 * (1 - train_accuracy)
             ))
 
         train_history.append(train_accuracy)
         loss_history.append(float(loss_accumulated))
 
         # validation
-        encoder.eval()
-        decoder.eval()
+        with torch.no_grad():
+            encoder.eval()
+            decoder.eval()
 
-        val_accuracies = []
-        for _, (x, y) in enumerate(val_loader):
-            outs, hiddens = encoder(x)
-            dim_predictions = decoder(outs, hiddens)
+            val_accuracies = []
+            for _, (x, y) in enumerate(val_loader):
+                outs, hiddens = encoder(x)
+                dim_predictions = decoder(outs, hiddens)
 
-            val_acc = np.mean(calculate_accuracy(dim_predictions, y))
-            val_accuracies.append(val_acc)
-        val_accurcy = np.mean(val_accuracies)
-        print('Epoch validation accuracy: {0:2.3f}'.format(val_accurcy))
-        val_history.append(val_accurcy)
+                val_acc = np.mean(calculate_accuracy(dim_predictions, y))
+                val_accuracies.append(val_acc)
+            val_accuracy = np.mean(val_accuracies)
+            print('Epoch [{0}] validation accuracy: {1:2.3f}%'.format(epoch, 100.0 * (1 - val_accuracy)))
+            val_history.append(val_accuracy)
         
         # early stop
-        if np.log10(float(loss_value)) < 1:
-            break
+        #if np.log10(float(loss_value)) < 1:
+        #    break
     return loss_history, train_history, val_history

@@ -11,7 +11,7 @@ from train import train_model
 from chamfer_distance_loss import MyChamferDistance, MyMSELoss
 from model import RnnDecoder, RnnEncoder
 
-batch_size = 4
+batch_size = 1
 device = torch.device("cpu")
 if torch.cuda.is_available():
     device = torch.device("cuda")
