@@ -10,6 +10,7 @@ def calculate_accuracy(dim_outputs, y):
     '''
     For now we will calculate accuracy by model guessing the right amount of dimensions produced
     '''
+ 
     def calculate_volume(set):
         size = set.shape[0]
         features = set.shape[1]
@@ -28,21 +29,20 @@ def calculate_accuracy(dim_outputs, y):
         return np.sum(diffs**2)
 
     accuracies = []
-    with torch.no_grad():
-        # y, dim_outputs: list len=batch_size of tensors with shape (dim_count, dim_features)
-        for batch_no in range(len(y)):
-            vol_actual = calculate_volume(y[batch_no])
-            vol_predicted = calculate_volume(dim_outputs[batch_no])
+    # y, dim_outputs: list len=batch_size of tensors with shape (dim_count, dim_features)
+    for batch_no in range(len(y)):
+        vol_actual = calculate_volume(y[batch_no])
+        vol_predicted = calculate_volume(dim_outputs[batch_no])
 
+        acc = 0
+        if vol_actual == vol_predicted:
+            acc = 1
+        elif vol_predicted == 0:
             acc = 0
-            if vol_actual == vol_predicted:
-                acc = 1
-            elif vol_predicted == 0:
-                acc = 0
-            elif vol_actual != 0:
-                acc = 1 - np.abs(np.log10(vol_predicted / vol_actual))
+        elif vol_actual != 0:
+            acc = 1 - np.abs(vol_predicted -vol_actual/ vol_actual)
             
-            accuracies.append(acc)
+        accuracies.append(acc)
 
     return accuracies
 
@@ -58,7 +58,7 @@ def plot_history(loss_history, train_history, val_history):
     validation, = plt.plot(val_history)
     validation.set_label("validation")
 
-    loss, = plt.plot(loss_history)
+    loss, = plt.plot(np.log10(loss_history))
     loss.set_label("loss")
 
     plt.legend()
@@ -77,6 +77,8 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
     train_accuracy = 0.0
 
     for epoch in range(epochs):
+        torch.cuda.empty_cache()
+        
         encoder.train()
         decoder.train()
 
@@ -104,11 +106,11 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
                 epoch,
                 i,
                 time.time() - start,
-                np.log10(float(loss_value)),
+                float(loss_value),
                 100.0 * (1 - train_accuracy)
             ))
 
-        train_history.append(train_accuracy)
+        train_history.append(float(train_accuracy))
         loss_history.append(float(loss_accumulated))
 
         # validation
@@ -124,8 +126,8 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
                 val_acc = np.mean(calculate_accuracy(dim_predictions, y))
                 val_accuracies.append(val_acc)
             val_accuracy = np.mean(val_accuracies)
-            print('Epoch [{0}] validation accuracy: {1:2.3f}%'.format(epoch, 100.0 * (1 - val_accuracy)))
-            val_history.append(val_accuracy)
+            print('Epoch [{0}] validation error: {1:2.3f}%'.format(epoch, 100.0 * (1 - val_accuracy)))
+            val_history.append(float(val_accuracy))
         
         # early stop
         #if np.log10(float(loss_value)) < 1:

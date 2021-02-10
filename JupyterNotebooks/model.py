@@ -4,12 +4,8 @@ import numpy as np
 import torch
 from torch import nn
 
-device = torch.device("cpu")
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-
 class RnnEncoder(nn.Module):
-    def __init__(self, ent_features, learned_size):
+    def __init__(self, ent_features, learned_size, enforced_device=None):
         super(RnnEncoder, self).__init__()
 
         self.rnn = nn.RNN(input_size = ent_features, hidden_size = learned_size)
@@ -18,21 +14,28 @@ class RnnEncoder(nn.Module):
         self.hidden = None
 
         self.fcn = nn.Sequential(
-            nn.Linear(learned_size, 256),
-            nn.Dropout(0.25),
-            nn.Linear(256, 1),
+            nn.Linear(learned_size, 128),
+            # nn.Dropout(0.1),
+            nn.Linear(128, 1),
             nn.ReLU()
         )
         
+        if enforced_device is not None:
+            self.device = enforced_device
+        else:
+            self.device = torch.device("cpu")
+            if torch.cuda.is_available():
+                self.device = torch.device("cuda")
+        
     def init_hidden(self, batch_size):
-        self.hidden = torch.zeros(1, batch_size, self.learned_size, device = device)
+        self.hidden = torch.zeros(1, batch_size, self.learned_size, device = self.device)
         
     def forward(self, x):
         # input of shape (seq_len, batch, input_size)
         batch_size = len(x)
         
-        hiddens = torch.zeros((batch_size, self.learned_size), dtype=torch.float32, device=device, requires_grad=True)
-        outs = torch.zeros((batch_size, 1), dtype=torch.float32, device=device, requires_grad=True)
+        hiddens = torch.zeros((batch_size, self.learned_size), dtype=torch.float32, device=self.device, requires_grad=True)
+        outs = torch.zeros((batch_size, 1), dtype=torch.float32, device=self.device, requires_grad=True)
 
         for j in range(batch_size):
             f = x[j]
@@ -41,7 +44,7 @@ class RnnEncoder(nn.Module):
             inp = f.unsqueeze(1) 
 
             # print(inp.shape, f.shape)
-            outp, h_n = self.rnn(inp.to(device))
+            outp, h_n = self.rnn(inp.to(self.device))
 
             # print('h_N', h_n.shape)
             # print('cell out', outp.shape)
@@ -55,18 +58,23 @@ class RnnEncoder(nn.Module):
 
             outs[j] = conts_outpus
             hiddens[j] = h_n
-
-        assert outs.shape == (batch_size, 1)
         
         return outs, hiddens
             
 class RnnDecoder(nn.Module):
-    def __init__(self, learned_size, dim_features):
+    def __init__(self, learned_size, dim_features, enforced_device = None):
         super(RnnDecoder, self).__init__()
         self.rnn = nn.RNN(input_size=learned_size, hidden_size=dim_features)
         self.learned_size = learned_size
         self.dim_features = dim_features
         
+        if enforced_device is not None:
+            self.device = enforced_device
+        else:
+            self.device = torch.device("cpu")
+            if torch.cuda.is_available():
+                self.device = torch.device("cuda")
+                
     def forward(self, out_counts, x):
         '''Receives tensor with hidden state and number of dimensions tensor per each file.
             Returns a list of tensors with dimension parameters'''
@@ -76,9 +84,9 @@ class RnnDecoder(nn.Module):
         result = []
         for j in range(batch_size):
             dim_count = int(out_counts[j].item())
-            outs = torch.zeros((dim_count, self.dim_features), dtype=torch.float32, device=device)
+            outs = torch.zeros((dim_count, self.dim_features), dtype=torch.float32, device=self.device)
             if dim_count > 0:
-                inp = torch.zeros((dim_count, self.learned_size), dtype=torch.float, device=device)
+                inp = torch.zeros((dim_count, self.learned_size), dtype=torch.float, device=self.device)
                 # that is not what supposed to happen, as we are just copying inputs to each dimension output
                 inp[:, :] = x[j, :]
                 inp = inp.unsqueeze(1)

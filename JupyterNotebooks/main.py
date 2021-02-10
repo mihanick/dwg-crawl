@@ -25,8 +25,8 @@ test_loader  = dwg_dataset.test_loader
 ent_features = dwg_dataset.entities.ent_features
 dim_features = dwg_dataset.entities.dim_features
 
-rnn_encoder = RnnEncoder(ent_features, 1024).to(device)
-rnn_decoder = RnnDecoder(1024, dim_features).to(device)
+rnn_encoder = RnnEncoder(ent_features, 1024, enforced_device=device).to(device)
+rnn_decoder = RnnDecoder(1024, dim_features, enforced_device=device).to(device)
 
 loss = MyChamferDistance()
 
