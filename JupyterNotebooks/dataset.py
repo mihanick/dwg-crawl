@@ -5,6 +5,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, SubsetRandomSampler
 
+from sklearn import preprocessing
+
 class EntityDataset(Dataset):
     def __init__(self, pandasData):
         self.data = pandasData
@@ -25,19 +27,40 @@ class EntityDataset(Dataset):
         self.ent_features = len(self.x_columns)
         self.dim_features = len(self.y_columns)
 
-        
+        self.min_max_scaler = preprocessing.MinMaxScaler()
+
     def __len__(self):
         return len(self.keys)
-    
+
+    def _normalize_dataset(self, data):
+        '''
+        Normalizes the values in dataset using sklean preprocessing
+        from sklearn import preprocessing
+        https://stackoverflow.com/questions/26414913/normalize-columns-of-pandas-data-frame
+        '''
+
+        # handle empty sets
+        if len(data) == 0:
+            return data
+
+        x = data.values
+        x_scaled = self.min_max_scaler.fit_transform(data)
+
+        return pd.DataFrame(x_scaled)
+
     def __getitem__(self, index):
         # https://stackoverflow.com/questions/45147100/pandas-drop-columns-with-all-nans
         
         x = self.groupped.get_group(self.keys[index])[self.x_columns]
         x = x.dropna( how ='all')
         x = x.fillna(0.0)
+        x = self._normalize_dataset(x)
+
         y = self.groupped.get_group(self.keys[index])[self.y_columns]
         y = y.dropna(how = 'all')
         y = y.fillna(0.0)
+        y = self._normalize_dataset(y)
+        
         #print(self.keys[index])
         # if not y.empty:
         #    print(x, y)
