@@ -28,7 +28,7 @@ dim_features = dwg_dataset.entities.dim_features
 rnn_encoder = RnnEncoder(ent_features, 1024).to(device)
 rnn_decoder = RnnDecoder(1024, dim_features).to(device)
 
-loss = MyMSELoss(dim_features) #MyChamferDistance()
+loss = MyChamferDistance()
 
 lr = 1e-3
 epochs = 11

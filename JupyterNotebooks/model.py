@@ -19,7 +19,7 @@ class RnnEncoder(nn.Module):
 
         self.fcn = nn.Sequential(
             nn.Linear(learned_size, 256),
-            nn.Dropout(0.5),
+            nn.Dropout(0.25),
             nn.Linear(256, 1),
             nn.ReLU()
         )
