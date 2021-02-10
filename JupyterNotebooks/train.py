@@ -102,7 +102,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
 
             train_accuracy = np.mean(calculate_accuracy(decoded, y))
 
-            print('[{0}-{1} @ {2:.1f} sec] Log10 Loss: {3:2f} Train err: {4:2.1f}%'. format(
+            print('[{0}-{1} @ {2:.1f} sec] Loss: {3:2f} Train err: {4:2.1f}%'. format(
                 epoch,
                 i,
                 time.time() - start,
@@ -128,8 +128,5 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
             val_accuracy = np.mean(val_accuracies)
             print('Epoch [{0}] validation error: {1:2.3f}%'.format(epoch, 100.0 * (1 - val_accuracy)))
             val_history.append(float(val_accuracy))
-        
-        # early stop
-        #if np.log10(float(loss_value)) < 1:
-        #    break
+
     return loss_history, train_history, val_history

@@ -226,3 +226,5 @@ JupyterNotebooks/.vscode/.ropeproject/objectdb
 JupyterNotebooks/.vscode/.ropeproject/config.py
 *.ipynb_checkpoints/
 JupyterNotebooks/tests/.ipynb_checkpoints/*
+JupyterNotebooks/.vs/*
+*.pyperf

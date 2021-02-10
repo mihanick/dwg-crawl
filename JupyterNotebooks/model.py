@@ -14,9 +14,9 @@ class RnnEncoder(nn.Module):
         self.hidden = None
 
         self.fcn = nn.Sequential(
-            nn.Linear(learned_size, 128),
+            nn.Linear(learned_size, 512),
             # nn.Dropout(0.1),
-            nn.Linear(128, 1),
+            nn.Linear(512, 1),
             nn.ReLU()
         )
         
