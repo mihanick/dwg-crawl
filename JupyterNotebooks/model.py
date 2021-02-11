@@ -51,13 +51,9 @@ class RnnEncoder(nn.Module):
             n = self.fcn(outp)
             
             # https://stackoverflow.com/questions/48005152/extract-the-count-of-positive-and-negative-values-from-an-array
-            counts = np.sum(np.array(n.cpu().detach().numpy()) > 0, axis=None)
+            _count = np.sum(np.array(n.cpu().detach().numpy()) > 0, axis=None)
             
-            conts_outpus = counts
-            # count_outputs = torch.Tensor(counts, requires_grad=True)
-            # print(cou)
-
-            outs[j] = conts_outpus
+            outs[j] = _count
             hiddens[j] = h_n
         
         return outs, hiddens

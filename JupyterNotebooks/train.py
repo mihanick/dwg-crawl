@@ -98,7 +98,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
 
             train_accuracy = np.mean(calculate_accuracy(decoded, y))
 
-            print('[{:4.0f}-{:4.0f} @ {:4.1f} sec] Loss: {:4.1f} Train err: {:3.1f}% in: {:5.0f} out: {:5.0f} target: {:5.0f}'
+            print('[{:4.0f}-{:4.0f} @ {:4.1f} sec] Loss: {:4.1f} Train err: {:4.1f}% in: {:5.0f} out: {:5.0f} target: {:5.0f}'
                   .format(
                         epoch,
                         i,
