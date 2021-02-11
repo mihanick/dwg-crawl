@@ -9,7 +9,7 @@ import numpy as np
 # https://stackoverflow.com/questions/20309456/call-a-function-from-another-file
 from train import train_model
 from dataset import DwgDataset
-from chamfer_distance_loss import MyChamferDistance, MyMSELoss
+from chamfer_distance_loss import MyChamferDistance
 from model import RnnDecoder, RnnEncoder
 
 batch_size = 16

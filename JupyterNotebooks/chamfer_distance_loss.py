@@ -87,31 +87,3 @@ def my_chamfer_distance(out, y):
 class MyChamferDistance(nn.Module):
     def forward(self, x, target):
         return my_chamfer_distance(x, target)
-
-class MyMSELoss(nn.Module):
-    def __init__(self, features):
-        super().__init__()
-        self.features = features
-
-    def forward(self, prediction, expected):
-        loss_f = nn.MSELoss()
-        
-        loss = torch.zeros((1, 1), dtype=torch.float32, requires_grad=True)
-
-        def at_least_one_element(ddd):
-            if len(ddd) == 0:
-                return torch.zeros((1, self.features))
-            else:
-                return ddd
-
-        for i in range(len(prediction)):                
-            for p in at_least_one_element(prediction[i]):
-                for e in at_least_one_element(expected[i]):
-                    # print(i, p, e)
-                    
-                    loss = loss + loss_f(p, e)
-                    
-        # RuntimeError: leaf variable has been moved into the graph interior
-        # UserWarning: The .grad attribute of a Tensor that is not a leaf Tensor is being accessed. Its .grad attribute won't be populated during autograd.backward(). If you indeed want the gradient for a non-leaf Tensor, use .retain_grad() on the non-leaf Tensor. If you access the non-leaf Tensor by mistake, make sure you access the leaf Tensor instead. See github.com/pytorch/pytorch/pull/30531 for more informations.
-
-        return loss

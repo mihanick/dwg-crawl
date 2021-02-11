@@ -4,7 +4,7 @@ Contains tests for input and output of models and also for loss functions
 
 #https://code.visualstudio.com/docs/python/testing
 import torch
-from chamfer_distance_loss import MyChamferDistance, MyMSELoss
+from chamfer_distance_loss import MyChamferDistance
 from dataset import DwgDataset
 from model import RnnDecoder, RnnEncoder
 from train import calculate_accuracy
@@ -98,16 +98,3 @@ def test_chamfer_distance():
     '''
     loss_layer = MyChamferDistance()
     _check_loss(loss_layer)
-
-def test_mse_distance():
-    '''
-    tests MSE loss class
-    '''
-    return
-
-    try:
-        loss_layer = MyMSELoss(features=6)
-        _check_loss(loss_layer)
-    except Exception as e:
-        print(e)
-        raise e
