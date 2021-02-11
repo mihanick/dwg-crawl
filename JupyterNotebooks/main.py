@@ -12,7 +12,7 @@ from dataset import DwgDataset
 from chamfer_distance_loss import MyChamferDistance
 from model import RnnDecoder, RnnEncoder
 
-batch_size = 16
+batch_size = 1
 device = torch.device("cpu")
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -26,12 +26,12 @@ test_loader  = dwg_dataset.test_loader
 ent_features = dwg_dataset.entities.ent_features
 dim_features = dwg_dataset.entities.dim_features
 
-rnn_encoder = RnnEncoder(ent_features, 2048, enforced_device=device).to(device)
-rnn_decoder = RnnDecoder(2048, dim_features, enforced_device=device).to(device)
+rnn_encoder = RnnEncoder(ent_features, 512, enforced_device=device).to(device)
+rnn_decoder = RnnDecoder(512, dim_features, enforced_device=device).to(device)
 
 loss = MyChamferDistance()
 
-lr = 1e-3
+lr = 5
 epochs = 3
 decoder_optimizer = torch.optim.Adam(rnn_decoder.parameters(), lr=lr)
 encoder_optimizer = torch.optim.Adam(rnn_encoder.parameters(), lr=0.1*lr)

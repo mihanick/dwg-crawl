@@ -35,12 +35,8 @@ def calculate_accuracy(dim_outputs, y):
         vol_predicted = calculate_volume(dim_outputs[batch_no])
 
         acc = 0
-        if vol_actual == vol_predicted:
-            acc = 1
-        elif vol_predicted == 0:
-            acc = 0
-        elif vol_actual != 0:
-            acc = 1 - np.abs(vol_predicted -vol_actual/ vol_actual)
+        if vol_actual != 0:
+            acc = 1 - np.abs(vol_predicted - vol_actual / vol_actual)
             
         accuracies.append(acc)
 
@@ -102,19 +98,21 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
 
             train_accuracy = np.mean(calculate_accuracy(decoded, y))
 
-            print('[{0}-{1} @ {2:.1f} sec] Loss: {3:2f} Train err: {4:2.1f}%'. format(
-                epoch,
-                i,
-                time.time() - start,
-                float(loss_value),
-                100.0 * (1 - train_accuracy)
-            ))
+            print('[{:4.0f}-{:4.0f} @ {:4.1f} sec] Loss: {:4.1f} Train err: {:3.1f}% in: {:5.0f} out: {:5.0f} target: {:5.0f}'
+                  .format(
+                        epoch,
+                        i,
+                        time.time() - start,
+                        float(loss_value),
+                        100.0 * (1 - train_accuracy),
+                        x[0].shape[0],
+                        decoded[0].shape[0],
+                        y[0].shape[0]
+                    ))
             
         train_history.append(float(train_accuracy))
         loss_history.append(float(loss_accumulated))
         
-        
-
         # validation
         with torch.no_grad():
             encoder.eval()
@@ -131,8 +129,4 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
             print('Epoch [{0}] validation error: {1:2.3f}%'.format(epoch, 100.0 * (1 - val_accuracy)))
             val_history.append(float(val_accuracy))
         
-        # free memory
-        del(loss_accumulated)
-        # del(outs_num, learned_hidden_representation, decoded)
-
     return loss_history, train_history, val_history
