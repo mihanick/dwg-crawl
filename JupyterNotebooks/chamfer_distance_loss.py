@@ -66,15 +66,19 @@ def my_chamfer_distance(out, y):
         
         # distance between empty sets is 0: just what we need
         if a.shape[1] == 0 and b.shape[1] == 0:
-            # loss += 0
+            loss = loss + 0
             continue
         
         # I assume the distance between empty set and non-empty set is
         # a distance to a same set with all zeros
         if a.shape[1] == 0:
-            a = torch.zeros(b.shape)
+            # a = torch.zeros(b.shape)
+            loss = loss + float("inf")
+            continue
         if b.shape[1] == 0:
-            b = torch.zeros(a.shape)
+            # b = torch.zeros(a.shape)
+            loss = loss + float("inf")
+            continue
         # https://discuss.pytorch.org/t/leaf-variable-was-used-in-an-inplace-operation/308
         curr_loss = chamfer_distance_sklearn(a.cpu().detach().numpy(), b.detach().numpy()).sum()
         loss = loss + curr_loss

@@ -14,9 +14,9 @@ class RnnEncoder(nn.Module):
         self.hidden = None
 
         self.fcn = nn.Sequential(
-            nn.Linear(learned_size, 512),
+            nn.Linear(learned_size, 128),
             # nn.Dropout(0.1),
-            nn.Linear(512, 1),
+            nn.Linear(128, 1),
             nn.ReLU()
         )
         
@@ -35,7 +35,7 @@ class RnnEncoder(nn.Module):
         batch_size = len(x)
         
         hiddens = torch.zeros((batch_size, self.learned_size), dtype=torch.float32, device=self.device, requires_grad=True)
-        outs = torch.zeros((batch_size, 1), dtype=torch.float32, device=self.device, requires_grad=True)
+        outs = torch.zeros((batch_size, 1), dtype=torch.float32, device=self.device, requires_grad=False)
 
         for j in range(batch_size):
             f = x[j]
@@ -52,6 +52,7 @@ class RnnEncoder(nn.Module):
             
             # https://stackoverflow.com/questions/48005152/extract-the-count-of-positive-and-negative-values-from-an-array
             counts = np.sum(np.array(n.cpu().detach().numpy()) > 0, axis=None)
+            
             conts_outpus = counts
             # count_outputs = torch.Tensor(counts, requires_grad=True)
             # print(cou)
@@ -84,7 +85,7 @@ class RnnDecoder(nn.Module):
         result = []
         for j in range(batch_size):
             dim_count = int(out_counts[j].item())
-            outs = torch.zeros((dim_count, self.dim_features), dtype=torch.float32, device=self.device)
+            outs = torch.zeros((dim_count, self.dim_features), dtype=torch.float32, device=self.device, requires_grad=True)
             if dim_count > 0:
                 inp = torch.zeros((dim_count, self.learned_size), dtype=torch.float, device=self.device)
                 # that is not what supposed to happen, as we are just copying inputs to each dimension output

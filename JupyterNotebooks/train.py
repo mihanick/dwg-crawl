@@ -109,9 +109,11 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
                 float(loss_value),
                 100.0 * (1 - train_accuracy)
             ))
-
+            
         train_history.append(float(train_accuracy))
         loss_history.append(float(loss_accumulated))
+        
+        
 
         # validation
         with torch.no_grad():
@@ -128,5 +130,9 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
             val_accuracy = np.mean(val_accuracies)
             print('Epoch [{0}] validation error: {1:2.3f}%'.format(epoch, 100.0 * (1 - val_accuracy)))
             val_history.append(float(val_accuracy))
+        
+        # free memory
+        del(loss_accumulated)
+        # del(outs_num, learned_hidden_representation, decoded)
 
     return loss_history, train_history, val_history
