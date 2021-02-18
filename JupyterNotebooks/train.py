@@ -5,6 +5,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+from guppy import hpy
 
 def calculate_accuracy(dim_outputs, y):
     '''
@@ -26,7 +27,7 @@ def calculate_accuracy(dim_outputs, y):
 
         
         diffs = max_coords - min_coords
-        return np.sum(diffs**2)
+        return 1 - np.sum(diffs**2)
 
     accuracies = []
     # y, dim_outputs: list len=batch_size of tensors with shape (dim_count, dim_features)
@@ -36,7 +37,7 @@ def calculate_accuracy(dim_outputs, y):
 
         acc = 0
         if vol_actual != 0:
-            acc = 1 - np.abs(vol_predicted - vol_actual / vol_actual)
+            acc = np.abs(vol_predicted - vol_actual / vol_actual)
             
         accuracies.append(acc)
 
@@ -98,13 +99,13 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
 
             train_accuracy = np.mean(calculate_accuracy(decoded, y))
 
-            print('[{:4.0f}-{:4.0f} @ {:4.1f} sec] Loss: {:4.1f} Train err: {:4.1f}% in: {:5.0f} out: {:5.0f} target: {:5.0f}'
+            print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.1f} Train acc: {:1.2f} in: {:5.0f} out: {:5.0f} target: {:5.0f}'
                   .format(
                         epoch,
                         i,
                         time.time() - start,
                         float(loss_value),
-                        100.0 * (1 - train_accuracy),
+                        train_accuracy,
                         x[0].shape[0],
                         decoded[0].shape[0],
                         y[0].shape[0]
@@ -113,6 +114,10 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
         train_history.append(float(train_accuracy))
         loss_history.append(float(loss_accumulated))
         
+        # https://stackoverflow.com/questions/110259/which-python-memory-profiler-is-recommended
+        h = hpy()
+        print(h.heap())
+
         # validation
         with torch.no_grad():
             encoder.eval()
@@ -126,7 +131,7 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
                 val_acc = np.mean(calculate_accuracy(dim_predictions, y))
                 val_accuracies.append(val_acc)
             val_accuracy = np.mean(val_accuracies)
-            print('Epoch [{0}] validation error: {1:2.3f}%'.format(epoch, 100.0 * (1 - val_accuracy)))
+            print('Epoch [{}] validation error: {:1.3f}'.format(epoch, val_accuracy))
             val_history.append(float(val_accuracy))
         
     return loss_history, train_history, val_history

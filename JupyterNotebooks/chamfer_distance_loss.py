@@ -39,7 +39,7 @@ def chamfer_distance_numpy(array1, array2):
     return dist
 
 
-def chamfer_distance_sklearn(array1,array2):
+def chamfer_distance_sklearn(array1, array2):
     batch_size, num_point = array1.shape[:2]
     dist = 0
     for i in range(batch_size):
@@ -70,13 +70,14 @@ def my_chamfer_distance(out, y):
             continue
         
         # I assume the distance between empty set and non-empty set is
-        # a distance to a same set with all zeros
+        # an infinity
         if a.shape[1] == 0:
-            # a = torch.zeros(b.shape)
             loss = loss + float("inf")
             continue
         if b.shape[1] == 0:
-            # b = torch.zeros(a.shape)
+            # positive infiinity here because
+            # negative infinity loss is less than zero
+            # so optimizer will seek it
             loss = loss + float("inf")
             continue
         # https://discuss.pytorch.org/t/leaf-variable-was-used-in-an-inplace-operation/308

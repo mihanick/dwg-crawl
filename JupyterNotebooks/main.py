@@ -31,10 +31,10 @@ rnn_decoder = RnnDecoder(512, dim_features, enforced_device=device).to(device)
 
 loss = MyChamferDistance()
 
-lr = 5
+lr = 0.1
 epochs = 3
 decoder_optimizer = torch.optim.Adam(rnn_decoder.parameters(), lr=lr)
-encoder_optimizer = torch.optim.Adam(rnn_encoder.parameters(), lr=0.1*lr)
+encoder_optimizer = torch.optim.Adam(rnn_encoder.parameters(), lr=0.5*lr)
 
 
 train_model(
