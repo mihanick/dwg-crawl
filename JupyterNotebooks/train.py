@@ -114,10 +114,6 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
         train_history.append(float(train_accuracy))
         loss_history.append(float(loss_accumulated))
         
-        # https://stackoverflow.com/questions/110259/which-python-memory-profiler-is-recommended
-        h = hpy()
-        print(h.heap())
-
         # validation
         with torch.no_grad():
             encoder.eval()
@@ -133,5 +129,12 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
             val_accuracy = np.mean(val_accuracies)
             print('Epoch [{}] validation error: {:1.3f}'.format(epoch, val_accuracy))
             val_history.append(float(val_accuracy))
+
+        # show memory consumption
+        # https://stackoverflow.com/questions/110259/which-python-memory-profiler-is-recommended
+        print("--------------------memory consumption:")
+        heap = hpy()
+        print(heap.heap())
+        print("--------------------------------------:")
         
     return loss_history, train_history, val_history

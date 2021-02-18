@@ -11,8 +11,10 @@ from train import train_model
 from dataset import DwgDataset
 from chamfer_distance_loss import MyChamferDistance
 from model import RnnDecoder, RnnEncoder
+from train import calculate_accuracy
 
 batch_size = 1
+
 device = torch.device("cpu")
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -32,7 +34,7 @@ rnn_decoder = RnnDecoder(512, dim_features, enforced_device=device).to(device)
 loss = MyChamferDistance()
 
 lr = 0.1
-epochs = 3
+epochs = 30
 decoder_optimizer = torch.optim.Adam(rnn_decoder.parameters(), lr=lr)
 encoder_optimizer = torch.optim.Adam(rnn_encoder.parameters(), lr=0.5*lr)
 
@@ -48,7 +50,6 @@ train_model(
     epochs       = epochs)
 
 # print validation results
-from train import calculate_accuracy
 rnn_encoder.eval()
 rnn_decoder.eval()
 
@@ -68,7 +69,7 @@ for (x, y) in iter(val_loader):
     print('predicted:', ppp)
     
     lv = loss(decoded, y)
-    print ('loss:', lv)
+    print('loss:', lv)
 
     acc = calculate_accuracy(decoded, y)
     print('accuracy:', acc)

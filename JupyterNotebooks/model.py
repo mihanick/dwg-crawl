@@ -8,15 +8,17 @@ class RnnEncoder(nn.Module):
     def __init__(self, ent_features, learned_size, enforced_device=None):
         super(RnnEncoder, self).__init__()
 
-        self.rnn = nn.RNN(input_size = ent_features, hidden_size = learned_size)
+        self.rnn = nn.RNN(input_size=ent_features, hidden_size=learned_size)
         self.learned_size = learned_size
         self.ent_features = ent_features
         self.hidden = None
 
-        self.fcn = nn.Sequential(
-            nn.Linear(learned_size, 128),
-            # nn.Dropout(0.51),
-            nn.Linear(128, 1),
+        self.fcn1 = nn.Linear(learned_size, 256)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.fcn2 = nn.Linear(256, 1024)
+        self.bn2 = nn.BatchNorm1d(1024)
+        self.fcno = nn.Sequential(
+            nn.Linear(1024, 1),
             nn.ReLU()
         )
         
@@ -28,7 +30,7 @@ class RnnEncoder(nn.Module):
                 self.device = torch.device("cuda")
         
     def init_hidden(self, batch_size):
-        self.hidden = torch.zeros(1, batch_size, self.learned_size, device = self.device)
+        self.hidden = torch.zeros(1, batch_size, self.learned_size, device=self.device)
         
     def forward(self, x):
         # input of shape (seq_len, batch, input_size)
@@ -48,10 +50,15 @@ class RnnEncoder(nn.Module):
 
             # print('h_N', h_n.shape)
             # print('cell out', outp.shape)
-            n = self.fcn(outp)
+            oo = self.fcn1(outp)
+            oo = oo.squeeze(dim=1)
+            oo = self.bn1(oo)
+            oo = self.fcn2(oo)
+            oo = self.bn2(oo)
+            oo = self.fcno(oo)
             
             # https://stackoverflow.com/questions/48005152/extract-the-count-of-positive-and-negative-values-from-an-array
-            _count = np.sum(np.array(n.cpu().detach().numpy()) > 0, axis=None)
+            _count = np.sum(np.array(oo.cpu().detach().numpy()) > 0, axis=None)
             
             outs[j] = _count
             hiddens[j] = h_n
@@ -59,7 +66,7 @@ class RnnEncoder(nn.Module):
         return outs, hiddens
             
 class RnnDecoder(nn.Module):
-    def __init__(self, learned_size, dim_features, enforced_device = None):
+    def __init__(self, learned_size, dim_features, enforced_device=None):
         super(RnnDecoder, self).__init__()
         self.rnn = nn.RNN(input_size=learned_size, hidden_size=dim_features)
         self.learned_size = learned_size
