@@ -92,6 +92,6 @@ class MyChamferDistance(nn.Module):
 class ChamferDistance2(nn.Module):
     def forward(self, x, target):
         
-        curr_loss = chamfer_distance_sklearn(x.cpu().detach().numpy(), target.detach().numpy()).sum()
+        curr_loss = chamfer_distance_sklearn(x.cpu().detach().numpy(), target.cpu().detach().numpy()).sum()
         
         return torch.tensor(curr_loss, requires_grad=True)
