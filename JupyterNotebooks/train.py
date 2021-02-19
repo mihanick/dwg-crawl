@@ -14,8 +14,7 @@ def count_relevant(y):
     '''
     n = np.count_nonzero(y.detach().cpu().numpy(), axis=2)
     n = np.count_nonzero(n, axis=1)
-    result = torch.LongTensor(n)
-    return result
+    return n
     
 
 def calculate_accuracy2(dim_outputs, y_padded):
@@ -25,16 +24,22 @@ def calculate_accuracy2(dim_outputs, y_padded):
 
     dim_outputs is a torch.tensor.shape(batch, max_sequence_len, dim_features)
     y_padded is a torch.tensor.shape(batch, max_sequence_len, dim_features)
-
     '''
-    with torch.no_grad():
-        #https://pytorch.org/docs/stable/generated/torch.count_nonzero.html
-        with torch.no_grad():
-            y = count_relevant(y_padded)
-            dim_out = count_relevant(dim_outputs)
-            
-            result = 1 - torch.abs(dim_out - y) / y
-            return torch.mean(result).item()
+
+    y = count_relevant(y_padded)
+    dim_out = count_relevant(dim_outputs)
+
+    result = np.zeros_like(y)
+
+    for i in range(len(y)):
+        if y[i] != 0:
+            result[i] = 1 - np.abs(dim_out[i] - y[i]) / y[i]
+        elif dim_out[i] == 0:
+            result[i] = 1
+        else:
+            result[i] = 0
+    
+    return np.mean(result)
 
 def calculate_accuracy(dim_outputs, y):
     '''
