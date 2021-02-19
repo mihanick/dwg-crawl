@@ -105,6 +105,10 @@ class RnnDecoder(nn.Module):
         return result
 
 class NNModulePrototype(nn.Module):
+    '''
+    Parent class to init cuda if available
+    Or use enforced device
+    '''
     def __init__ (self, enforced_device=None):
         super().__init__()
 
@@ -151,10 +155,14 @@ class UglyModel(NNModulePrototype):
 
         self.hidden_size = self.dim_features*20
 
+        self.output_seq_length = 20 #self.max_seq_length
+
         self.fc0 = nn.Linear(self.max_seq_length, self.hidden_size)
-        self.fc1 = nn.Linear(self.hidden_size * self.ent_features, self.dim_features * self.max_seq_length)
         self.bn1 = nn.BatchNorm1d(self.hidden_size*self.ent_features)
-        self.fc2 = nn.Linear(256*self.dim_features, self.max_seq_length * self.dim_features)
+
+        self.fc1 = nn.Linear(self.hidden_size * self.ent_features, self.dim_features * self.output_seq_length)
+        self.relu = nn.ReLU()
+        self.do = nn.Dropout(0.95)
 
     def forward(self, x):
         x = x.to(self.device)
@@ -162,9 +170,11 @@ class UglyModel(NNModulePrototype):
         x = torch.transpose(x, 1, 2)
         x = self.fc0(x)
         x = x.view(batch_size, self.hidden_size * self.ent_features)
-        x = self.bn1(x)
+        # x = self.bn1(x)
+        x = self.relu(x)
         x = self.fc1(x)
-        x = x.view(batch_size, self.dim_features, self.max_seq_length)
+        x = self.do(x)
+        x = x.view(batch_size, self.dim_features, self.output_seq_length)
         x = torch.transpose(x, 1, 2)
         
         return x

@@ -36,7 +36,7 @@ model = UglyModel(ent_features=ent_features, dim_features=dim_features, max_seq_
 model.to(device)
 
 lr = 0.1
-epochs = 3
+epochs = 30
 opt = torch.optim.Adam(model.parameters(), lr=lr)
 
 start = time.time()
@@ -59,8 +59,11 @@ for epoch in range(epochs):
     for i, (x, y) in enumerate(train_loader):
 
         opt.zero_grad()
+
         decoded = model(padder(x))
         y_padded = padder(y)
+        decoded = padder(decoded)
+
         loss_value = loss(decoded, y_padded)
 
         loss_value.backward()
@@ -70,7 +73,7 @@ for epoch in range(epochs):
 
         train_accuracy = calculate_accuracy2(decoded, y_padded)
         with torch.no_grad():
-            print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.1f} Train acc: {:1.2f} in: {} out: {} target: {}'
+            print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.4f} Train acc: {:1.2f} in: {} out: {} target: {}'
                     .format(
                         epoch,
                         i,

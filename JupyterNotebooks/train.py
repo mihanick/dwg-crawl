@@ -5,16 +5,16 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from guppy import hpy
 
 def count_relevant(y):
     '''
     counts number of non all-zeroes
     input y : tensor.shape(batch, max_seq_len, features)
-    output tensor.shape(batch, int)
+    output tensor with shape(batch, 1)
     '''
-    result = torch.count_nonzero(y, dim=2)
-    result = torch.count_nonzero(result, dim=1)
+    n = np.count_nonzero(y.detach().cpu().numpy(), axis=2)
+    n = np.count_nonzero(n, axis=1)
+    result = torch.LongTensor(n)
     return result
     
 
@@ -158,12 +158,5 @@ def train_model(encoder, decoder, train_loader, val_loader, loss, decoder_opt, e
             val_accuracy = np.mean(val_accuracies)
             print('Epoch [{}] validation error: {:1.3f}'.format(epoch, val_accuracy))
             val_history.append(float(val_accuracy))
-
-        # show memory consumption
-        # https://stackoverflow.com/questions/110259/which-python-memory-profiler-is-recommended
-        print("--------------------memory consumption:")
-        heap = hpy()
-        print(heap.heap())
-        print("--------------------------------------:")
         
     return loss_history, train_history, val_history
