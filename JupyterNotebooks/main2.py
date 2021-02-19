@@ -13,7 +13,7 @@ from dataset import DwgDataset
 from model import UglyModel, Padder
 from train import calculate_accuracy2, count_relevant
 
-batch_size = 2
+batch_size = 4
 
 device = torch.device("cpu")
 #if torch.cuda.is_available():
@@ -35,8 +35,8 @@ loss = nn.MSELoss()
 model = UglyModel(ent_features=ent_features, dim_features=dim_features, max_seq_length=max_seq_length, enforced_device=device)
 model.to(device)
 
-lr = 0.1
-epochs = 30
+lr = 0.01
+epochs = 5
 opt = torch.optim.Adam(model.parameters(), lr=lr)
 
 start = time.time()
@@ -99,7 +99,7 @@ for epoch in range(epochs):
             val_acc = calculate_accuracy2(dim_predictions, padder(y))
             val_accuracies.append(val_acc)
         val_accuracy = np.mean(val_accuracies)
-        print('Epoch [{}] validation error: {:1.3f}'.format(epoch, val_accuracy))
+        print('Epoch [{}] validation accuracy: {:1.3f}'.format(epoch, val_accuracy))
         val_history.append(float(val_accuracy))
 
     # show memory consumption

@@ -151,17 +151,21 @@ class UglyModel(NNModulePrototype):
         
         self.ent_features = ent_features
         self.dim_features = dim_features
-        self.max_seq_length = max_seq_length
+        self.max_seq_length =max_seq_length
 
         self.hidden_size = self.dim_features*20
 
-        self.output_seq_length = 20 #self.max_seq_length
+        self.output_seq_length =  int(max_seq_length/100)
 
         self.fc0 = nn.Linear(self.max_seq_length, self.hidden_size)
-        self.bn1 = nn.BatchNorm1d(self.hidden_size*self.ent_features)
-
+        
         self.fc1 = nn.Linear(self.hidden_size * self.ent_features, self.dim_features * self.output_seq_length)
         self.relu = nn.ReLU()
+
+        # this requires dropLast for dataset, as we can have 1- length batch
+        #https://discuss.pytorch.org/t/error-expected-more-than-1-value-per-channel-when-training/26274/5
+        self.bn1 = nn.BatchNorm1d(self.dim_features * self.output_seq_length)
+
         self.do = nn.Dropout(0.95)
 
     def forward(self, x):
@@ -170,10 +174,14 @@ class UglyModel(NNModulePrototype):
         x = torch.transpose(x, 1, 2)
         x = self.fc0(x)
         x = x.view(batch_size, self.hidden_size * self.ent_features)
-        # x = self.bn1(x)
-        x = self.relu(x)
+        
         x = self.fc1(x)
-        x = self.do(x)
+        x = self.bn1(x)
+        
+        x = self.relu(x)
+        
+
+        # x = self.do(x)
         x = x.view(batch_size, self.dim_features, self.output_seq_length)
         x = torch.transpose(x, 1, 2)
         
