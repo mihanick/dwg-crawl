@@ -14,7 +14,7 @@ from model import UglyModel, Padder
 from train import calculate_accuracy2, count_relevant, CalculateLoaderAccuracy
 from chamfer_distance_loss import ChamferDistance2
 
-batch_size = 2
+batch_size = 4
 
 device = torch.device("cpu")
 if torch.cuda.is_available():
