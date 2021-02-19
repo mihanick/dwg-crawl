@@ -16,8 +16,8 @@ from train import calculate_accuracy2, count_relevant
 batch_size = 2
 
 device = torch.device("cpu")
-if torch.cuda.is_available():
-    device = torch.device("cuda")
+#if torch.cuda.is_available():
+#    device = torch.device("cuda")
 
 dwg_dataset = DwgDataset(pickle_file='test_dataset.pickle', batch_size=batch_size)
 
@@ -33,11 +33,11 @@ max_seq_length = dwg_dataset.max_seq_length
 loss = nn.MSELoss()
 
 model = UglyModel(ent_features=ent_features, dim_features=dim_features, max_seq_length=max_seq_length, enforced_device=device)
+model.to(device)
 
 lr = 0.1
 epochs = 3
 opt = torch.optim.Adam(model.parameters(), lr=lr)
-
 
 start = time.time()
 
@@ -46,7 +46,7 @@ train_history  = []
 val_history    = []
 train_accuracy = 0.0
 
-padder = Padder(max_seq_length)
+padder = Padder(max_seq_length, enforced_device=device)
 
 for epoch in range(epochs):
     torch.cuda.empty_cache()

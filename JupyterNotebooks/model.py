@@ -106,7 +106,7 @@ class RnnDecoder(nn.Module):
 
 class NNModulePrototype(nn.Module):
     def __init__ (self, enforced_device=None):
-        super(NNModulePrototype, self).__init__()
+        super().__init__()
 
         if enforced_device is not None:
             self.device = enforced_device
@@ -116,8 +116,8 @@ class NNModulePrototype(nn.Module):
                 self.device = torch.device("cuda")
 
 class Padder(NNModulePrototype):
-    def __init__(self, max_seq_length, requires_grad=False):
-        super(Padder, self).__init__()
+    def __init__(self, max_seq_length, enforced_device=None, requires_grad=False):
+        super().__init__(enforced_device)
 
         self.max_seq_length = max_seq_length
         self.requires_grad = requires_grad
@@ -157,6 +157,7 @@ class UglyModel(NNModulePrototype):
         self.fc2 = nn.Linear(256*self.dim_features, self.max_seq_length * self.dim_features)
 
     def forward(self, x):
+        x = x.to(self.device)
         batch_size = x.shape[0]
         x = torch.transpose(x, 1, 2)
         x = self.fc0(x)
