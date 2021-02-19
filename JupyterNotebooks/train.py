@@ -7,6 +7,35 @@ import matplotlib.pyplot as plt
 import torch
 from guppy import hpy
 
+def count_relevant(y):
+    '''
+    counts number of non all-zeroes
+    input y : tensor.shape(batch, max_seq_len, features)
+    output tensor.shape(batch, int)
+    '''
+    result = torch.count_nonzero(y, dim=2)
+    result = torch.count_nonzero(result, dim=1)
+    return result
+    
+
+def calculate_accuracy2(dim_outputs, y_padded):
+    '''
+    Calculates the value representing how accurate is prediction of dim_outputs 
+    in comparison to given y
+
+    dim_outputs is a torch.tensor.shape(batch, max_sequence_len, dim_features)
+    y_padded is a torch.tensor.shape(batch, max_sequence_len, dim_features)
+
+    '''
+    with torch.no_grad():
+        #https://pytorch.org/docs/stable/generated/torch.count_nonzero.html
+        with torch.no_grad():
+            y = count_relevant(y_padded)
+            dim_out = count_relevant(dim_outputs)
+            
+            result = 1 - torch.abs(dim_out - y) / y
+            return torch.mean(result).item()
+
 def calculate_accuracy(dim_outputs, y):
     '''
     For now we will calculate accuracy by model guessing the right amount of dimensions produced

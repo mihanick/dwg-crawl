@@ -4,10 +4,99 @@ Contains tests for input and output of models and also for loss functions
 
 #https://code.visualstudio.com/docs/python/testing
 import torch
+from torch import nn
 from chamfer_distance_loss import MyChamferDistance
 from dataset import DwgDataset
-from model import RnnDecoder, RnnEncoder
-from train import calculate_accuracy
+from model import RnnDecoder, RnnEncoder, UglyModel, Padder
+from train import calculate_accuracy, calculate_accuracy2, count_relevant
+
+def test_ugly_model():
+    '''
+    runs all samples throug dataset
+    '''
+    loss = nn.MSELoss()
+    
+    data = DwgDataset('./test_dataset.pickle')
+    max_seq_length = data.max_seq_length
+    input_padder = Padder(max_seq_length)
+    output_padder = Padder(max_seq_length)
+
+    model = UglyModel(9, 6, max_seq_length)
+
+    i = 0
+    for (x, y) in iter(data.train_loader):
+        x_padded = input_padder(x)
+        output = model(x_padded)
+
+        y_padded = output_padder(y)
+        loss_v = loss(output, y_padded)
+        loss_v.backward()
+        acc = calculate_accuracy2(output, y_padded)
+        
+        
+        print(i, '------------------------------')
+        print('actual number',  count_relevant(y_padded))
+        print('predicted number', count_relevant(output))
+        print('loss', loss_v)
+        print('accuracy', acc)
+
+        i += 1
+
+def test_single_random_input_ugly_model():
+    loss = nn.MSELoss()
+
+    max_seq_length = 4
+    input_padder = Padder(max_seq_length, requires_grad=False)
+    output_padder = Padder(max_seq_length, requires_grad=False)
+
+    out = [torch.randn([3, 6], requires_grad=True), torch.randn([max_seq_length, 6], requires_grad=True)]
+    y = [torch.randn([max_seq_length, 6]), torch.randn([1, 6])]
+    output_p = input_padder(out)
+    y_p = output_padder(y)
+
+    loss_v = loss(output_p, y_p)
+    print('check random sets')
+    print(loss_v)
+    loss_v.backward()
+
+    acc = calculate_accuracy2(output_p, y_p)
+
+    print("check empty sets")
+
+    out = [torch.randn([0, 6], requires_grad=True), torch.randn([max_seq_length, 6], requires_grad=True)]
+    y = [torch.randn([max_seq_length, 6]), torch.randn([0, 6])]
+    output_p = input_padder(out)
+    y_p = output_padder(y)
+
+    loss_v = loss(output_p, y_p)
+    print(loss_v)
+    loss_v.backward()
+
+    acc = calculate_accuracy2(output_p, y_p)
+    print(acc)
+
+def test_input_output_model():
+    '''
+    runs all samples throug dataset
+    '''
+
+    loss = MyChamferDistance()
+
+    data = DwgDataset('./test_dataset.pickle')
+
+    encoder = RnnEncoder(9, 32)
+    decoder = RnnDecoder(32, 6)
+
+    i = 0
+    for (x, _y) in iter(data.train_loader):
+        outs, learned = encoder(x)
+        _decoded = decoder(outs, learned)
+        loss_v = loss(_decoded, _y)
+        loss_v.backward()
+        acc = calculate_accuracy(_decoded, _y)
+        i += 1
+
+        
 
 def test_input_output_model():
     '''

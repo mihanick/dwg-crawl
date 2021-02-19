@@ -2,7 +2,8 @@ from tests.test_pytest import *
 
 # test_debug_ch_dist()
 # test_input_output_model()
-test_loss_acc()
+#test_loss_acc()
+test_ugly_model()
 
 # https://arxiv.org/pdf/1904.08921.pdf
 # https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html#torch.nn.Transformer

@@ -111,5 +111,17 @@ class DwgDataset:
         self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = train_sampler, collate_fn=custom_collate)
         self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = val_sampler, collate_fn=custom_collate)
         self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = test_sampler, collate_fn=custom_collate)
-    
-    
+
+        self.max_seq_length = 0
+        self.MaxSeqLength(self.train_loader)
+        self.MaxSeqLength(self.val_loader)
+        self.MaxSeqLength(self.test_loader)
+
+    def MaxSeqLength(self, loader):
+        for (x, y) in loader:
+            for xx in x: 
+                l = xx.shape[0] 
+                if l > self.max_seq_length:
+                    self.max_seq_length = l
+
+        
