@@ -47,6 +47,7 @@ val_history    = []
 train_accuracy = 0.0
 
 padder = Padder(max_seq_length, enforced_device=device)
+padder.to(device)
 
 for epoch in range(epochs):
     torch.cuda.empty_cache()

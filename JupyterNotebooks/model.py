@@ -143,7 +143,7 @@ class Padder(NNModulePrototype):
 
 class UglyModel(NNModulePrototype):
     def __init__ (self, ent_features, dim_features, max_seq_length, enforced_device=None):
-        super(UglyModel, self).__init__()
+        super(UglyModel, self).__init__(enforced_device=enforced_device)
         
         self.ent_features = ent_features
         self.dim_features = dim_features
