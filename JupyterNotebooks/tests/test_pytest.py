@@ -5,18 +5,17 @@ Contains tests for input and output of models and also for loss functions
 #https://code.visualstudio.com/docs/python/testing
 import torch
 from torch import nn
-from chamfer_distance_loss import MyChamferDistance
+from chamfer_distance_loss import MyChamferDistance, ChamferDistance2
 from dataset import DwgDataset
 from model import RnnDecoder, RnnEncoder, UglyModel, Padder
 from train import calculate_accuracy, calculate_accuracy2, count_relevant
 
-def test_ugly_model():
+def _ugly_model_run(loss):
     '''
     runs all samples throug dataset
     '''
-    loss = nn.MSELoss()
     
-    data = DwgDataset('./test_dataset.pickle')
+    data = DwgDataset('./test_dataset.pickle', batch_size=2)
     max_seq_length = data.max_seq_length
     input_padder = Padder(max_seq_length)
     output_padder = Padder(max_seq_length)
@@ -29,7 +28,7 @@ def test_ugly_model():
         output = model(x_padded)
 
         y_padded = output_padder(y)
-        loss_v = loss(output, y_padded)
+        loss_v = loss(output_padder(output), y_padded)
         loss_v.backward()
         acc = calculate_accuracy2(output, y_padded)
         
@@ -41,6 +40,21 @@ def test_ugly_model():
         print('accuracy', acc)
 
         i += 1
+
+def test_ugly_model_mse():
+    '''
+    runs all samples throug dataset with mse
+    '''
+    loss = nn.MSELoss()
+    _ugly_model_run(loss)
+
+def test_ugly_model_ch_dist():
+    '''
+    runs all samples throug dataset with ch_dist
+    '''
+    loss = ChamferDistance2()
+    _ugly_model_run(loss)
+
 
 def test_single_random_input_ugly_model():
     loss = nn.MSELoss()

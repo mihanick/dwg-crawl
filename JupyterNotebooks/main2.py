@@ -11,13 +11,14 @@ import numpy as np
 # https://stackoverflow.com/questions/20309456/call-a-function-from-another-file
 from dataset import DwgDataset
 from model import UglyModel, Padder
-from train import calculate_accuracy2, count_relevant
+from train import calculate_accuracy2, count_relevant, CalculateLoaderAccuracy
+from chamfer_distance_loss import ChamferDistance2
 
-batch_size = 4
+batch_size = 2
 
 device = torch.device("cpu")
-#if torch.cuda.is_available():
-#    device = torch.device("cuda")
+if torch.cuda.is_available():
+    device = torch.device("cuda")
 
 dwg_dataset = DwgDataset(pickle_file='test_dataset.pickle', batch_size=batch_size)
 
@@ -29,13 +30,24 @@ ent_features = dwg_dataset.entities.ent_features
 dim_features = dwg_dataset.entities.dim_features
 
 max_seq_length = dwg_dataset.max_seq_length
+output_seq_length = int(max_seq_length/10)
 
-loss = nn.MSELoss()
+input_padder = Padder(max_seq_length, enforced_device=device)
+input_padder.to(device)
+output_padder = Padder(max_seq_length=output_seq_length, enforced_device=device)
+output_padder.to(device)
 
-model = UglyModel(ent_features=ent_features, dim_features=dim_features, max_seq_length=max_seq_length, enforced_device=device)
+loss = ChamferDistance2()
+
+model = UglyModel(
+    ent_features=ent_features, 
+    dim_features=dim_features, 
+    input_seq_length=max_seq_length,
+    output_seq_length=output_seq_length,
+    enforced_device=device)
 model.to(device)
 
-lr = 0.01
+lr = 0.0001
 epochs = 5
 opt = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -45,9 +57,6 @@ loss_history   = []
 train_history  = []
 val_history    = []
 train_accuracy = 0.0
-
-padder = Padder(max_seq_length, enforced_device=device)
-padder.to(device)
 
 for epoch in range(epochs):
     torch.cuda.empty_cache()
@@ -59,19 +68,19 @@ for epoch in range(epochs):
     for i, (x, y) in enumerate(train_loader):
 
         opt.zero_grad()
+        x_p = input_padder(x)
+        decoded = model(x_p)
+        y_padded = output_padder(y)
+        decoded_p = output_padder(decoded)
 
-        decoded = model(padder(x))
-        y_padded = padder(y)
-        decoded = padder(decoded)
-
-        loss_value = loss(decoded, y_padded)
+        loss_value = loss(decoded_p, y_padded)
 
         loss_value.backward()
         opt.step()
 
         loss_accumulated += loss_value
 
-        train_accuracy = calculate_accuracy2(decoded, y_padded)
+        train_accuracy = calculate_accuracy2(decoded_p, y_padded)
         with torch.no_grad():
             print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.4f} Train acc: {:1.2f} in: {} out: {} target: {}'
                     .format(
@@ -80,8 +89,8 @@ for epoch in range(epochs):
                         time.time() - start,
                         float(loss_value),
                         train_accuracy,
-                        count_relevant(padder(x)),
-                        count_relevant(decoded),
+                        count_relevant(x_p),
+                        count_relevant(decoded_p),
                         count_relevant(y_padded)
                     ))
             
@@ -89,35 +98,11 @@ for epoch in range(epochs):
     loss_history.append(float(loss_accumulated))
     
     # validation
-    with torch.no_grad():
-        model.eval()
-
-        val_accuracies = []
-        for _, (x, y) in enumerate(val_loader):
-            dim_predictions = model(padder(x))
-
-            val_acc = calculate_accuracy2(dim_predictions, padder(y))
-            val_accuracies.append(val_acc)
-        val_accuracy = np.mean(val_accuracies)
-        print('Epoch [{}] validation accuracy: {:1.3f}'.format(epoch, val_accuracy))
-        val_history.append(float(val_accuracy))
-
-    # show memory consumption
-    # https://stackoverflow.com/questions/110259/which-python-memory-profiler-is-recommended
-    #print("--------------------memory consumption:")
-    #heap = hpy()
-    #print(heap.heap())
-    #print("--------------------------------------:")
+    val_accuracy = CalculateLoaderAccuracy(model, val_loader, input_padder, output_padder)
+    print('Epoch [{}] validation accuracy: {:1.3f}'.format(epoch, val_accuracy))
+    val_history.append(float(val_accuracy))
 
 
 # Calculate test accuracy
-
-test_accuracies = []
-for (x,y) in test_loader:
-    with torch.no_grad():
-        prediction = model(padder(x))
-        accuracy = calculate_accuracy2(prediction, padder(y))
-        test_accuracies.append(accuracy)
-        
-mean_test_accuracy = np.mean(test_accuracies)
+mean_test_accuracy = CalculateLoaderAccuracy(model, test_loader, input_padder, output_padder)
 print('Accuracy on testing: {}'.format(mean_test_accuracy))

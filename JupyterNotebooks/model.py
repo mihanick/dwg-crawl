@@ -146,16 +146,17 @@ class Padder(NNModulePrototype):
 
 
 class UglyModel(NNModulePrototype):
-    def __init__ (self, ent_features, dim_features, max_seq_length, enforced_device=None):
+    def __init__ (self, ent_features, dim_features, input_seq_length, output_seq_length, enforced_device=None):
         super(UglyModel, self).__init__(enforced_device=enforced_device)
         
         self.ent_features = ent_features
         self.dim_features = dim_features
-        self.max_seq_length =max_seq_length
+        self.max_seq_length = input_seq_length
 
+
+        self.output_seq_length = output_seq_length
         self.hidden_size = self.dim_features*20
 
-        self.output_seq_length =  int(max_seq_length/100)
 
         self.fc0 = nn.Linear(self.max_seq_length, self.hidden_size)
         
@@ -177,9 +178,8 @@ class UglyModel(NNModulePrototype):
         
         x = self.fc1(x)
         x = self.bn1(x)
-        
+
         x = self.relu(x)
-        
 
         # x = self.do(x)
         x = x.view(batch_size, self.dim_features, self.output_seq_length)

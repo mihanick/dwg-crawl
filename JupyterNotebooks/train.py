@@ -41,6 +41,19 @@ def calculate_accuracy2(dim_outputs, y_padded):
     
     return np.mean(result)
 
+def CalculateLoaderAccuracy(model, loader, input_padder, output_padder):
+    with torch.no_grad():
+        model.eval()
+
+        val_accuracies = []
+        for _, (x, y) in enumerate(loader):
+            dim_predictions = model(input_padder(x))
+
+            val_acc = calculate_accuracy2(output_padder(dim_predictions), output_padder(y))
+            val_accuracies.append(val_acc)
+        val_accuracy = np.mean(val_accuracies)
+        return val_accuracy
+
 def calculate_accuracy(dim_outputs, y):
     '''
     For now we will calculate accuracy by model guessing the right amount of dimensions produced
