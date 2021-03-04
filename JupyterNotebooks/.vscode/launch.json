@@ -8,7 +8,7 @@
             "name": "Run main.py",
             "type": "python",
             "request": "launch",
-            "program": "main2.py",
+            "program": "main.py",
             "console": "integratedTerminal"
         },
     ]

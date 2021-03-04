@@ -70,7 +70,7 @@ def normalize(df, to_size = 100):
         
     return  df
 
-def generate_file(group, verbose = False, entities_limit = 1e9):
+def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
     # print(group.info())
     
     # skip small drawings
@@ -82,7 +82,7 @@ def generate_file(group, verbose = False, entities_limit = 1e9):
         return
     
     filename = 'img/' + fileid + '.png'
-    d = draw.Drawing(800, 400, origin=(0,0), displayInline = False)
+    d = draw.Drawing(800, 200, origin=(0,0), displayInline = False)
     
     entscount = 0
     for row_index, row in group.iterrows():
@@ -131,7 +131,7 @@ def generate_file(group, verbose = False, entities_limit = 1e9):
             )
             
             # https://github.com/cduck/drawSvg
-            dim.appendTitle(row['DimensionText'])
+            # dim.appendTitle(row['DimensionText'])
             d.append(dim)
             entscount = entscount + 1    
         if entscount > entities_limit:
@@ -142,8 +142,10 @@ def generate_file(group, verbose = False, entities_limit = 1e9):
     d.setPixelScale(2)
     r = d.rasterize()
     
-    d.savePng(filename)
+    if save_file:
+        d.savePng(filename)
     #d.saveSvg(filename+'.svg')
+    return d
     
 # https://stackoverflow.com/questions/49081097/slice-pandas-dataframe-json-column-into-columns
 def expand_columns(df, column_names):

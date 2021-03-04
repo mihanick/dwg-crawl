@@ -4,68 +4,68 @@ import numpy as np
 
 import torch
 from torch.utils.data import Dataset, SubsetRandomSampler
-
+import torch
+from torch.utils.data import Dataset, SubsetRandomSampler
 from sklearn import preprocessing
+
 
 class EntityDataset(Dataset):
     def __init__(self, pandasData):
-        self.data = pandasData
-        self.groupped = pandasData.groupby('FileId')
-        self.keys = list(self.groupped.groups.keys() )
-        
         self.x_columns = [
-            #'ClassName', 
             'StartPoint.X', 'StartPoint.Y', 'StartPoint.Z',
-            'EndPoint.X', 'EndPoint.Y', 'EndPoint.Z',
-            'Position.X', 'Position.Y', 'Position.Z']
+            'EndPoint.X', 'EndPoint.Y', 'EndPoint.Z']
 
         self.y_columns = [
-            #'ClassName', 
             'XLine1Point.X', 'XLine1Point.Y','XLine1Point.Z', 
             'XLine2Point.X', 'XLine2Point.Y', 'XLine2Point.Z']
 
         self.ent_features = len(self.x_columns)
         self.dim_features = len(self.y_columns)
 
-        self.min_max_scaler = preprocessing.MinMaxScaler()
+        df = pandasData.dropna(how='all', subset=(self.x_columns + self.y_columns))
+        
+        # drop unclustered data
+        df = df.drop(df[df["label"] == -1].index)
+        #print(df)
+        #data = self.min_max_scaler.fit_transform(data)
+    
+        groupped = df.groupby(['FileId', 'label'])
+        keys = list(groupped.groups.keys())
+        
+        self.data = []
+        y_cache = None
+        
+        for key in keys:
+            _group = groupped.get_group(key)
+            x = _group[self.x_columns]
+            x = x.dropna(how ='all')
+            x = x.fillna(0.0)
+            x = torch.FloatTensor(x.values)
+            
+            if y_cache is None:
+                _y = _group[self.y_columns]
+                _y = _y.dropna(how = 'all')
+                _y = _y.fillna(0.0)
+                y_cache = list(_y.to_numpy())
 
+            y = None
+            if len(y_cache) > 0:
+                #pop
+                for _y in y_cache:
+                    y = _y.reshape(1, self.dim_features)
+                    y = torch.FloatTensor(y)
+                    self.data.append((x,y))
+            else:
+                y = torch.zeros((1, self.dim_features), dtype=torch.float32)
+                y_cache = None
+            
+            self.data.append((x, y))
+        
     def __len__(self):
-        return len(self.keys)
-
-    def _normalize_dataset(self, data):
-        '''
-        Normalizes the values in dataset using sklean preprocessing
-        from sklearn import preprocessing
-        https://stackoverflow.com/questions/26414913/normalize-columns-of-pandas-data-frame
-        '''
-
-        # handle empty sets
-        if len(data) == 0:
-            return data
-
-        x = data.values
-        x_scaled = self.min_max_scaler.fit_transform(data)
-
-        return pd.DataFrame(x_scaled)
+        return len(self.data)
 
     def __getitem__(self, index):
-        # https://stackoverflow.com/questions/45147100/pandas-drop-columns-with-all-nans
-        
-        x = self.groupped.get_group(self.keys[index])[self.x_columns]
-        x = x.dropna( how ='all')
-        x = x.fillna(0.0)
-        x = self._normalize_dataset(x)
-
-        y = self.groupped.get_group(self.keys[index])[self.y_columns]
-        y = y.dropna(how = 'all')
-        y = y.fillna(0.0)
-        y = self._normalize_dataset(y)
-        
-        #print(self.keys[index])
-        # if not y.empty:
-        #    print(x, y)
-        
-        return torch.FloatTensor(np.array(x.values)), torch.FloatTensor(np.array(y.values))
+        return self.data[index]
 
 class DwgDataset:
     def __init__(self, pickle_file, batch_size=1):
@@ -110,18 +110,4 @@ class DwgDataset:
 
         self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = train_sampler, collate_fn=custom_collate, drop_last=True)
         self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = val_sampler, collate_fn=custom_collate, drop_last=True)
-        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = test_sampler, collate_fn=custom_collate)
-
-        self.max_seq_length = 0
-        self.MaxSeqLength(self.train_loader)
-        self.MaxSeqLength(self.val_loader)
-        self.MaxSeqLength(self.test_loader)
-
-    def MaxSeqLength(self, loader):
-        for (x, y) in loader:
-            for xx in x: 
-                l = xx.shape[0] 
-                if l > self.max_seq_length:
-                    self.max_seq_length = l
-
-        
+        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = test_sampler, collate_fn=custom_collate)       
