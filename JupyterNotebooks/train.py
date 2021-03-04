@@ -6,41 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-def count_relevant(y):
-    '''
-    counts number of non all-zeroes
-    input y : tensor.shape(batch, max_seq_len, features)
-    output tensor with shape(batch, 1)
-    '''
-    n = np.count_nonzero(y.detach().cpu().numpy(), axis=2)
-    n = np.count_nonzero(n, axis=1)
-    return n
-    
-
-def calculate_accuracy2(dim_outputs, y_padded):
-    '''
-    Calculates the value representing how accurate is prediction of dim_outputs 
-    in comparison to given y
-
-    dim_outputs is a torch.tensor.shape(batch, max_sequence_len, dim_features)
-    y_padded is a torch.tensor.shape(batch, max_sequence_len, dim_features)
-    '''
-
-    y = count_relevant(y_padded)
-    dim_out = count_relevant(dim_outputs)
-
-    result = np.zeros_like(y)
-
-    for i in range(len(y)):
-        if y[i] != 0:
-            result[i] = 1 - np.abs(dim_out[i] - y[i]) / y[i]
-        elif dim_out[i] == 0:
-            result[i] = 1
-        else:
-            result[i] = 0
-    
-    return np.mean(result)
-
 def CalculateLoaderAccuracy(model, loader, input_padder, output_padder):
     with torch.no_grad():
         model.eval()
@@ -49,46 +14,26 @@ def CalculateLoaderAccuracy(model, loader, input_padder, output_padder):
         for _, (x, y) in enumerate(loader):
             dim_predictions = model(input_padder(x))
 
-            val_acc = calculate_accuracy2(output_padder(dim_predictions), output_padder(y))
+            val_acc = calculate_accuracy(dim_predictions, y)
             val_accuracies.append(val_acc)
-        val_accuracy = np.mean(val_accuracies)
+        val_accuracy = torch.mean(val_accuracies)
         return val_accuracy
 
 def calculate_accuracy(dim_outputs, y):
-    '''
-    For now we will calculate accuracy by model guessing the right amount of dimensions produced
-    '''
- 
-    def calculate_volume(set):
-        size = set.shape[0]
-        features = set.shape[1]
+    
+    batch_size = y.shape[0]
+    accuracies = torch.FloatTensor((batch_size,1))
 
-        min_coords = np.zeros((1, features))
-        max_coords = np.zeros((1, features))
+    for i in range(batch_size):
+        z = torch.zeros_like(y[i])
+        if (y[i].eq(z) and dim_outputs[i].eq(z)):
+            accuracies[i] = 1
+        elif y[i].eq(z):
+            accuracies[i] = 0
+        else
+            accuracies[i] = torch.mean(torch.abs(dim_outputs[i] - y[i])/torch.abs(y[i]))
 
-        if size != 0:
-            min_coords = np.min(set.detach().cpu().numpy(), axis=0)
-            max_coords = np.max(set.detach().cpu().numpy(), axis=0)
-
-        # if size is 1 difference will be 0 and volume will be 0
-
-        
-        diffs = max_coords - min_coords
-        return 1 - np.sum(diffs**2)
-
-    accuracies = []
-    # y, dim_outputs: list len=batch_size of tensors with shape (dim_count, dim_features)
-    for batch_no in range(len(y)):
-        vol_actual = calculate_volume(y[batch_no])
-        vol_predicted = calculate_volume(dim_outputs[batch_no])
-
-        acc = 0
-        if vol_actual != 0:
-            acc = np.abs(vol_predicted - vol_actual / vol_actual)
-            
-        accuracies.append(acc)
-
-    return accuracies
+    return torch.mean(accuracies)
 
 def plot_history(loss_history, train_history, val_history):
     '''

@@ -1,10 +1,12 @@
+'''
+Loading data from pickle pandas table
+'''
 # https://stackoverflow.com/questions/16249736/how-to-import-data-from-mongodb-to-pandas
 import pandas as pd
 import numpy as np
 
 import torch
-from torch.utils.data import Dataset, SubsetRandomSampler
-import torch
+
 from torch.utils.data import Dataset, SubsetRandomSampler
 from sklearn import preprocessing
 
@@ -24,9 +26,11 @@ class EntityDataset(Dataset):
 
         df = pandasData.dropna(how='all', subset=(self.x_columns + self.y_columns))
         
-        # drop unclustered data
+        # drop unclustered data, 
+        # i.e. outlier points that has not been cluster labeled
+        # i.e label==-1
         df = df.drop(df[df["label"] == -1].index)
-        #print(df)
+        
         #data = self.min_max_scaler.fit_transform(data)
     
         groupped = df.groupby(['FileId', 'label'])
@@ -38,13 +42,18 @@ class EntityDataset(Dataset):
         for key in keys:
             _group = groupped.get_group(key)
             x = _group[self.x_columns]
-            x = x.dropna(how ='all')
+            x = x.dropna(how='all')
+
+            # drop empty entities sets, as we will have nothing to learn on
+            if len(x) == 0:
+                continue
+
             x = x.fillna(0.0)
             x = torch.FloatTensor(x.values)
             
             if y_cache is None:
                 _y = _group[self.y_columns]
-                _y = _y.dropna(how = 'all')
+                _y = _y.dropna(how='all')
                 _y = _y.fillna(0.0)
                 y_cache = list(_y.to_numpy())
 
@@ -54,7 +63,7 @@ class EntityDataset(Dataset):
                 for _y in y_cache:
                     y = _y.reshape(1, self.dim_features)
                     y = torch.FloatTensor(y)
-                    self.data.append((x,y))
+                    self.data.append((x, y))
             else:
                 y = torch.zeros((1, self.dim_features), dtype=torch.float32)
                 y_cache = None
@@ -69,6 +78,7 @@ class EntityDataset(Dataset):
 
 class DwgDataset:
     def __init__(self, pickle_file, batch_size=1):
+        self.batch_size = batch_size
 
         test_data = pd.read_pickle(pickle_file)
 
@@ -82,7 +92,7 @@ class DwgDataset:
         val_split  = int(np.floor(validation_fraction * data_len))
         test_split = int(np.floor(test_fraction * data_len))
         indices = list(range(data_len))
-        np.random.seed(228)
+        np.random.seed(42)
 
         np.random.shuffle(indices)
 
@@ -97,15 +107,12 @@ class DwgDataset:
         # https://stackoverflow.com/questions/64586575/adding-class-objects-to-pytorch-dataloader-batch-must-contain-tensors
         def custom_collate(sample):
             x = []
-            y = []
-
-            for (xx, yy) in sample:
-                #if torch.count_nonzero(xx) > 0:
-                    # print(xx)
+            y = torch.zeros(self.batch_size, self.entities.dim_features)
+            
+            for i in range(len(sample)):
+                xx, yy = sample[i]
                 x.append(xx)
-                #if torch.count_nonzero(yy) > 0:
-                y.append(yy)
-            #print(len(x), len(y))
+                y[i] = yy
             return x, y
 
         self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = train_sampler, collate_fn=custom_collate, drop_last=True)

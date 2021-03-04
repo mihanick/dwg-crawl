@@ -19,12 +19,14 @@ class NNModulePrototype(nn.Module):
             if torch.cuda.is_available():
                 self.device = torch.device("cuda")
 
-class MyRnn(NNModulePrototype):
+class DimRnn(NNModulePrototype):
     def __init__(self, ent_features, dim_features, hidden_size, enforced_device=None):
+        '''
+        Inints layers and inputs-outputs
+        '''
         super().__init__(enforced_device)
-
-        self.rnn = nn.RNN(input_size=ent_features, hidden_size=hidden_size)
-        self.learned_size = hidden_size
+        self.hidden_size = dim_features #hidden_size - not used
+        self.rnn = nn.RNN(input_size=ent_features, hidden_size=dim_features)
         self.ent_features = ent_features
         self.hidden = None
         self.dim_features = dim_features
@@ -33,21 +35,36 @@ class MyRnn(NNModulePrototype):
         '''
 
         '''
+        # As we have variable entity sequence length between samples in batch
+        # we will just manually loop samples in batch
+        # while rnn will assume batch_size == 1
+
         batch_size = len(x)
         
         if self.hidden is None:
-            self.hidden = torch.zeros(1, batch_size, self.learned_size, device=self.device)
+            # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
+            # h_0 of shape (num_layers * num_directions, batch, hidden_size
+            self.hidden = torch.zeros(1, 1, self.hidden_size, device=self.device)
 
-        hiddens = torch.zeros((batch_size, self.learned_size), dtype=torch.float32, device=self.device, requires_grad=True)
-        outs = torch.zeros((batch_size, 1), dtype=torch.float32, device=self.device, requires_grad=False)
-
+        result = torch.zeros(batch_size, self.dim_features, device=self.device)
         for j in range(batch_size):
-            f = x[j]
-            entities_count = f.shape[0]
-            inp = f.unsqueeze(1) 
+            xj = x[j]
 
-            outp, h_n = self.rnn(inp.to(self.device))
-        
-        return outp
+            # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
+            # input of shape (seq_len, batch, input_size)
+            inp = xj.unsqueeze(1) 
+
+            # https://stackoverflow.com/questions/48274929/pytorch-runtimeerror-trying-to-backward-through-the-graph-a-second-time-but
+            self.hidden = self.hidden.detach()
+
+            # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
+            # output of shape (seq_len, batch, num_directions * hidden_size)
+            # h_n of shape (num_layers * num_directions, batch, hidden_size):
+            outp, self.hidden = self.rnn(inp.to(self.device), self.hidden)
+            
+            result[j] = self.hidden.squeeze(1)
+        # we need an output result shape (batch, dim_features)
+
+        return result
 
        

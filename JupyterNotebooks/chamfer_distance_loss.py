@@ -38,7 +38,6 @@ def chamfer_distance_numpy(array1, array2):
         dist = dist + (av_dist1+av_dist2)/batch_size
     return dist
 
-
 def chamfer_distance_sklearn(array1, array2):
     batch_size, num_point = array1.shape[:2]
     dist = 0
@@ -53,45 +52,10 @@ def chamfer_distance_sklearn(array1, array2):
     return dist
 
 def my_chamfer_distance(out, y):
-    loss = torch.zeros(1, dtype=torch.float32, requires_grad=True)
+    a = out.unsqueeze(0).cpu().detach().numpy()
+    b = y.unsqueeze(0).cpu().detach().numpy()
+    return chamfer_distance_sklearn(a, b)
 
-    for i in range(len(y)):
-        # we need extra dimension for batch
-        a = torch.unsqueeze(out[i], dim=0)
-        b = torch.unsqueeze(y[i], dim=0)    
-        # print(yyy.shape)
-        # print(xxx.shape)    
-        # second dimension is a number of points. if the number of points is 0, htan
-        # it is an empty set
-        
-        # distance between empty sets is 0: just what we need
-        if a.shape[1] == 0 and b.shape[1] == 0:
-            loss = loss + 0
-            continue
-        
-        # I assume the distance between empty set and non-empty set is
-        # an infinity
-        if a.shape[1] == 0:
-            loss = loss + float("inf")
-            continue
-        if b.shape[1] == 0:
-            # positive infiinity here because
-            # negative infinity loss is less than zero
-            # so optimizer will seek it
-            loss = loss + float("inf")
-            continue
-        # https://discuss.pytorch.org/t/leaf-variable-was-used-in-an-inplace-operation/308
-        curr_loss = chamfer_distance_sklearn(a.cpu().detach().numpy(), b.detach().numpy()).sum()
-        loss = loss + curr_loss
-    return loss
-
-class MyChamferDistance(nn.Module):
+class ChamferDistance(nn.Module):
     def forward(self, x, target):
         return my_chamfer_distance(x, target)
-
-class ChamferDistance2(nn.Module):
-    def forward(self, x, target):
-        
-        curr_loss = chamfer_distance_sklearn(x.cpu().detach().numpy(), target.cpu().detach().numpy()).sum()
-        
-        return torch.tensor(curr_loss, requires_grad=True)
