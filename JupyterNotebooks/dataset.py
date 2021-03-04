@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from torch.utils.data import Dataset, SubsetRandomSampler
-from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
 
 
 class EntityDataset(Dataset):
@@ -31,8 +31,6 @@ class EntityDataset(Dataset):
         # i.e label==-1
         df = df.drop(df[df["label"] == -1].index)
         
-        #data = self.min_max_scaler.fit_transform(data)
-    
         groupped = df.groupby(['FileId', 'label'])
         keys = list(groupped.groups.keys())
         
@@ -49,7 +47,8 @@ class EntityDataset(Dataset):
                 continue
 
             x = x.fillna(0.0)
-            x = torch.FloatTensor(x.values)
+            x = MinMaxScaler().fit_transform(x.values)
+            x = torch.FloatTensor(x)
             
             if y_cache is None:
                 _y = _group[self.y_columns]
@@ -62,6 +61,7 @@ class EntityDataset(Dataset):
                 #pop
                 for _y in y_cache:
                     y = _y.reshape(1, self.dim_features)
+                    y = MinMaxScaler().fit_transform(y)
                     y = torch.FloatTensor(y)
                     self.data.append((x, y))
             else:

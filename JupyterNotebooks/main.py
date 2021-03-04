@@ -12,7 +12,6 @@ from dataset import DwgDataset
 from model import DimRnn
 from accuracy import calculate_accuracy, CalculateLoaderAccuracy
 
-
 def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.001, epochs=5):
     device = torch.device("cpu")
     if torch.cuda.is_available():
@@ -55,7 +54,7 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
             opt.zero_grad()
             out = model(x)
 
-            loss_value = loss(out, y)
+            loss_value = loss(out, y.to(device))
 
             loss_value.backward()
             opt.step()
@@ -63,8 +62,9 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
             loss_accumulated += loss_value
 
             train_accuracy = calculate_accuracy(out, y)
+
             with torch.no_grad():
-                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.4f} Acc: {:1.2f}'
+                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.4f} Chamfer distance: {:1.2f}'
                         .format(
                             epoch,
                             i,
@@ -78,14 +78,14 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
         
         # validation
         val_accuracy = CalculateLoaderAccuracy(model, val_loader)
-        print('Epoch [{}] validation accuracy: {:1.3f}'.format(epoch, val_accuracy))
+        print('Epoch [{}] validation chamfer distance: {:1.3f}'.format(epoch, val_accuracy))
         val_history.append(float(val_accuracy))
 
 
     # Calculate test accuracy
     mean_test_accuracy = CalculateLoaderAccuracy(model, test_loader)
-    print('Accuracy on testing: {}'.format(mean_test_accuracy))
+    print('Testing chamfer distance: {}'.format(mean_test_accuracy))
 
     return train_history, loss_history, val_history
 
-run() 
+run(batch_size=256, epochs = 50) 
