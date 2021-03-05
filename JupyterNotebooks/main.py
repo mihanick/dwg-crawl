@@ -64,7 +64,7 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
             train_accuracy = calculate_accuracy(out, y)
 
             with torch.no_grad():
-                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.4f} Chamfer distance: {:1.2f}'
+                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.5f} Chamfer distance: {:1.4f}'
                         .format(
                             epoch,
                             i,
@@ -78,14 +78,16 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
         
         # validation
         val_accuracy = CalculateLoaderAccuracy(model, val_loader)
-        print('Epoch [{}] validation chamfer distance: {:1.3f}'.format(epoch, val_accuracy))
+        print('Epoch [{}] validation chamfer distance: {:1.4f}'.format(epoch, val_accuracy))
         val_history.append(float(val_accuracy))
 
 
     # Calculate test accuracy
     mean_test_accuracy = CalculateLoaderAccuracy(model, test_loader)
-    print('Testing chamfer distance: {}'.format(mean_test_accuracy))
-
+    print('Testing chamfer distance: {:1.4f}'.format(mean_test_accuracy))
+    
+    # https://pytorch.org/tutorials/beginner/saving_loading_models.html
+    # save model
+    torch.save(model.state_dict(), 'DimRnnTrained.model')
+    
     return train_history, loss_history, val_history
-
-run(batch_size=256, epochs = 50) 
