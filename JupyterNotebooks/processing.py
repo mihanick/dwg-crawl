@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 from pymongo import MongoClient
 
-
-
 def generate_image_by_id(collection, fileId):
     data = query_collection_to_dataframe(collection, fileId)
     cols_to_expand = ['XLine1Point', 'XLine2Point','StartPoint','EndPoint','Position']
@@ -92,3 +90,35 @@ def expand_columns(df, column_names):
         # Keep index!!
         res = pd.concat([res, res1], axis = 1)
     return res
+
+def Col2Numpy(series, column_names):
+    '''
+    Splits json data {'ClassName':.., 'X':..,'Y':...,'Z':...} 
+    of each column in column_names
+    into columns 'column_name.X', 'column_name.Y',..
+    '''
+    
+    # As each point columns is a json of {ClassName, X, Y, Z}
+    # We break them into x, y, z columns and drop ClassName column
+    
+    result = pd.DataFrame()
+    
+    for col_name in column_names:
+        # we don't split nan rows
+        points = series[col_name].dropna()
+        
+        # get only row values and store index
+        values = points.values.tolist()
+        indexes = points.index
+        
+        # create sub-dataframe parsing json in values
+        # and assign it stored index
+        res = pd.DataFrame(data= values, index = indexes)
+        
+        # drop "Point3d" class name (if frame not empty)
+        if len(res)>0:
+            res = res.drop(columns=['ClassName'])
+
+        # join columns with input dataframe
+        result = pd.concat([result, res])
+    return result

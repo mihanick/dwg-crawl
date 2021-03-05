@@ -6,11 +6,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
+
 # https://pypi.org/project/drawSvg/
 # !pip install drawsvg
 # Works on linux only!
 # sudo apt-get install libcairo2
-import drawSvg as draw
+try:
+    import drawSvg as draw
+except:
+    print('Could not import drawSvg')
+
+def draw_set(pnt_set, labels, core_indices):
+    unique_labels = set(labels)
+    
+    colors = [plt.cm.Spectral(each) for each in (np.linspace(0,1,len(unique_labels)))]
+    
+    core_samples_mask = np.zeros_like(labels, dtype=bool)
+    core_samples_mask[core_indices] = True
+
+    plt.figure(figsize=(10,10))
+
+    for k, col in zip(unique_labels, colors):
+        if k == -1:
+            col = [0, 0, 0, 1]
+        class_member_mask = (labels == k)
+
+        xyz = pnt_set[class_member_mask & core_samples_mask]
+        plt.plot(xyz[:, 0], xyz[:, 1], 'o', markerfacecolor=tuple(col),  markeredgecolor="k", markersize=10)
+        
+        xyz = pnt_set[class_member_mask & ~core_samples_mask]
+        plt.plot(xyz[:, 0], xyz[:, 1], 'o', markerfacecolor=tuple(col),  markeredgecolor="k", markersize=6)
+    
+    plt.show()
 
 def plot_history(loss_history, train_history, val_history):
     '''
