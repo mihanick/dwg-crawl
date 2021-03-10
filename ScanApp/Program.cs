@@ -10,7 +10,7 @@ namespace DwgDump
 	{
 		static void Main(string[] args)
 		{
-			string dir = @"C:\git\dwg-crawl\TestData";
+			string dir = @"H:\Примеры проектов";
 
 			if (args.Length == 1)
 				if (Directory.Exists(args[0]))
