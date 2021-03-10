@@ -11,8 +11,9 @@ from torch import nn
 from dataset import DwgDataset
 from model import DimRnn
 from accuracy import calculate_accuracy, CalculateLoaderAccuracy
+from chamfer_distance_loss import ChamferDistance
 
-def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.001, epochs=5):
+def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.01, epochs=5):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -27,8 +28,9 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
     dim_features = dwg_dataset.entities.dim_features
 
     loss = nn.MSELoss()
+    # loss = ChamferDistance(device)
 
-    model = DimRnn(ent_features, dim_features, 16, device)
+    model = DimRnn(ent_features=ent_features, dim_features=dim_features, hidden_size=512, enforced_device=device)
     model.to(device)
 
     lr = lr

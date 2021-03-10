@@ -1,11 +1,12 @@
 '''
-Contains functions and modules to calculate chamfer and MeanSquareError
+Contains functions and modules to calculate chamfer distance
 '''
 import numpy as np
 import numpy.linalg as LA
 from sklearn.neighbors import KDTree
 import torch
 from torch import nn
+from model import NNModulePrototype
 
 # https://stackoverflow.com/questions/47060685/chamfer-distance-between-two-point-clouds-in-tensorflow
 
@@ -56,6 +57,9 @@ def my_chamfer_distance(out, y):
     b = y.unsqueeze(0).cpu().detach().numpy()
     return chamfer_distance_sklearn(a, b)
 
-class ChamferDistance(nn.Module):
+class ChamferDistance(NNModulePrototype):
     def forward(self, x, target):
-        return my_chamfer_distance(x, target)
+        d = my_chamfer_distance(x, target)
+        result = torch.as_tensor(d, device=self.device)
+        result.requires_grad = True
+        return result

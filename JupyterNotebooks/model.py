@@ -25,11 +25,12 @@ class DimRnn(NNModulePrototype):
         Inints layers and inputs-outputs
         '''
         super().__init__(enforced_device)
-        self.hidden_size = dim_features #hidden_size - not used
-        self.rnn = nn.RNN(input_size=ent_features, hidden_size=dim_features)
+        self.hidden_size = hidden_size
+        self.rnn = nn.RNN(input_size=ent_features, hidden_size=self.hidden_size)
         self.ent_features = ent_features
         self.hidden = None
         self.dim_features = dim_features
+        self.l1 = nn.Linear(self.hidden_size,self.dim_features)
 
     def forward(self, x):
         '''
@@ -46,7 +47,7 @@ class DimRnn(NNModulePrototype):
             # h_0 of shape (num_layers * num_directions, batch, hidden_size
             self.hidden = torch.zeros(1, 1, self.hidden_size, device=self.device)
 
-        result = torch.zeros(batch_size, self.dim_features, device=self.device)
+        result = torch.zeros(batch_size, self.hidden_size, device=self.device)
         for j in range(batch_size):
             xj = x[j]
 
@@ -63,8 +64,9 @@ class DimRnn(NNModulePrototype):
             outp, self.hidden = self.rnn(inp.to(self.device), self.hidden)
             
             result[j] = self.hidden.squeeze(1)
+        
+        result = self.l1(result)
         # we need an output result shape (batch, dim_features)
-
         return result
 
        
