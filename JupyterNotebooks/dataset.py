@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from torch.utils.data import Dataset, SubsetRandomSampler
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 
 
 class EntityDataset(Dataset):
@@ -18,7 +18,7 @@ class EntityDataset(Dataset):
             'EndPoint.X', 'EndPoint.Y', 'EndPoint.Z']
 
         self.y_columns = [
-            'XLine1Point.X', 'XLine1Point.Y','XLine1Point.Z', 
+            'XLine1Point.X', 'XLine1Point.Y', 'XLine1Point.Z', 
             'XLine2Point.X', 'XLine2Point.Y', 'XLine2Point.Z']
 
         self.ent_features = len(self.x_columns)
@@ -34,20 +34,26 @@ class EntityDataset(Dataset):
         groupped = df.groupby(['FileId', 'label'])
         keys = list(groupped.groups.keys())
         
+        self.groupped = groupped
+        self.data_frame = df
+        
         self.data = []
         y_cache = None
         
+        scaler = StandardScaler()
+
         for key in keys:
             _group = groupped.get_group(key)
-            x = _group[self.x_columns]
-            x = x.dropna(how='all')
+            _x = _group[self.x_columns]
+            _x = _x.dropna(how='all')
 
             # drop empty entities sets, as we will have nothing to learn on
-            if len(x) == 0:
+            if len(_x) == 0:
                 continue
 
-            x = x.fillna(0.0)
-            x = MinMaxScaler().fit_transform(x.values)
+            _x = _x.fillna(0.0)
+
+            x = scaler.fit_transform(_x.values)
             x = torch.FloatTensor(x)
             
             if y_cache is None:
@@ -58,10 +64,11 @@ class EntityDataset(Dataset):
 
             y = None
             if len(y_cache) > 0:
-                #pop
+                
+                y_cache = scaler.fit_transform(y_cache)
+
                 for _y in y_cache:
                     y = _y.reshape(1, self.dim_features)
-                    y = MinMaxScaler().fit_transform(y)
                     y = torch.FloatTensor(y)
                     self.data.append((x, y))
             else:

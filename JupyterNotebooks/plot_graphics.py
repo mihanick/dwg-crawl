@@ -5,7 +5,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-
+from IPython.display import Image
+from IPython.display import clear_output
 
 # https://pypi.org/project/drawSvg/
 # !pip install drawsvg
@@ -132,4 +133,52 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
     if save_file:
         d.savePng(filename)
     #d.saveSvg(filename+'.svg')
-    return d    
+    return r    
+
+def draw_sample(x, y, verbose = False):
+    print(x.shape,y.shape)
+    drawing_size = 200
+    
+    d = draw.Drawing(3*drawing_size, drawing_size, origin=(0,0), displayInline = False)
+    
+    x = x*drawing_size
+    y = y*drawing_size
+    
+    entscount = 0
+    for row in x:
+        if verbose:
+            print(row)
+        
+        d.append(
+        draw.Lines(
+            row[0].item(),
+            row[1].item(),
+            row[3].item(),
+            row[4].item(),
+            close = False,
+            fill='#eeee00',
+            stroke = 'black'))
+        entscount = entscount + 1
+    
+    print(y, (y != 0).all())
+    if (y != 0).all():
+        dim = draw.Lines(
+                y[0].item(),
+                y[1].item(),
+                y[3].item(),
+                y[4].item(),
+                close = False,
+                fill='#eeee00',
+                stroke = 'blue',
+                stroke_width = '1'
+        )
+
+        d.append(dim)
+        entscount = entscount + 1    
+            
+    print('entities:', entscount)        
+    #https://pypi.org/project/drawSvg/
+    d.setPixelScale(2)
+    r = d.rasterize()
+    
+    return r

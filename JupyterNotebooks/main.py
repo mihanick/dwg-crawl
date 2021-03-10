@@ -91,3 +91,5 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
     torch.save(model.state_dict(), 'DimRnnTrained.model')
     
     return train_history, loss_history, val_history
+    
+run()
