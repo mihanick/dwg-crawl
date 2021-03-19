@@ -1,17 +1,9 @@
 import pymongo
 import pandas as pd
 import numpy as np
-from pymongo import MongoClient
+import math
 
-def generate_image_by_id(collection, fileId):
-    data = query_collection_to_dataframe(collection, fileId)
-    cols_to_expand = ['XLine1Point', 'XLine2Point','StartPoint','EndPoint','Position']
-    data = expand_columns(data, cols_to_expand)
-    data = normalize(data, to_size = 400)
-    generate_file(data)
-    
-    filename = 'img/' + fileId + '.png'
-    return filename  
+from pymongo import MongoClient
 
 def query_collection_to_dataframe(mongo_collection, fileId):
     query = {
@@ -105,7 +97,7 @@ def Col2Numpy(series, column_names):
     
     for col_name in column_names:
         # we don't split nan rows
-        points = series[col_name].dropna()
+        points = series[col_name].dropna(how="all")
         
         # get only row values and store index
         values = points.values.tolist()
@@ -122,3 +114,16 @@ def Col2Numpy(series, column_names):
         # join columns with input dataframe
         result = pd.concat([result, res])
     return result
+
+def scale_ds(x):
+    _x1 = x.fillna(0).to_numpy()
+    
+    mn = _x1.min()
+    mx = _x1.max()
+
+    assert math.isnan(mn) == False, 'min is NaN'
+    assert math.isnan(mx) == False, 'max is NaN'
+
+    scale = 1/(mx - mn)
+    x = (x - mn) * scale
+    return x, scale

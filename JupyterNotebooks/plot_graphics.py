@@ -17,6 +17,16 @@ try:
 except:
     print('Could not import drawSvg')
 
+def generate_image_by_id(collection, fileId):
+    data = query_collection_to_dataframe(collection, fileId)
+    cols_to_expand = ['XLine1Point', 'XLine2Point','StartPoint','EndPoint','Position']
+    data = expand_columns(data, cols_to_expand)
+    data = normalize(data, to_size = 400)
+    generate_file(data)
+    
+    filename = 'img/' + fileId + '.png'
+    return filename      
+    
 def draw_set(pnt_set, labels, core_indices):
     unique_labels = set(labels)
     
@@ -62,7 +72,7 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
     # print(group.info())
     
     # skip small drawings
-    if (len(group)<1):
+    if (len(group)<10):
         return
     
     fileid = group.iloc[0]['FileId']
@@ -136,15 +146,16 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
     return r    
 
 def draw_sample(x, y, verbose = False):
-    print(x.shape,y.shape)
+    # print(x.shape,y.shape)
     drawing_size = 200
     
-    d = draw.Drawing(3*drawing_size, drawing_size, origin=(0,0), displayInline = False)
+    d = draw.Drawing(4*drawing_size, drawing_size, displayInline = False)
     
-    x = x*drawing_size
-    y = y*drawing_size
+    x = x * drawing_size
+    y = y * drawing_size
     
     entscount = 0
+    # print(x)
     for row in x:
         if verbose:
             print(row)
@@ -153,24 +164,26 @@ def draw_sample(x, y, verbose = False):
         draw.Lines(
             row[0].item(),
             row[1].item(),
+            row[2].item(),
             row[3].item(),
-            row[4].item(),
             close = False,
             fill='#eeee00',
             stroke = 'black'))
         entscount = entscount + 1
     
-    print(y, (y != 0).all())
-    if (y != 0).all():
+    # print(y, (y != 0).all())
+    #if (y != 0).all():
+    if True:
+        # print(y)
         dim = draw.Lines(
                 y[0].item(),
                 y[1].item(),
+                y[2].item(),
                 y[3].item(),
-                y[4].item(),
                 close = False,
                 fill='#eeee00',
                 stroke = 'blue',
-                stroke_width = '1'
+                stroke_width = '2'
         )
 
         d.append(dim)

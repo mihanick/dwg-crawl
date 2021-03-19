@@ -8,18 +8,17 @@ import numpy as np
 import torch
 
 from torch.utils.data import Dataset, SubsetRandomSampler
-from sklearn.preprocessing import StandardScaler
-
+from processing import scale_ds
 
 class EntityDataset(Dataset):
     def __init__(self, pandasData):
         self.x_columns = [
-            'StartPoint.X', 'StartPoint.Y', 'StartPoint.Z',
-            'EndPoint.X', 'EndPoint.Y', 'EndPoint.Z']
+            'StartPoint.X', 'StartPoint.Y', 
+            'EndPoint.X', 'EndPoint.Y']
 
         self.y_columns = [
-            'XLine1Point.X', 'XLine1Point.Y', 'XLine1Point.Z', 
-            'XLine2Point.X', 'XLine2Point.Y', 'XLine2Point.Z']
+            'XLine1Point.X', 'XLine1Point.Y',
+            'XLine2Point.X', 'XLine2Point.Y']
 
         self.ent_features = len(self.x_columns)
         self.dim_features = len(self.y_columns)
@@ -38,44 +37,40 @@ class EntityDataset(Dataset):
         self.data_frame = df
         
         self.data = []
-        y_cache = None
-        
-        scaler = StandardScaler()
 
         for key in keys:
             _group = groupped.get_group(key)
-            _x = _group[self.x_columns]
+            
+            entire_frame = _group[self.x_columns + self.y_columns]
+            entire_frame, _ = scale_ds(entire_frame)
+            
+            _x = entire_frame[self.x_columns]
             _x = _x.dropna(how='all')
-
             # drop empty entities sets, as we will have nothing to learn on
-            if len(_x) == 0:
+            # also drop small chunks
+            if len(_x) < 10:
                 continue
 
             _x = _x.fillna(0.0)
-
-            x = scaler.fit_transform(_x.values)
-            x = torch.FloatTensor(x)
-            
-            if y_cache is None:
-                _y = _group[self.y_columns]
-                _y = _y.dropna(how='all')
-                _y = _y.fillna(0.0)
-                y_cache = list(_y.to_numpy())
-
-            y = None
-            if len(y_cache) > 0:
+            _x = _x.values
+            x = torch.FloatTensor(_x)
+        
+            _y = entire_frame[self.y_columns]
+            _y = _y.dropna(how='all')
+            _y = _y.fillna(0.0)
+            y_cache = list(_y.to_numpy())
                 
-                y_cache = scaler.fit_transform(y_cache)
-
+            if len(y_cache) > 0:
                 for _y in y_cache:
-                    y = _y.reshape(1, self.dim_features)
-                    y = torch.FloatTensor(y)
+                    #y = _y.reshape(1, self.dim_features)
+                    # print("y",y)
+                    # print(_y)
+                    y = torch.FloatTensor(_y)
+                    # print(y)
                     self.data.append((x, y))
             else:
                 y = torch.zeros((1, self.dim_features), dtype=torch.float32)
-                y_cache = None
-            
-            self.data.append((x, y))
+                self.data.append((x, y))
         
     def __len__(self):
         return len(self.data)
