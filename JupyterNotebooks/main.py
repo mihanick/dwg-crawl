@@ -9,7 +9,7 @@ from torch import nn
 
 # https://stackoverflow.com/questions/20309456/call-a-function-from-another-file
 from dataset import DwgDataset
-from model import DimRnn
+from model import DimTransformer
 from accuracy import calculate_accuracy, CalculateLoaderAccuracy
 from chamfer_distance_loss import ChamferDistance
 
@@ -30,7 +30,7 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
     loss = nn.MSELoss()
     # loss = ChamferDistance(device)
 
-    model = DimRnn(ent_features=ent_features, dim_features=dim_features, hidden_size=1024, enforced_device=device)
+    model = DimTransformer(ent_features=ent_features, dim_features=dim_features, hidden_size=1024, enforced_device=device)
     model.to(device)
 
     lr = lr
@@ -54,7 +54,7 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
         for i, (x, y) in enumerate(train_loader):
 
             opt.zero_grad()
-            out = model(x)
+            out = model(x, y)
 
             loss_value = loss(out, y.to(device))
 
@@ -83,13 +83,12 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
         print('Epoch [{}] validation chamfer distance: {:1.4f}'.format(epoch, val_accuracy))
         val_history.append(float(val_accuracy))
 
+        # https://pytorch.org/tutorials/beginner/saving_loading_models.html
+        # save model
+        torch.save(model.state_dict(), 'DimRnnTrained.model')
 
     # Calculate test accuracy
     mean_test_accuracy = CalculateLoaderAccuracy(model, test_loader)
     print('Testing chamfer distance: {:1.4f}'.format(mean_test_accuracy))
-    
-    # https://pytorch.org/tutorials/beginner/saving_loading_models.html
-    # save model
-    torch.save(model.state_dict(), 'DimRnnTrained.model')
     
     return train_history, loss_history, val_history

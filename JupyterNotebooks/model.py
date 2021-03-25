@@ -69,4 +69,48 @@ class DimRnn(NNModulePrototype):
         # we need an output result shape (batch, dim_features)
         return result
 
-       
+class DimTransformer(NNModulePrototype):
+    def __init__(self, ent_features, dim_features, hidden_size, enforced_device=None):
+        '''
+        Inints layers and inputs-outputs
+        '''
+        super().__init__(enforced_device)
+
+        self.transformer = torch.nn.Transformer(
+            d_model=ent_features, 
+            nhead=ent_features,
+            dim_feedforward=512)
+
+        self.hidden_size = hidden_size
+        self.ent_features = ent_features
+        self.dim_features = dim_features
+        # self.l1 = nn.Linear(self.hidden_size,self.dim_features)
+
+    def forward(self, x, y):
+        '''
+
+        '''
+        # As we have variable entity sequence length between samples in batch
+        # we will just manually loop samples in batch
+        # while rnn will assume batch_size == 1
+
+        batch_size = len(x)
+
+        result = torch.zeros(batch_size, self.ent_features, device=self.device)
+        for j in range(batch_size):
+            xj = x[j]
+            yj = y[j]
+            # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
+            # input of shape (seq_len, batch, input_size)
+            inp = xj.unsqueeze(1) 
+            trgt = yj.unsqueeze(0)
+            trgt = trgt.unsqueeze(0)
+
+            # https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html
+            outp = self.transformer(inp, trgt)
+            
+            r = outp.squeeze(0)
+            r = outp.squeeze(0)
+            result[j] = r
+        # we need an output result shape (batch, dim_features)
+        return result

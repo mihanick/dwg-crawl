@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run main.py",
+            "name": "Run run.py",
             "type": "python",
             "request": "launch",
-            "program": "main.py",
+            "program": "run.py",
             "console": "integratedTerminal"
         },
     ]
