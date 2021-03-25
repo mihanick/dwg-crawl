@@ -79,7 +79,9 @@ class DimTransformer(NNModulePrototype):
         self.transformer = torch.nn.Transformer(
             d_model=ent_features, 
             nhead=ent_features,
-            dim_feedforward=512)
+            dim_feedforward=256,
+            num_encoder_layers=4,
+            num_decoder_layers=4)
 
         self.hidden_size = hidden_size
         self.ent_features = ent_features
@@ -107,10 +109,10 @@ class DimTransformer(NNModulePrototype):
             trgt = trgt.unsqueeze(0)
 
             # https://pytorch.org/docs/stable/generated/torch.nn.Transformer.html
-            outp = self.transformer(inp, trgt)
+            outp = self.transformer(inp.to(self.device), trgt.to(self.device))
             
             r = outp.squeeze(0)
             r = outp.squeeze(0)
             result[j] = r
         # we need an output result shape (batch, dim_features)
-        return result
+        return result.cpu()

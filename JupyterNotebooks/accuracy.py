@@ -8,7 +8,7 @@ def CalculateLoaderAccuracy(model, loader):
 
         val_accuracies = []
         for _, (x, y) in enumerate(loader):
-            dim_predictions = model(x)
+            dim_predictions = model(x, y)
 
             val_acc = calculate_accuracy(dim_predictions, y)
             val_accuracies.append(val_acc)

@@ -13,7 +13,7 @@ from model import DimTransformer
 from accuracy import calculate_accuracy, CalculateLoaderAccuracy
 from chamfer_distance_loss import ChamferDistance
 
-def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=15):
+def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.001, epochs=3):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -52,7 +52,6 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
         loss_accumulated = 0
 
         for i, (x, y) in enumerate(train_loader):
-
             opt.zero_grad()
             out = model(x, y)
 
@@ -85,7 +84,7 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
 
         # https://pytorch.org/tutorials/beginner/saving_loading_models.html
         # save model
-        torch.save(model.state_dict(), 'DimRnnTrained.model')
+        torch.save(model.state_dict(), 'DimTransformerTrained.model')
 
     # Calculate test accuracy
     mean_test_accuracy = CalculateLoaderAccuracy(model, test_loader)
