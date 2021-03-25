@@ -55,7 +55,7 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
             opt.zero_grad()
             out = model(x, y)
 
-            loss_value = loss(out, y.to(device))
+            loss_value = loss(out, y)
 
             loss_value.backward()
             opt.step()
