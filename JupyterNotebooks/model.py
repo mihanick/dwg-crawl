@@ -79,9 +79,9 @@ class DimTransformer(NNModulePrototype):
         self.transformer = torch.nn.Transformer(
             d_model=ent_features, 
             nhead=ent_features,
-            dim_feedforward=256,
-            num_encoder_layers=4,
-            num_decoder_layers=4)
+            dim_feedforward=16,
+            num_encoder_layers=1,
+            num_decoder_layers=1)
 
         self.hidden_size = hidden_size
         self.ent_features = ent_features

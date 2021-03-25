@@ -145,9 +145,9 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
     #d.saveSvg(filename+'.svg')
     return r    
 
-def draw_sample(x, y, verbose = False):
+def draw_sample(x, y, pred=None, verbose = False):
     # print(x.shape,y.shape)
-    drawing_size = 200
+    drawing_size = 300
     
     d = draw.Drawing(4*drawing_size, drawing_size, displayInline = False)
     
@@ -173,21 +173,36 @@ def draw_sample(x, y, verbose = False):
     
     # print(y, (y != 0).all())
     #if (y != 0).all():
-    if True:
-        # print(y)
+    # print(y)
+    dim = draw.Lines(
+            y[0].item(),
+            y[1].item(),
+            y[2].item(),
+            y[3].item(),
+            close = False,
+            fill='#eeee00',
+            stroke = 'blue',
+            stroke_width = '2'
+    )
+
+    d.append(dim)
+    
+    if pred!=None:
+        pred = pred * drawing_size
         dim = draw.Lines(
-                y[0].item(),
-                y[1].item(),
-                y[2].item(),
-                y[3].item(),
+                pred[0].item(),
+                pred[1].item(),
+                pred[2].item(),
+                pred[3].item(),
                 close = False,
                 fill='#eeee00',
-                stroke = 'blue',
+                stroke = 'red',
                 stroke_width = '2'
         )
 
         d.append(dim)
-        entscount = entscount + 1    
+    
+    entscount = entscount + 1    
             
     print('entities:', entscount)        
     #https://pypi.org/project/drawSvg/
