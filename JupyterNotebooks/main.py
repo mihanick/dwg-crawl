@@ -12,8 +12,9 @@ from dataset import DwgDataset
 from model import DimTransformer
 from accuracy import calculate_accuracy, CalculateLoaderAccuracy
 from chamfer_distance_loss import ChamferDistance
+from torch.optim.lr_scheduler import StepLR
 
-def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.001, epochs=3):
+def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.001, epochs=3, verbose=True):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -36,6 +37,7 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
     lr = lr
     epochs = epochs
     opt = torch.optim.Adam(model.parameters(), lr=lr)
+    scheduler = StepLR(opt, step_size=10, gamma=0.1)
 
     start = time.time()
 
@@ -46,7 +48,7 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
 
     for epoch in range(epochs):
         torch.cuda.empty_cache()
-        
+
         model.train()
 
         loss_accumulated = 0
@@ -65,15 +67,18 @@ def run(batch_size=4, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.00
             train_accuracy = calculate_accuracy(out, y)
 
             with torch.no_grad():
-                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.5f} Chamfer distance: {:1.4f}'
-                        .format(
-                            epoch,
-                            i,
-                            time.time() - start,
-                            float(loss_value),
-                            train_accuracy
-                        ))
-                
+                if verbose:
+                    print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.5f} Chamfer distance: {:1.4f}'
+                            .format(
+                                epoch,
+                                i,
+                                time.time() - start,
+                                float(loss_value),
+                                train_accuracy
+                            ))
+                            
+        scheduler.step()       
+
         train_history.append(float(train_accuracy))
         loss_history.append(float(loss_accumulated))
         
