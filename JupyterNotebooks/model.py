@@ -1,8 +1,12 @@
-import numpy as np
+'''
+    taken from https://nn.labml.ai/sketch_rnn/index.html
+'''
 
-# https://blog.floydhub.com/a-beginners-guide-on-recurrent-neural-networks-with-pytorch/
 import torch
 from torch import nn
+import einops
+from calc_loss import BivariateGaussianMixture
+
 
 class NNModulePrototype(nn.Module):
     '''
@@ -19,54 +23,52 @@ class NNModulePrototype(nn.Module):
             if torch.cuda.is_available():
                 self.device = torch.device("cuda")
 
-class DimRnn(NNModulePrototype):
-    def __init__(self, ent_features, dim_features, hidden_size, enforced_device=None):
-        '''
-        Inints layers and inputs-outputs
-        '''
+
+class EncoderRNN(NNModulePrototype):
+    def __init__(self, d_z: int, enc_hidden_size: int, enforced_device=None):
         super().__init__(enforced_device)
-        self.hidden_size = hidden_size
-        self.rnn = nn.RNN(input_size=ent_features, hidden_size=self.hidden_size)
-        self.ent_features = ent_features
-        self.hidden = None
-        self.dim_features = dim_features
-        self.l1 = nn.Linear(self.hidden_size,self.dim_features)
+        self.lstm = nn.LSTM(5, enc_hidden_size, bidirectional=True)
+        self.mu_head = nn.Linear(2*enc_hidden_size, d_z)
+        self.sigma_head = nn.Linear(2*enc_hidden_size, d_z)
 
-    def forward(self, x):
+    def forward(self, inputs: torch.Tensor, state=None):
+        _, (hidden, cell) = self.lstm(inputs.float(), state)
+        hidden = einops.rearrange(hidden, 'fb b h -> b (fb h)')
+        mu = self.mu_head(hidden)
+        sigma_hat = self.sigma_head(hidden)
+        sigma = torch.exp(sigma_hat / 2.)
+        z = mu + sigma * torch.normal(mu.new_zeros(mu.shape), mu.new_ones(mu.shape))
+
+        return z, mu, sigma_hat
+
+class DecoderRNN(torch.nn.Module):
+    def __init__(self, d_z: int, dec_hidden_size: int, n_distributions: int, enforced_device=None):
+        super().__init__(enforced_device)
+
+        self.lstm = nn.LSTM(d_z + 5, dec_hidden_size)
+        self.init_state = nn.Linear(d_z, 2*dec_hidden_size)
+        self.mixtures = nn.Linear(dec_hidden_size, 6*n_distributions)
+        self.q_head = nn.Linear(dec_hidden_size, 3)
+        self.q_log_softmax = nn.LogSoftmax(-1)
+        self.n_distributions = n_distributions
+        self.dec_hidden_size = dec_hidden_size
+
+    def forward(self, x: torch.Tensor, z: torch.Tensor, state = None):
         '''
-
+        state: Optional[Tuple[torch.Tensor, torch.Tensor]]
         '''
-        # As we have variable entity sequence length between samples in batch
-        # we will just manually loop samples in batch
-        # while rnn will assume batch_size == 1
+        if state is None:
+            h, c = torch.split(torch.tanh(self.init_state(z)),
+                               self.dec_hidden_size, 1)
+            state = (h.unsqueeze(0).contiguous(), c.unsqueeze(0).contiguous())
 
-        batch_size = len(x)
-        
-        if self.hidden is None:
-            # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
-            # h_0 of shape (num_layers * num_directions, batch, hidden_size
-            self.hidden = torch.zeros(1, 1, self.hidden_size, device=self.device)
+        outputs, state = self.lstm(x, state)
 
-        result = torch.zeros(batch_size, self.hidden_size, device=self.device)
-        for j in range(batch_size):
-            xj = x[j]
+        q_logits = self.q_log_softmax(self.q_head(outputs))
 
-            # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
-            # input of shape (seq_len, batch, input_size)
-            inp = xj.unsqueeze(1) 
+        pi_logits, mu_x, mu_y, sigma_x, sigma_y, rho_xy = torch.split(
+            self.mixtures(outputs), self.n_distributions, 2)
 
-            # https://stackoverflow.com/questions/48274929/pytorch-runtimeerror-trying-to-backward-through-the-graph-a-second-time-but
-            self.hidden = self.hidden.detach()
+        dist = BivariateGaussianMixture(pi_logits, mu_x, mu_y, torch.exp(sigma_x), torch.exp(sigma_y), torch.tanh(rho_xy))
 
-            # https://pytorch.org/docs/stable/generated/torch.nn.RNN.html
-            # output of shape (seq_len, batch, num_directions * hidden_size)
-            # h_n of shape (num_layers * num_directions, batch, hidden_size):
-            outp, self.hidden = self.rnn(inp.to(self.device), self.hidden)
-            
-            result[j] = self.hidden.squeeze(1)
-        
-        result = self.l1(result)
-        # we need an output result shape (batch, dim_features)
-        return result
-
-       
+        return dist, q_logits, state

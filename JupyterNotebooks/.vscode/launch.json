@@ -8,7 +8,7 @@
             "name": "Run main.py",
             "type": "python",
             "request": "launch",
-            "program": "sketch_rnn.py",
+            "program": "run.py",
             "console": "integratedTerminal"
         },
     ]

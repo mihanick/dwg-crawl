@@ -20,66 +20,95 @@ class EntityDataset(Dataset):
             'XLine1Point.X', 'XLine1Point.Y',
             'XLine2Point.X', 'XLine2Point.Y']
 
-        self.ent_features = len(self.x_columns)
-        self.dim_features = len(self.y_columns)
+        self.stroke_columns = ['dx', 'dy', 'is_dim']
+        # dx, dy, is_dim, eos
+        self.stroke_features = len(self.stroke_columns) + 1
 
         df = pandasData.dropna(how='all', subset=(self.x_columns + self.y_columns))
-        
+
         # drop unclustered data, 
         # i.e. outlier points that has not been cluster labeled
         # i.e label==-1
         df = df.drop(df[df["label"] == -1].index)
-        
+
         groupped = df.groupby(['FileId', 'label'])
         keys = list(groupped.groups.keys())
         
         self.groupped = groupped
         self.data_frame = df
         
-        self.data = []
+        calculated_data = []
+
+        self.max_seq_length = 0
 
         for key in keys:
             _group = groupped.get_group(key)
             
-            entire_frame = _group[self.x_columns + self.y_columns]
-            entire_frame, _ = scale_ds(entire_frame)
-            
-            _x = entire_frame[self.x_columns]
-            _x = _x.dropna(how='all')
-            # drop empty entities sets, as we will have nothing to learn on
-            # also drop small chunks
-            if len(_x) < 10:
-                continue
+            group_df = _group[self.x_columns + self.y_columns]
+            group_df, _ = scale_ds(group_df)
 
-            _x = _x.fillna(0.0)
-            _x = _x.values
-            x = torch.FloatTensor(_x)
-        
-            _y = entire_frame[self.y_columns]
-            _y = _y.dropna(how='all')
-            _y = _y.fillna(0.0)
-            y_cache = list(_y.to_numpy())
-                
-            if len(y_cache) > 0:
-                for _y in y_cache:
-                    #y = _y.reshape(1, self.dim_features)
-                    # print("y",y)
-                    # print(_y)
-                    y = torch.FloatTensor(_y)
-                    # print(y)
-                    self.data.append((x, y))
-            else:
-                y = torch.zeros((1, self.dim_features), dtype=torch.float32)
-                self.data.append((x, y))
-        
+            # reformat dataset to one table [dx, dy, 'is_dim']
+            # is_dim = 1 for dimensions
+            group_df['is_dim'] = 0.0
+            group_df['dx'] = 0.0
+            group_df['dy'] = 0.0
+            
+            should be much easier
+            
+            def calc_d(row):
+                if np.isnan(row['StartPoint.X']):
+                    row['dx'] = row['XLine1Point.X'] - row['XLine2Point.X']
+                    row['dy'] = row['XLine1Point.Y'] - row['XLine2Point.Y']
+                    row['is_dim'] = 1
+                else:
+                    row['dx'] = row['EndPoint.X'] - row['StartPoint.X']
+                    row['dy'] = row['EndPoint.Y'] - row['StartPoint.Y']
+            
+            group_df = group_df.apply(calc_d, axis=1)
+
+            #entire_frame.fillna(0)
+
+            seq_len =  len(group_df)
+            if self.max_seq_length < seq_len:
+                self.max_seq_length = seq_len
+
+            d = group_df[self.stroke_columns]
+            calculated_data.append(d.values)
+
+        if scale is None:
+            scale = np.std(np.concatenate([np.ravel(s[:, 0:2]) for s in calculated_data]))
+        self.scale = scale
+
+        # pad all data to max_seq_len
+        self.data = torch.zeros(len(calculated_data), self.max_seq_length + 2, self.stroke_features, dtype=torch.float)
+        self.mask = torch.zeros(len(calculated_data), self.max_seq_length + 1)
+
+        for i, seq in enumerate(calculated_data):
+            seq = torch.from_numpy(seq)
+            seq_len = len(seq)
+
+            # dx, dy
+            self.data[i,1:seq_len + 1, :2] = seq[:,:2] / scale
+
+            #is_dim
+            self.data[i,1:seq_len + 1, 2] = seq[:,2]
+
+            #end of sequence
+            self.data[i, :seq_len + 1,3] = 1
+
+            self.mask[i, :seq_len +1] = 1
+
+        # start of sequence
+        self.data[:, 0, 2] = 1
+
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
-        return self.data[index]
+        return self.data[index], self.mask[index]
 
 class DwgDataset:
-    def __init__(self, pickle_file, batch_size=1):
+    def __init__(self, pickle_file, batch_size=128):
         self.batch_size = batch_size
 
         test_data = pd.read_pickle(pickle_file)
@@ -106,17 +135,6 @@ class DwgDataset:
         val_sampler   = SubsetRandomSampler(val_indices)
         test_sampler  = SubsetRandomSampler(test_indices)
 
-        # https://stackoverflow.com/questions/64586575/adding-class-objects-to-pytorch-dataloader-batch-must-contain-tensors
-        def custom_collate(sample):
-            x = []
-            y = torch.zeros(self.batch_size, self.entities.dim_features)
-            
-            for i in range(len(sample)):
-                xx, yy = sample[i]
-                x.append(xx)
-                y[i] = yy
-            return x, y
-
-        self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = train_sampler, collate_fn=custom_collate, drop_last=True)
-        self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = val_sampler, collate_fn=custom_collate, drop_last=True)
-        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = test_sampler, collate_fn=custom_collate)       
+        self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = train_sampler)
+        self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = val_sampler)
+        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = test_sampler)       

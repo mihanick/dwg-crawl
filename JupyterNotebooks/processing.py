@@ -116,6 +116,12 @@ def Col2Numpy(series, column_names):
     return result
 
 def scale_ds(x):
+    '''
+    Scales dataset by difference between max and min
+
+    returns scaled dataset and calculated scale
+    '''
+
     _x1 = x.fillna(0).to_numpy()
     
     mn = _x1.min()

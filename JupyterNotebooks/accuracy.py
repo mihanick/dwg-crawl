@@ -1,21 +1,32 @@
 import numpy as np
 import torch
-from chamfer_distance_loss import my_chamfer_distance
+from calc_loss import KLDivLoss, ReconstructionLoss
 
-def CalculateLoaderAccuracy(model, loader):
+def CalculateLoaderAccuracy(encoder, decoder, loader):
     with torch.no_grad():
-        model.eval()
+        encoder.eval()
+        decoder.eval()
 
-        val_accuracies = []
-        for _, (x, y) in enumerate(loader):
-            dim_predictions = model(x)
+        kl_losses = []
+        reconstruction_losses = []
 
-            val_acc = calculate_accuracy(dim_predictions, y)
-            val_accuracies.append(val_acc)
-        val_accuracy = np.mean(val_accuracies)
-        return val_accuracy
+        for _, batch in enumerate(loader):
+            data = batch[0].to(encoder.device).transpose(0, 1)
+            mask = batch[1].to(encoder.device).transpose(0, 1)
 
-def calculate_accuracy(dim_outputs, y):
-    l = my_chamfer_distance(dim_outputs, y)
+            z, mu, sigma_hat = encoder(data)
 
-    return l
+            z_stack = z.unsqueeze(0).expand(data.shape[0]- 1, -1, -1)
+
+            inputs = torch.cat([data[:-1], z_stack], 2)
+
+            dist, q_logits, _ = decoder(inputs, z, None)
+
+            kl_loss = KLDivLoss()(sigma_hat, mu)
+            reconstruction_loss = ReconstructionLoss()(mask, data[1:], dist, q_logits)
+
+            kl_losses.append(kl_loss)
+            reconstruction_losses.append(reconstruction_loss)
+
+        return np.mean(kl_losses), np.mean(reconstruction_losses)
+
