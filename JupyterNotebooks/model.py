@@ -25,9 +25,9 @@ class NNModulePrototype(nn.Module):
 
 
 class EncoderRNN(NNModulePrototype):
-    def __init__(self, d_z: int, enc_hidden_size: int, enforced_device=None):
+    def __init__(self, d_z: int, enc_hidden_size: int, stroke_features: int, enforced_device=None):
         super().__init__(enforced_device)
-        self.lstm = nn.LSTM(5, enc_hidden_size, bidirectional=True)
+        self.lstm = nn.LSTM(stroke_features, enc_hidden_size, bidirectional=True)
         self.mu_head = nn.Linear(2*enc_hidden_size, d_z)
         self.sigma_head = nn.Linear(2*enc_hidden_size, d_z)
 
@@ -41,14 +41,14 @@ class EncoderRNN(NNModulePrototype):
 
         return z, mu, sigma_hat
 
-class DecoderRNN(torch.nn.Module):
-    def __init__(self, d_z: int, dec_hidden_size: int, n_distributions: int, enforced_device=None):
+class DecoderRNN(NNModulePrototype):
+    def __init__(self, d_z: int, dec_hidden_size: int, n_distributions: int, stroke_features: int, enforced_device=None):
         super().__init__(enforced_device)
 
-        self.lstm = nn.LSTM(d_z + 5, dec_hidden_size)
+        self.lstm = nn.LSTM(d_z + stroke_features, dec_hidden_size)
         self.init_state = nn.Linear(d_z, 2*dec_hidden_size)
         self.mixtures = nn.Linear(dec_hidden_size, 6*n_distributions)
-        self.q_head = nn.Linear(dec_hidden_size, 3)
+        self.q_head = nn.Linear(dec_hidden_size, 2)
         self.q_log_softmax = nn.LogSoftmax(-1)
         self.n_distributions = n_distributions
         self.dec_hidden_size = dec_hidden_size

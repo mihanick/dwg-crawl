@@ -13,21 +13,19 @@ from dataset import DwgDataset
 from accuracy import CalculateLoaderAccuracy
 
 
-def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=15):
+def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=15, train_verbose=True):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")
 
-    dwg_dataset = DwgDataset(pickle_file=pickle_file, batch_size=batch_size)
+    dwg_dataset = DwgDataset(pickle_file=pickle_file, batch_size=batch_size, limit_seq_len=1000)
 
     train_loader = dwg_dataset.train_loader
     val_loader   = dwg_dataset.val_loader
     test_loader  = dwg_dataset.test_loader
 
-    ent_features = dwg_dataset.entities.ent_features
-    dim_features = dwg_dataset.entities.dim_features
-
-    max_seq_length = dwg_dataset.max_seq_length
+    stroke_features = dwg_dataset.entities.stroke_features
+    max_seq_length = dwg_dataset.entities.max_seq_length
 
     enc_hidden_size    = 256
     dec_hidden_size    = 512
@@ -38,8 +36,8 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
     grad_clip          = 1.0
     temperature        = 0.4
 
-    encoder = EncoderRNN(d_z, enc_hidden_size).to(device)
-    decoder = DecoderRNN(d_z, dec_hidden_size, n_distributions).to(device)
+    encoder = EncoderRNN(d_z, enc_hidden_size, stroke_features=stroke_features, enforced_device=device)
+    decoder = DecoderRNN(d_z, dec_hidden_size, n_distributions, stroke_features=stroke_features, enforced_device=device)
 
     optimizer = torch.optim.Adam(list(encoder.parameters()) + list(decoder.parameters()), lr=0.001)
 
@@ -74,15 +72,15 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
             nn.utils.clip_grad_norm_(decoder.parameters(), grad_clip)
 
             optimizer.step()
-
-            print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] RLoss: {:5.5f} KL Loss: {:1.4f}'
-                        .format(
-                            epoch,
-                            i,
-                            time.time() - start,
-                            reconstruction_loss.item(),
-                            kl_loss.item()
-                        ))
+            if train_verbose:
+                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] RLoss: {:5.5f} KL Loss: {:1.4f}'
+                            .format(
+                                epoch,
+                                i,
+                                time.time() - start,
+                                reconstruction_loss.item(),
+                                kl_loss.item()
+                            ))
         
         # validation
         val_kl, val_rl = CalculateLoaderAccuracy(encoder, decoder, val_loader)
@@ -95,4 +93,4 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
 
     # Calculate test accuracy
     test_kl, test_rl = CalculateLoaderAccuracy(encoder, decoder, test_loader)
-    print('Test losses kl:{:1.4f} rl:{:1.4f}'.format(epoch, test_kl, test_rl))
+    print('Test losses kl:{:1.4f} rl:{:1.4f}'.format(test_kl, test_rl))

@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, SubsetRandomSampler
 from processing import scale_ds
 
 class EntityDataset(Dataset):
-    def __init__(self, pandasData):
+    def __init__(self, pandasData, limit_seq_len=None):
         self.x_columns = [
             'StartPoint.X', 'StartPoint.Y', 
             'EndPoint.X', 'EndPoint.Y']
@@ -50,34 +50,28 @@ class EntityDataset(Dataset):
             # reformat dataset to one table [dx, dy, 'is_dim']
             # is_dim = 1 for dimensions
             group_df['is_dim'] = 0.0
-            group_df['dx'] = 0.0
-            group_df['dy'] = 0.0
+            group_df['dx'] = group_df['EndPoint.X'] - group_df['StartPoint.X']
+            group_df['dy'] = group_df['EndPoint.Y'] - group_df['StartPoint.Y']
             
-            should be much easier
+            # https://www.datasciencelearner.com/how-to-merge-two-columns-in-pandas/
+            group_df['is_dim'] = np.where(group_df['EndPoint.X'].isna(), 1, 0)
+            group_df['dx'] = np.where(group_df['EndPoint.X'].isna(), group_df['XLine1Point.X'] - group_df['XLine2Point.X'], group_df['dx'])
+            group_df['dy'] = np.where(group_df['EndPoint.X'].isna(), group_df['XLine1Point.Y'] - group_df['XLine2Point.Y'], group_df['dy'])
             
-            def calc_d(row):
-                if np.isnan(row['StartPoint.X']):
-                    row['dx'] = row['XLine1Point.X'] - row['XLine2Point.X']
-                    row['dy'] = row['XLine1Point.Y'] - row['XLine2Point.Y']
-                    row['is_dim'] = 1
-                else:
-                    row['dx'] = row['EndPoint.X'] - row['StartPoint.X']
-                    row['dy'] = row['EndPoint.Y'] - row['StartPoint.Y']
-            
-            group_df = group_df.apply(calc_d, axis=1)
+            seq_len = len(group_df)
+            if limit_seq_len is not None:
+                if seq_len > limit_seq_len:
+                    continue
 
-            #entire_frame.fillna(0)
-
-            seq_len =  len(group_df)
             if self.max_seq_length < seq_len:
                 self.max_seq_length = seq_len
 
             d = group_df[self.stroke_columns]
             calculated_data.append(d.values)
 
-        if scale is None:
-            scale = np.std(np.concatenate([np.ravel(s[:, 0:2]) for s in calculated_data]))
-        self.scale = scale
+        #if scale is None:
+        #    scale = np.std(np.concatenate([np.ravel(s[:, 0:2]) for s in calculated_data]))
+        #self.scale = scale
 
         # pad all data to max_seq_len
         self.data = torch.zeros(len(calculated_data), self.max_seq_length + 2, self.stroke_features, dtype=torch.float)
@@ -88,13 +82,13 @@ class EntityDataset(Dataset):
             seq_len = len(seq)
 
             # dx, dy
-            self.data[i,1:seq_len + 1, :2] = seq[:,:2] / scale
+            self.data[i,1:seq_len + 1, :2] = seq[:,:2] #/ scale
 
             #is_dim
             self.data[i,1:seq_len + 1, 2] = seq[:,2]
 
             #end of sequence
-            self.data[i, :seq_len + 1,3] = 1
+            self.data[i, :seq_len + 1, 3] = 1
 
             self.mask[i, :seq_len +1] = 1
 
@@ -108,12 +102,12 @@ class EntityDataset(Dataset):
         return self.data[index], self.mask[index]
 
 class DwgDataset:
-    def __init__(self, pickle_file, batch_size=128):
+    def __init__(self, pickle_file, batch_size=128, limit_seq_len=10000):
         self.batch_size = batch_size
 
         test_data = pd.read_pickle(pickle_file)
 
-        self.entities = EntityDataset(test_data)
+        self.entities = EntityDataset(test_data, limit_seq_len=limit_seq_len)
 
         data_len = len(self.entities)
 
