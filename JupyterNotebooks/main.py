@@ -13,12 +13,12 @@ from dataset import DwgDataset
 from accuracy import CalculateLoaderAccuracy
 
 
-def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=15, train_verbose=True):
+def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=15, train_verbose=True, limit_seq_len=3500):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")
 
-    dwg_dataset = DwgDataset(pickle_file=pickle_file, batch_size=batch_size, limit_seq_len=1000)
+    dwg_dataset = DwgDataset(pickle_file=pickle_file, batch_size=batch_size, limit_seq_len=limit_seq_len)
 
     train_loader = dwg_dataset.train_loader
     val_loader   = dwg_dataset.val_loader
@@ -42,7 +42,7 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
     encoder.to(device)
     decoder.to(device)
 
-    optimizer = torch.optim.Adam(list(encoder.parameters()) + list(decoder.parameters()), lr=0.001)
+    optimizer = torch.optim.Adam(list(encoder.parameters()) + list(decoder.parameters()), lr=lr)
 
     start = time.time()
     for epoch in range(epochs):
