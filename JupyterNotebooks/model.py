@@ -7,26 +7,9 @@ from torch import nn
 import einops
 from calc_loss import BivariateGaussianMixture
 
-
-class NNModulePrototype(nn.Module):
-    '''
-    Parent class to init cuda if available
-    Or use enforced device
-    '''
-    def __init__ (self, enforced_device=None):
+class EncoderRNN(nn.Module):
+    def __init__(self, d_z: int, enc_hidden_size: int, stroke_features: int):
         super().__init__()
-
-        if enforced_device is not None:
-            self.device = enforced_device
-        else:
-            self.device = torch.device("cpu")
-            if torch.cuda.is_available():
-                self.device = torch.device("cuda")
-
-
-class EncoderRNN(NNModulePrototype):
-    def __init__(self, d_z: int, enc_hidden_size: int, stroke_features: int, enforced_device=None):
-        super().__init__(enforced_device)
         self.lstm = nn.LSTM(stroke_features, enc_hidden_size, bidirectional=True)
         self.mu_head = nn.Linear(2*enc_hidden_size, d_z)
         self.sigma_head = nn.Linear(2*enc_hidden_size, d_z)
@@ -41,9 +24,9 @@ class EncoderRNN(NNModulePrototype):
 
         return z, mu, sigma_hat
 
-class DecoderRNN(NNModulePrototype):
-    def __init__(self, d_z: int, dec_hidden_size: int, n_distributions: int, stroke_features: int, enforced_device=None):
-        super().__init__(enforced_device)
+class DecoderRNN(nn.Module):
+    def __init__(self, d_z: int, dec_hidden_size: int, n_distributions: int, stroke_features: int):
+        super().__init__()
 
         self.lstm = nn.LSTM(d_z + stroke_features, dec_hidden_size)
         self.init_state = nn.Linear(d_z, 2*dec_hidden_size)

@@ -36,8 +36,11 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
     grad_clip          = 1.0
     temperature        = 0.4
 
-    encoder = EncoderRNN(d_z, enc_hidden_size, stroke_features=stroke_features, enforced_device=device)
-    decoder = DecoderRNN(d_z, dec_hidden_size, n_distributions, stroke_features=stroke_features, enforced_device=device)
+    encoder = EncoderRNN(d_z, enc_hidden_size, stroke_features=stroke_features)
+    decoder = DecoderRNN(d_z, dec_hidden_size, n_distributions, stroke_features=stroke_features)
+    
+    encoder.to(device)
+    decoder.to(device)
 
     optimizer = torch.optim.Adam(list(encoder.parameters()) + list(decoder.parameters()), lr=0.001)
 
@@ -83,7 +86,7 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
                             ))
         
         # validation
-        val_kl, val_rl = CalculateLoaderAccuracy(encoder, decoder, val_loader)
+        val_kl, val_rl = CalculateLoaderAccuracy(encoder, decoder, val_loader, device)
         print('Epoch [{}] validation losses kl:{:1.4f} rl:{:1.4f}'.format(epoch, val_kl, val_rl))
 
         # https://pytorch.org/tutorials/beginner/saving_loading_models.html
@@ -92,5 +95,5 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
         torch.save(decoder.state_dict(), 'DimDecoder.model')
 
     # Calculate test accuracy
-    test_kl, test_rl = CalculateLoaderAccuracy(encoder, decoder, test_loader)
+    test_kl, test_rl = CalculateLoaderAccuracy(encoder, decoder, test_loader, device)
     print('Test losses kl:{:1.4f} rl:{:1.4f}'.format(test_kl, test_rl))
