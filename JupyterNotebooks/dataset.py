@@ -20,7 +20,7 @@ class EntityDataset(Dataset):
             'XLine1Point.X', 'XLine1Point.Y',
             'XLine2Point.X', 'XLine2Point.Y']
 
-        self.stroke_columns = ['dx', 'dy', 'is_dim']
+        self.stroke_columns = ['dx', 'dy', 'is_pen', 'is_dim']
         # dx, dy, is_dim, eos
         self.stroke_features = len(self.stroke_columns) + 1
 
@@ -47,27 +47,67 @@ class EntityDataset(Dataset):
             group_df = _group[self.x_columns + self.y_columns]
             group_df, _ = scale_ds(group_df)
 
-            # reformat dataset to one table [dx, dy, 'is_dim']
+            seq_len = len(group_df)
+            # reformat dataset to one table [dx, dy, 'is_pen', 'is_dim']
+            # is_pen = 1 for dims and lines, is_pen = 0 for pen transition
             # is_dim = 1 for dimensions
-            group_df['is_dim'] = 0.0
-            group_df['dx'] = group_df['EndPoint.X'] - group_df['StartPoint.X']
-            group_df['dy'] = group_df['EndPoint.Y'] - group_df['StartPoint.Y']
-            
+
             # https://www.datasciencelearner.com/how-to-merge-two-columns-in-pandas/
             group_df['is_dim'] = np.where(group_df['EndPoint.X'].isna(), 1, 0)
-            group_df['dx'] = np.where(group_df['EndPoint.X'].isna(), group_df['XLine1Point.X'] - group_df['XLine2Point.X'], group_df['dx'])
-            group_df['dy'] = np.where(group_df['EndPoint.X'].isna(), group_df['XLine1Point.Y'] - group_df['XLine2Point.Y'], group_df['dy'])
+            #group_df['dx'] = group_df['EndPoint.X'] - group_df['StartPoint.X']
+            #group_df['dy'] = group_df['EndPoint.Y'] - group_df['StartPoint.Y']
+
+            # calculated numpy data
+            # for each line of group_df
+            # we will add 2 lines in npd:
+            # one for pen movement from end of (prevx, prevy) to current x1,x2 (is_pen=0)
+            # and one for pen drawing from x1,y1 to x2,y2
+            # is_dim will be written to numpy data as well
+            npd = np.zeros((seq_len*2, 4), dtype=np.float)
+
+            prevx = 0
+            prevy = 0
+            i = 0
+            for _, row  in group_df.iterrows():
+                x1 = row['StartPoint.X']
+                y1 = row['StartPoint.Y']
+                x2 = row['EndPoint.X']
+                y2 = row['EndPoint.Y']
+
+                if row['is_dim'] == 1:
+                    x1 = row['XLine1Point.X']
+                    y1 = row['XLine1Point.Y']
+                    x2 = row['XLine2Point.X']
+                    y2 = row['XLine2Point.Y']
+                    npd[2*i + 1, 3] = 1
+
+                npd[2*i + 1, 0] = x2 - x1
+                npd[2*i + 1, 1] = y2 - y1
+                npd[2*i + 1, 2] = 1
+
+                npd[2*i, 0] = x1 - prevx
+                npd[2*i, 1] = y1 - prevy
+                npd[2*i, 2] = 0
+
+                prevx = x2
+                prevy = y2
+                
+                #print (row)
+                # print (npd[2*i:2*i+2])
+
+                i+=1
             
-            seq_len = len(group_df)
+            #print(group_df)
+            #print(npd)
+            
             if limit_seq_len is not None:
                 if seq_len > limit_seq_len:
                     continue
 
-            if self.max_seq_length < seq_len:
-                self.max_seq_length = seq_len
+            if self.max_seq_length < npd.shape[0]:
+                self.max_seq_length = npd.shape[0]
 
-            d = group_df[self.stroke_columns]
-            calculated_data.append(d.values)
+            calculated_data.append(npd)
 
         #if scale is None:
         #    scale = np.std(np.concatenate([np.ravel(s[:, 0:2]) for s in calculated_data]))
@@ -84,11 +124,14 @@ class EntityDataset(Dataset):
             # dx, dy
             self.data[i,1:seq_len + 1, :2] = seq[:,:2] #/ scale
 
-            #is_dim
+            #is_pen
             self.data[i,1:seq_len + 1, 2] = seq[:,2]
 
+            #is_dim
+            self.data[i,1:seq_len + 1, 3] = seq[:,3]
+
             #end of sequence
-            self.data[i, :seq_len + 1, 3] = 1
+            self.data[i, :seq_len + 1, 4] = 1
 
             self.mask[i, :seq_len +1] = 1
 

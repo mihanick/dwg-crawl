@@ -47,7 +47,7 @@ class ReconstructionLoss(torch.nn.Module):
     def forward(self, mask: torch.Tensor, target: torch.Tensor, dist: 'BivarateGaussianMixture', q_logits: torch.Tensor):
         pi, mix = dist.get_distribution()
 
-        # target has shape [sel_en, batch_size, 5(i.e. dx, dy, p1, p2, p3)] 
+        # target has shape [sel_en, batch_size, 5(i.e. dx, dy, is_pen, is_dim, eos)] 
         # we want to get dx, dy and get the probabilities from each of distributions in the mixture
         # xy will have shape [seq_length, batch_size, n_distributions, 2]
         xy = target[:, :, 0:2].unsqueeze(-2).expand(-1, -1, dist.n_distributions, -1)

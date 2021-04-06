@@ -31,7 +31,7 @@ class DecoderRNN(nn.Module):
         self.lstm = nn.LSTM(d_z + stroke_features, dec_hidden_size)
         self.init_state = nn.Linear(d_z, 2*dec_hidden_size)
         self.mixtures = nn.Linear(dec_hidden_size, 6*n_distributions)
-        self.q_head = nn.Linear(dec_hidden_size, 2)
+        self.q_head = nn.Linear(dec_hidden_size, stroke_features - 2) #first two stroke features are dx,dy than follow logits
         self.q_log_softmax = nn.LogSoftmax(-1)
         self.n_distributions = n_distributions
         self.dec_hidden_size = dec_hidden_size

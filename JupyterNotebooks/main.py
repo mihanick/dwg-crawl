@@ -13,7 +13,7 @@ from dataset import DwgDataset
 from accuracy import CalculateLoaderAccuracy
 
 
-def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=15, train_verbose=True, limit_seq_len=3500):
+def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=5, train_verbose=True, limit_seq_len=200):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")
