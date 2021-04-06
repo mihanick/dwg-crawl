@@ -76,7 +76,7 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
 
             optimizer.step()
             if train_verbose:
-                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] RLoss: {:5.5f} KL Loss: {:1.4f}'
+                print('  [{:4.0f}-{:4.0f} @ {:5.1f} sec] RLoss: {:5.5f} KL Loss: {:1.4f}'
                             .format(
                                 epoch,
                                 i,
@@ -87,7 +87,8 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
         
         # validation
         val_kl, val_rl = CalculateLoaderAccuracy(encoder, decoder, val_loader, device)
-        print('Epoch [{}] validation losses kl:{:1.4f} rl:{:1.4f}'.format(epoch, val_kl, val_rl))
+        
+        print('Epoch [{} @ {:4.1f}] validation losses kl:{:1.4f} rl:{:1.4f}'.format(epoch, time.time() - start, val_kl, val_rl))
 
         # https://pytorch.org/tutorials/beginner/saving_loading_models.html
         # save model
