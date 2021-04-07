@@ -44,10 +44,15 @@ class Sampler:
     @staticmethod
     def _sample_step(dist: 'BivariateGaussianMixture', q_logits: torch.Tensor, temperature: float):
         dist.set_temperature(temperature)
+
         pi, mix = dist.get_distribution()
-        idx = pi.sample()[0, 0]
         q = torch.distributions.Categorical(logits=q_logits / temperature)
-        q_idx = q.sample()[0, 0]
+
+        ps = pi.sample()
+        qs = q.sample()
+
+        idx = ps[0, 0]
+        q_idx = qs[0, 0]
         xy = mix.sample()[0, 0, idx]
 
         stroke = q_logits.new_zeros(5)
@@ -76,7 +81,7 @@ def test_model_generation():
         device = torch.device("cuda")
 
     from dataset import DwgDataset
-    dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size = 32, limit_seq_len=200)
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size=32, limit_seq_len=400)
 
     stroke_features = dwg_dataset.entities.stroke_features
     max_seq_length = dwg_dataset.entities.max_seq_length
@@ -110,6 +115,5 @@ def test_model_generation():
 
         seq = sampler.sample(data, 0.4)
         print(seq)
-        break
 
 test_model_generation()

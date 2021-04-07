@@ -48,6 +48,15 @@ class EntityDataset(Dataset):
             group_df, _ = scale_ds(group_df)
 
             seq_len = len(group_df)
+
+            if limit_seq_len is not None:
+                if seq_len > limit_seq_len:
+                    continue
+                
+            #skip small groups
+            if seq_len < 20:
+                continue
+
             # reformat dataset to one table [dx, dy, 'is_pen', 'is_dim']
             # is_pen = 1 for dims and lines, is_pen = 0 for pen transition
             # is_dim = 1 for dimensions
@@ -100,10 +109,6 @@ class EntityDataset(Dataset):
             #print(group_df)
             #print(npd)
             
-            if limit_seq_len is not None:
-                if seq_len > limit_seq_len:
-                    continue
-
             if self.max_seq_length < npd.shape[0]:
                 self.max_seq_length = npd.shape[0]
 
