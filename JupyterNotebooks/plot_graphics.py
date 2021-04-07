@@ -193,3 +193,10 @@ def images_from_batch(data, verbose=False):
         result.append(d)
         
     return result
+
+
+def save_batch_images(data):
+    vv = images_from_batch(data)
+    for i, img in enumerate(vv):
+        img.savePng('img_g/img'+str(i)+'.png')
+  

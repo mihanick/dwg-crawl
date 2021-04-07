@@ -7,15 +7,9 @@ import torch
 from dataset import DwgDataset
 from model import DecoderRNN, EncoderRNN
 
-from plot_graphics import images_from_batch
+from plot_graphics import images_from_batch, save_batch_images
 from calc_loss import BivariateGaussianMixture
 
-
-def draw_batch(data):
-    vv = images_from_batch(data)
-    for i, img in enumerate(vv):
-        img.savePng('img_g/img'+str(i)+'.png')
-    
 
 class Sampler:
     def __init__(self, encoder:EncoderRNN, decoder:DecoderRNN):
@@ -62,44 +56,60 @@ class Sampler:
 
         return stroke
 
+def test_data_drawing():
+    from dataset import DwgDataset
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size = 32, limit_seq_len=200)
 
-device = torch.device("cpu")
-if torch.cuda.is_available():
-    device = torch.device("cuda")
+    for i, batch in enumerate(dwg_dataset.train_loader):
+        
+        data = batch[0].transpose(0, 1)
+        mask = batch[1].transpose(0, 1)
+        
+        save_batch_images(data)
+        break
 
-from dataset import DwgDataset
-dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size = 32, limit_seq_len=1750)
+# test_data_drawing()
 
-stroke_features = dwg_dataset.entities.stroke_features
-max_seq_length = dwg_dataset.entities.max_seq_length
+def test_model_generation():
+    device = torch.device("cpu")
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
 
-enc_hidden_size    = 256
-dec_hidden_size    = 512
+    from dataset import DwgDataset
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size = 32, limit_seq_len=200)
 
-d_z=128
-n_distributions    = 20
+    stroke_features = dwg_dataset.entities.stroke_features
+    max_seq_length = dwg_dataset.entities.max_seq_length
 
-from model import DecoderRNN, EncoderRNN
-encoder = EncoderRNN(d_z, enc_hidden_size, stroke_features=stroke_features)
-decoder = DecoderRNN(d_z, dec_hidden_size, n_distributions, stroke_features=stroke_features)
-encoder.to(device)
-decoder.to(device)
+    enc_hidden_size    = 256
+    dec_hidden_size    = 512
 
-# https://pytorch.org/tutorials/beginner/saving_loading_models.html
-encoder.load_state_dict(torch.load('DimEncoder.model', map_location=device))
-decoder.load_state_dict(torch.load('DimDecoder.model', map_location=device))
+    d_z=128
+    n_distributions    = 20
 
-decoder.eval()
-encoder.eval()
-sampler = Sampler(encoder, decoder)
+    from model import DecoderRNN, EncoderRNN
+    encoder = EncoderRNN(d_z, enc_hidden_size, stroke_features=stroke_features)
+    decoder = DecoderRNN(d_z, dec_hidden_size, n_distributions, stroke_features=stroke_features)
+    encoder.to(device)
+    decoder.to(device)
 
-for i, batch in enumerate(dwg_dataset.train_loader):
-    
-    data = batch[0].to(device).transpose(0, 1)
-    mask = batch[1].to(device).transpose(0, 1)
-    
-    # draw_batch(data)
+    # https://pytorch.org/tutorials/beginner/saving_loading_models.html
+    encoder.load_state_dict(torch.load('DimEncoder.model', map_location=device))
+    decoder.load_state_dict(torch.load('DimDecoder.model', map_location=device))
 
-    seq = sampler.sample(data, 0.4)
-    print(seq)
-    break
+    decoder.eval()
+    encoder.eval()
+    sampler = Sampler(encoder, decoder)
+
+    for i, batch in enumerate(dwg_dataset.train_loader):
+        
+        data = batch[0].to(device).transpose(0, 1)
+        mask = batch[1].to(device).transpose(0, 1)
+        
+        # draw_batch(data)
+
+        seq = sampler.sample(data, 0.4)
+        print(seq)
+        break
+
+test_model_generation()
