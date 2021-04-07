@@ -3,6 +3,7 @@ Contains functions and modules to calculate loss
 '''
 import torch
 import numpy as np
+import math
 
 class BivariateGaussianMixture:
     def __init__(self, pi_logits: torch.Tensor, mu_x: torch.Tensor, mu_y: torch.Tensor, sigma_x: torch.Tensor, sigma_y: torch.Tensor, rho_xy: torch.Tensor):
