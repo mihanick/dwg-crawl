@@ -122,18 +122,20 @@ class EntityDataset(Dataset):
             seq_len = len(seq)
 
             # dx, dy
-            self.data[i,1:seq_len + 1, :2] = seq[:, :2] #/ scale
+            self.data[i, 1:seq_len + 1, :2] = seq[:, :2] #/ scale
 
             #is_pen
-            self.data[i,1:seq_len + 1, 2] = seq[:, 2]
+            self.data[i, 1:seq_len + 1, 2] = seq[:, 2]
 
             #is_dim
-            self.data[i,1:seq_len + 1, 3] = seq[:, 3]
+            #self.data[i, 1:seq_len + 1, 3] = seq[:, 3]
+            #is_lift
+            self.data[i, 1:seq_len + 1, 2] = 1 -  seq[:, 2]
 
             #end of sequence
             self.data[i, seq_len + 1:, 4] = 1
 
-            self.mask[i, :seq_len +1] = 1
+            self.mask[i, :seq_len + 1] = 1
 
         # start of sequence
         self.data[:, 0, 2] = 1
