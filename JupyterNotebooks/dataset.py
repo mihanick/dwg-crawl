@@ -54,8 +54,11 @@ class EntityDataset(Dataset):
 
             # https://www.datasciencelearner.com/how-to-merge-two-columns-in-pandas/
             group_df['is_dim'] = np.where(group_df['EndPoint.X'].isna(), 1, 0)
-            #group_df['dx'] = group_df['EndPoint.X'] - group_df['StartPoint.X']
-            #group_df['dy'] = group_df['EndPoint.Y'] - group_df['StartPoint.Y']
+            group_df['StartPoint.X'] = np.where(group_df['is_dim'] == 1, group_df['XLine1Point.X'], group_df['StartPoint.X'])
+            group_df['StartPoint.Y'] = np.where(group_df['is_dim'] == 1, group_df['XLine1Point.Y'], group_df['StartPoint.Y'])
+            group_df['EndPoint.X'] = np.where(group_df['is_dim'] == 1, group_df['XLine2Point.X'], group_df['EndPoint.X'])
+            group_df['EndPoint.Y'] = np.where(group_df['is_dim'] == 1, group_df['XLine2Point.Y'], group_df['EndPoint.Y'])
+            
 
             # calculated numpy data
             # for each line of group_df
@@ -67,19 +70,16 @@ class EntityDataset(Dataset):
 
             prevx = 0
             prevy = 0
-            i = 0
-            for _, row  in group_df.iterrows():
-                x1 = row['StartPoint.X']
-                y1 = row['StartPoint.Y']
-                x2 = row['EndPoint.X']
-                y2 = row['EndPoint.Y']
 
-                if row['is_dim'] == 1:
-                    x1 = row['XLine1Point.X']
-                    y1 = row['XLine1Point.Y']
-                    x2 = row['XLine2Point.X']
-                    y2 = row['XLine2Point.Y']
-                    npd[2*i + 1, 3] = 1
+            # TODO: More optimization needed, like npd[:]
+            i = 0
+            for  row  in group_df[['StartPoint.X', 'StartPoint.Y', 'EndPoint.X', 'EndPoint.Y', 'is_dim']].values:
+                x1 = row[0]
+                y1 = row[1]
+                x2 = row[2]
+                y2 = row[3]
+
+                npd[2*i + 1, 3] = row[4]
 
                 npd[2*i + 1, 0] = x2 - x1
                 npd[2*i + 1, 1] = y2 - y1
