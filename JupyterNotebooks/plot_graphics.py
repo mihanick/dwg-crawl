@@ -1,7 +1,7 @@
 '''
 Train functions to run from console or jupyter
 '''
-import time
+
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -17,16 +17,6 @@ try:
 except:
     print('Could not import drawSvg')
 
-def generate_image_by_id(collection, fileId):
-    data = query_collection_to_dataframe(collection, fileId)
-    cols_to_expand = ['XLine1Point', 'XLine2Point','StartPoint','EndPoint','Position']
-    data = expand_columns(data, cols_to_expand)
-    data = normalize(data, to_size = 400)
-    generate_file(data)
-    
-    filename = 'img/' + fileId + '.png'
-    return filename      
-    
 def draw_set(pnt_set, labels, core_indices):
     unique_labels = set(labels)
     
@@ -145,53 +135,61 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
     #d.saveSvg(filename+'.svg')
     return r    
 
-def draw_sample(x, y, verbose = False):
-    # print(x.shape,y.shape)
+def images_from_batch(data, verbose=False):
+    #print(data.shape)
     drawing_size = 200
     
-    d = draw.Drawing(4*drawing_size, drawing_size, displayInline = False)
-    
-    x = x * drawing_size
-    y = y * drawing_size
-    
-    entscount = 0
-    # print(x)
-    for row in x:
-        if verbose:
-            print(row)
-        
-        d.append(
-        draw.Lines(
-            row[0].item(),
-            row[1].item(),
-            row[2].item(),
-            row[3].item(),
-            close = False,
-            fill='#eeee00',
-            stroke = 'black'))
-        entscount = entscount + 1
-    
-    # print(y, (y != 0).all())
-    #if (y != 0).all():
-    if True:
-        # print(y)
-        dim = draw.Lines(
-                y[0].item(),
-                y[1].item(),
-                y[2].item(),
-                y[3].item(),
-                close = False,
-                fill='#eeee00',
-                stroke = 'blue',
-                stroke_width = '2'
-        )
+    data = data.transpose(0, 1)
+    result = []
 
-        d.append(dim)
-        entscount = entscount + 1    
-            
-    print('entities:', entscount)        
-    #https://pypi.org/project/drawSvg/
-    d.setPixelScale(2)
-    r = d.rasterize()
-    
-    return r
+    for batch_no in range(data.shape[0]):
+        d = draw.Drawing(3*drawing_size, drawing_size, displayInline=True)
+        sample = data[batch_no]
+
+        entscount = 0
+        x = 0
+        y = 0
+
+        for stroke in sample:
+            if verbose:
+                print(stroke)            
+            if stroke[4] == 1:
+                continue
+
+            dx = stroke[0].item() * drawing_size
+            dy = stroke[1].item() * drawing_size
+
+            if dx == 0 and dy == 0:
+                continue
+
+            cl = 'black'
+            stroke_width = '1'
+            if stroke[3] == 1: #is_dim
+                cl='blue'
+                stroke_width = '2'
+
+            if stroke[2] == 1: #is_pen
+                d.append(
+                    draw.Lines(
+                        x,
+                        y,
+                        x + dx,
+                        y + dy,
+                        close=False,
+                        fill='#eeee00',
+                        stroke=cl,
+                        stroke_width=stroke_width))
+                entscount = entscount + 1
+            x = x + dx
+            y = y + dy
+
+        if verbose:
+            print('entities:', entscount)        
+        #https://pypi.org/project/drawSvg/
+        d.setPixelScale(2)
+        r = d.rasterize()
+        #d.savePng('img_g/test' + str(batch_no) + '.png')
+        # return r
+        result.append(d)
+        
+    return result

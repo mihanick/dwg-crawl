@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run main.py",
+            "name": "Run pipeline",
             "type": "python",
             "request": "launch",
-            "program": "run.py",
+            "program": "test_draw.py",
             "console": "integratedTerminal"
         },
     ]
