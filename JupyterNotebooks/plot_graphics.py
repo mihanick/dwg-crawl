@@ -40,20 +40,23 @@ def draw_set(pnt_set, labels, core_indices):
     
     plt.show()
 
-def plot_history(loss_history, train_history, val_history):
+def plot_history(train_rl_losses, train_kl_losses, val_rl_losses, val_kl_losses):
     '''
     Plots learning history in jupyter
     '''
-    plt.ylabel('Accuracy @ epoch')
+    plt.ylabel('Loss @ epoch')
 
-    train, = plt.plot(train_history)
-    train.set_label("train")
+    train_rl, = plt.plot(train_rl_losses)
+    train_rl.set_label("train rl")
 
-    validation, = plt.plot(val_history)
-    validation.set_label("validation")
+    train_kl, = plt.plot(train_kl_losses)
+    train_kl.set_label("train kl")
 
-    loss, = plt.plot(np.log10(loss_history))
-    loss.set_label("loss")
+    val_rl, = plt.plot(val_rl_losses)
+    val_rl.set_label("val rl")
+
+    val_kl, = plt.plot(val_kl_losses)
+    val_kl.set_label("val kl")
 
     plt.legend()
     plt.show()

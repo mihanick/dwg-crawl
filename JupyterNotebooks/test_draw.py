@@ -1,6 +1,9 @@
 '''
 Contains tests for input and output of models and also for loss functions
 '''
+from main import run
+run()
+exit
 
 #https://code.visualstudio.com/docs/python/testing
 import torch
