@@ -12,7 +12,6 @@ from calc_loss import ReconstructionLoss, KLDivLoss
 from dataset import DwgDataset
 from accuracy import CalculateLoaderAccuracy
 
-
 def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=5, train_verbose=True, limit_seq_len=200):
     device = torch.device("cpu")
     if torch.cuda.is_available():
@@ -32,7 +31,7 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
 
     d_z                = 128
     n_distributions    = 20
-    kl_div_loss_weight = 0.5
+    kl_div_loss_weight = 0.8
     grad_clip          = 1.0
     temperature        = 0.4
 
