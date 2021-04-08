@@ -10,7 +10,6 @@ from model import DecoderRNN, EncoderRNN
 from plot_graphics import images_from_batch, save_batch_images
 from calc_loss import BivariateGaussianMixture
 
-
 class Sampler:
     def __init__(self, encoder:EncoderRNN, decoder:DecoderRNN):
         self.decoder = decoder

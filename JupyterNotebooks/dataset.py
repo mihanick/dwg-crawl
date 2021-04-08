@@ -135,7 +135,7 @@ class EntityDataset(Dataset):
             #is_dim
             #self.data[i, 1:seq_len + 1, 3] = seq[:, 3]
             #is_lift
-            self.data[i, 1:seq_len + 1, 2] = 1 -  seq[:, 2]
+            self.data[i, 1:seq_len + 1, 3] = 1 -  seq[:, 2]
 
             #end of sequence
             self.data[i, seq_len + 1:, 4] = 1
