@@ -80,7 +80,7 @@ def test_model_generation():
         device = torch.device("cuda")
 
     from dataset import DwgDataset
-    dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size=32, limit_seq_len=400)
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size=32, limit_seq_len=1000)
 
     stroke_features = dwg_dataset.entities.stroke_features
     max_seq_length = dwg_dataset.entities.max_seq_length
@@ -112,7 +112,14 @@ def test_model_generation():
         
         # draw_batch(data)
 
-        seq = sampler.sample(data, 0.4)
-        print(seq)
+        #[max_seq_len, batch_size, stroke_features]
+        d = data.transpose(0,1)
+        for dd in d:
+            sourceseqlen = dd[dd[:,4]<1].shape[0]
+            
+            #[max_seq_len, stroke_features]
+            ddd = dd.unsqueeze(1)
+            seq = sampler.sample(ddd, 0.9)
+            print(soruceseqlen, seq.shape[0])
 
 test_model_generation()

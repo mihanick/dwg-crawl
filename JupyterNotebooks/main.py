@@ -46,7 +46,8 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
 
     start = time.time()
     for epoch in range(epochs):
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         
         encoder.train()
         decoder.train()
