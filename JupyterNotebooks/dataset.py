@@ -39,7 +39,7 @@ class EntityDataset(Dataset):
         
         calculated_data = []
 
-        self.max_seq_length = 0
+        max_seq_length = 0
 
         for key in keys:
             _group = groupped.get_group(key)
@@ -109,18 +109,16 @@ class EntityDataset(Dataset):
             #print(group_df)
             #print(npd)
             
-            if self.max_seq_length < npd.shape[0]:
-                self.max_seq_length = npd.shape[0]
+            if max_seq_length < npd.shape[0]:
+                max_seq_length = npd.shape[0]
 
             calculated_data.append(npd)
 
-        #if scale is None:
-        #    scale = np.std(np.concatenate([np.ravel(s[:, 0:2]) for s in calculated_data]))
-        #self.scale = scale
+        self.max_seq_length = max_seq_length + 2 # add sos and eos
 
         # pad all data to max_seq_len
-        self.data = torch.zeros(len(calculated_data), self.max_seq_length + 2, self.stroke_features, dtype=torch.float)
-        self.mask = torch.zeros(len(calculated_data), self.max_seq_length + 1)
+        self.data = torch.zeros(len(calculated_data), self.max_seq_length, self.stroke_features, dtype=torch.float)
+        self.mask = torch.zeros(len(calculated_data), self.max_seq_length - 1)
 
         for i, seq in enumerate(calculated_data):
             seq = torch.from_numpy(seq)

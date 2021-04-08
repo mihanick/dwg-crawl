@@ -6,8 +6,7 @@ import torch
 from torch import nn
 import einops
 from calc_loss import BivariateGaussianMixture, ReconstructionLoss, KLDivLoss
-from accuracy import CalculateLoaderAccuracy
-
+import numpy as np
 
 class EncoderRNN(nn.Module):
     def __init__(self, d_z: int, enc_hidden_size: int, stroke_features: int):
@@ -136,7 +135,7 @@ class Trainer:
                             ))
         
         # validation
-        val_kl, val_rl = CalculateLoaderAccuracy(self.encoder, self.decoder, self.val_loader, self.device)
+        val_kl, val_rl = self.CalculateLoaderAccuracy(self.val_loader)
 
         if self.train_verbose:
             print('Epoch [{} @ {:4.1f}] validation losses rl:{:1.4f} kl:{:1.4f}'.format(epoch_no, time.time() - start, val_rl, val_kl))
@@ -147,3 +146,31 @@ class Trainer:
         torch.save(self.decoder.state_dict(), 'DimDecoder.model')
 
         return test_rl, test_kl, val_rl, val_kl
+
+    def CalculateLoaderAccuracy(self, loader):
+        with torch.no_grad():
+            self.encoder.eval()
+            self.decoder.eval()
+
+            kl_losses = []
+            reconstruction_losses = []
+
+            for _, batch in enumerate(loader):
+                data = batch[0].to(self.device).transpose(0, 1)
+                mask = batch[1].to(self.device).transpose(0, 1)
+
+                z, mu, sigma_hat = self.encoder(data)
+
+                z_stack = z.unsqueeze(0).expand(data.shape[0]- 1, -1, -1)
+
+                inputs = torch.cat([data[:-1], z_stack], 2)
+
+                dist, q_logits, _ = self.decoder(inputs, z, None)
+
+                kl_loss = KLDivLoss()(sigma_hat, mu)
+                reconstruction_loss = ReconstructionLoss()(mask, data[1:], dist, q_logits)
+
+                kl_losses.append(kl_loss.item())
+                reconstruction_losses.append(reconstruction_loss.item())
+
+            return np.mean(kl_losses), np.mean(reconstruction_losses)
