@@ -174,3 +174,53 @@ class Trainer:
                 reconstruction_losses.append(reconstruction_loss.item())
 
             return np.mean(kl_losses), np.mean(reconstruction_losses)
+
+class Sampler:
+    def __init__(self, encoder:EncoderRNN, decoder:DecoderRNN):
+        self.decoder = decoder
+        self.encoder = encoder
+
+    def sample(self, data: torch.Tensor, temperature: float):
+        longest_seq_len = data.shape[0]
+        z, _, _ = self.encoder(data)
+        s = data.new_tensor([0, 0, 1, 0, 0])
+        seq = [s]
+
+        state = None
+
+        z_stack = z.unsqueeze(0).expand(data.shape[0]- 1, -1, -1)
+        inputs = torch.cat([data[:-1], z_stack], 2)
+
+        with torch.no_grad():
+            for i in range(longest_seq_len):
+                dist, q_logits, state = self.decoder(inputs, z, state)
+                s = self._sample_step(dist, q_logits, temperature)
+
+                seq.append(s)
+
+                if s[4] == 1:
+                    break
+        # print(seq)
+        seq = torch.stack(seq)
+
+        return seq
+    
+    @staticmethod
+    def _sample_step(dist: 'BivariateGaussianMixture', q_logits: torch.Tensor, temperature: float):
+        dist.set_temperature(temperature)
+
+        pi, mix = dist.get_distribution()
+        q = torch.distributions.Categorical(logits=q_logits / temperature)
+
+        ps = pi.sample()
+        qs = q.sample()
+
+        idx = ps[0, 0]
+        q_idx = qs[0, 0]
+        xy = mix.sample()[0, 0, idx]
+
+        stroke = q_logits.new_zeros(5)
+        stroke[:2] = xy
+        stroke[q_idx + 2] = 1
+
+        return stroke

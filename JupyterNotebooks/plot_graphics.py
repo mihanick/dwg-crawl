@@ -142,7 +142,7 @@ def images_from_batch(data, verbose=False):
     #print(data.shape)
     drawing_size = 200
     
-    data = data.transpose(0, 1)
+    #data = data.transpose(0, 1)
     result = []
 
     for batch_no in range(data.shape[0]):
