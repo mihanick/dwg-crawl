@@ -133,8 +133,8 @@ class Trainer:
         
         self.eta_min = 0.01
         self.R = 0.99995
-        self.KL_min = 0.2
-        self.wKL = 0.5
+        self.KL_min = 0.001
+        self.wKL = 5
         self.lr = lr
         self.lr_decay = 0.9999
         self.min_lr = 0.00001
@@ -220,12 +220,17 @@ class Trainer:
         LS = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2))) 
         LP = - torch.sum(p * torch.log(q)) 
 
-        return (LS + LP) / (self.max_seq_length * self.batch_size)
+        result = (LS + LP) / (self.max_seq_length * self.batch_size)
+        if torch.isnan(result):
+            print('lR is none', dx, dy)
+        return result
 
     def kullback_leibler_loss(self, sigma, mu):
         LKL = -0.5 * torch.sum(1 + sigma - mu**2 - torch.exp(sigma)) / float(self.Nz * self.batch_size)
         # KL_min = torch.Tensor([self.KL_min]).to(self.device)
         # LKL =  torch.max(LKL, KL_min) # * eta_step
+        if torch.isnan(LKL):
+            print(sigma, mu)
         LKL *= self.wKL 
         return LKL
 
@@ -302,8 +307,8 @@ class Trainer:
             loss.backward()
 
             # grad clip
-            nn.utils.clip_grad_norm(self.encoder.parameters(), self.grad_clip)
-            nn.utils.clip_grad_norm(self.decoder.parameters(), self.grad_clip)
+            nn.utils.clip_grad_norm_(self.encoder.parameters(), self.grad_clip)
+            nn.utils.clip_grad_norm_(self.decoder.parameters(), self.grad_clip)
 
             self.enc_optimizer.step()
             self.dec_optimizer.step()
@@ -329,7 +334,8 @@ class Trainer:
 
         # https://pytorch.org/tutorials/beginner/saving_loading_models.html
         # save model
-        torch.save(self.encoder.state_dict(), 'DimEncoder.model')
-        torch.save(self.decoder.state_dict(), 'DimDecoder.model')
+        if epoch_no%20==0:
+            torch.save(self.encoder.state_dict(), 'DimEncoder.model')
+            torch.save(self.decoder.state_dict(), 'DimDecoder.model')
 
         return loss_rl, loss_lkl, val_rl, val_lkl
