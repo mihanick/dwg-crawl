@@ -107,13 +107,13 @@ class DecoderRNN(nn.Module):
 
         no_logits = self.stroke_features - 2
 
-        pi = F.softmax(pi.transpose(0, 1).squeeze(), dim=-1).view(len_out, -1, self.M)
-        sigma_x = torch.exp(sigma_x.transpose(0,1).squeeze()).view(len_out, -1, self.M)
-        sigma_y = torch.exp(sigma_y.transpose(0,1).squeeze()).view(len_out, -1, self.M)
-        rho_xy = torch.tanh(rho_xy.transpose(0,1).squeeze()).view(len_out, -1, self.M)
-        mu_x = mu_x.transpose(0,1).squeeze().contiguous().view(len_out, -1, self.M)
-        mu_y = mu_y.transpose(0,1).squeeze().contiguous().view(len_out, -1, self.M)
-        q = F.softmax(params_pen, dim=-1).view(len_out, -1, no_logits)
+        pi = F.softmax(pi.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
+        sigma_x = torch.exp(sigma_x.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
+        sigma_y = torch.exp(sigma_y.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
+        rho_xy = torch.tanh(rho_xy.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
+        mu_x = mu_x.transpose(0, 1).squeeze().contiguous().view(len_out, -1, self.M)
+        mu_y = mu_y.transpose(0, 1).squeeze().contiguous().view(len_out, -1, self.M)
+        q = F.softmax(params_pen).view(len_out, -1, no_logits)
 
         return pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, hidden, cell
 
@@ -213,7 +213,9 @@ class Trainer:
             exp_ = torch.exp(-z/(2 * (1 - rho_xy ** 2)))
             norm = 2 * np.pi * sigma_x * sigma_y * torch.sqrt(1 - rho_xy ** 2)
 
-            return exp_ / norm
+            result = exp_ / norm
+
+            return result
 
         pdf = bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy)
 
@@ -222,7 +224,7 @@ class Trainer:
 
         result = (LS + LP) / (self.max_seq_length * self.batch_size)
         if torch.isnan(result):
-            print('lR is none', dx, dy)
+            result = self.KL_min
         return result
 
     def kullback_leibler_loss(self, sigma, mu):
@@ -230,7 +232,7 @@ class Trainer:
         # KL_min = torch.Tensor([self.KL_min]).to(self.device)
         # LKL =  torch.max(LKL, KL_min) # * eta_step
         if torch.isnan(LKL):
-            print(sigma, mu)
+            LKR = self.KL_min
         LKL *= self.wKL 
         return LKL
 
