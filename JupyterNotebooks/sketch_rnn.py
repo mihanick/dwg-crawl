@@ -107,18 +107,18 @@ class DecoderRNN(nn.Module):
 
         no_logits = self.stroke_features - 2
 
-        pi = F.softmax(pi.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
+        pi = F.softmax(pi.transpose(0, 1).squeeze(), dim=-1).view(len_out, -1, self.M)
         sigma_x = torch.exp(sigma_x.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
         sigma_y = torch.exp(sigma_y.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
         rho_xy = torch.tanh(rho_xy.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
         mu_x = mu_x.transpose(0, 1).squeeze().contiguous().view(len_out, -1, self.M)
         mu_y = mu_y.transpose(0, 1).squeeze().contiguous().view(len_out, -1, self.M)
-        q = F.softmax(params_pen).view(len_out, -1, no_logits)
+        q = F.softmax(params_pen, dim=-1).view(len_out, -1, no_logits)
 
         return pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, hidden, cell
 
 class Trainer:
-    def __init__(self, dwg_dataset, lr=0.008, train_verbose=True):
+    def __init__(self, dwg_dataset, lr=0.001, train_verbose=True):
         self.device = torch.device("cpu")
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
@@ -126,23 +126,23 @@ class Trainer:
         self.enc_hidden_size = 256
         self.dec_hidden_size = 512
 
-        self.Nz = 128
-        self.M = 20
+        self.Nz              = 128
+        self.M               = 20
 
-        self.dropout = 0.9
+        self.dropout         = 0.9
         
-        self.eta_min = 0.01
-        self.R = 0.99995
-        self.KL_min = 0.001
-        self.wKL = 5
-        self.lr = lr
-        self.lr_decay = 0.9999
-        self.min_lr = 0.00001
-        self.grad_clip = 1.
-        self.temperature = 0.4
+        #self.eta_min     = 0.01
+        #self.R           = 0.99995
+        self.KL_min        = 0.001
+        self.wKL           = 500
+        self.lr            = lr
+        self.lr_decay      = 0.9999
+        self.min_lr        = 0.00001
+        self.grad_clip     = 1.
+        self.temperature   = 0.4
 
-        self.train_verbose = train_verbose
-        self.dwg_dataset = dwg_dataset
+        self.train_verbose   = train_verbose
+        self.dwg_dataset     = dwg_dataset
 
         self.train_loader    = dwg_dataset.train_loader
         self.val_loader      = dwg_dataset.val_loader
