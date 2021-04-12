@@ -203,7 +203,79 @@ class Trainer:
         p = torch.stack([p1, p2, p3], 2)
 
         return mask, dx, dy, p
-    
+
+    def new_stroke_sample(self, pi, q, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
+        def adjust_temperature(pi_pdf):
+            pi_pdf = np.log(pi_pdf) / self.temperature
+            pi_pdf -= pi_pdf.max()
+            pi_pdf = np.exp(pi_pdf)
+            pi_pdf /= pi_pdf.sum()
+            return pi_pdf
+
+        def sample_bivariate_normal(mu_x, mu_y, sigma_x, sigma_y, rho_xy, temperature, greedy=False):
+            if greedy:
+                return mu_x, mu_y
+            mean = [mu_x, mu_y]
+
+            sigma_x *= np.sqrt(temperature)
+            sigma_y *= np.sqrt(temperature)
+
+            cov = [[sigma_x*sigma_x, rho_xy*sigma_x*sigma_y], [rho_xy*sigma_x*sigma_y, sigma_y*sigma_y]]
+            x = np.random.multivariate_normal(mean, cov, 1)
+            return x[0][0], x[0][1]
+
+        #get mixture index
+        pi = adjust_temperature(pi)
+        pi_idx = np.random.choice(self.M, p=pi)
+
+        #get pen state
+        q = adjust_temperature(q)
+        # TODO: There could be only one output for logits
+        # where q as probability distribution of logits 
+        # q_idx is selected on base of probablities
+        # where should be 1 in data
+        q_idx = np.random.choice(self.stroke_features - 2, p=q)
+        logits = torch.zeros(self.stroke_features - 2)
+        logits[q_idx] = 1
+
+        #get mixture params:
+        mu_x = mu_x.data[pi_idx]
+        mu_y = mu_y.data[pi_idx]
+        sigma_x = sigma_x.data[pi_idx]
+        sigma_y = sigma_y.data[pi_idx]
+        rho_xy = rho_xy.data[pi_idx]
+
+        x, y = sample_bivariate_normal(mu_x, mu_y, sigma_x, sigma_y, rho_xy, self.temperature, greedy=False)
+
+        result = torch.tensor([x, y])
+        result = torch.cat([result, logits])
+        return result
+            
+    def sample_next_state(self, pi, q, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
+        '''
+        pi.shape[1,batch_size,M]
+        q.shape[1,batch_size,stroke_features - 2(for x,y) = 3]
+        mu_x,mu_y,sigma_x,sigma_y,rho_xy.shape[1,batch_size, M]
+        returns next sketch shape[batch_size, stroke_features]
+        '''
+
+        with torch.no_grad():
+            result = torch.zeros(self.batch_size, self.stroke_features)
+
+            for i in range(self.batch_size):
+                #dx, dy, is_pen, is_lift, eos
+                result[i] = self.new_stroke_sample(
+                    pi[0, i].cpu().numpy(),
+                    q[0, i].cpu().numpy(),
+                    mu_x[0, i],
+                    mu_y[0, i],
+                    sigma_x[0, i],
+                    sigma_y[0, i],
+                    rho_xy[0, i]
+                    )
+
+            return result
+
     def reconstruction_loss(self, mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy,  pi, q):
         def bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
             z_x = ((dx - mu_x) / sigma_x) ** 2
