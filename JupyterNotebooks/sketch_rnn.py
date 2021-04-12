@@ -265,8 +265,8 @@ class Trainer:
             loss_kl = self.kullback_leibler_loss(sigma, mu)
             loss_rl = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy,  pi, q)
 
-            rl.append(loss_rl.detach().cpu().numpy())
-            kl.append(loss_kl.detach().cpu().numpy())
+            rl.append(float(loss_rl))
+            kl.append(float(loss_kl))
 
         return np.mean(rl), np.mean(kl)
 
@@ -324,8 +324,8 @@ class Trainer:
                                 epoch_no,
                                 i,
                                 time.time() - start,
-                                loss_rl.item(),
-                                loss_lkl.item()
+                                float(loss_rl),
+                                float(loss_lkl)
                             ))
         
         # validation
