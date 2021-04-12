@@ -133,12 +133,12 @@ class Trainer:
         
         #self.eta_min     = 0.01
         #self.R           = 0.99995
-        self.KL_min        = 0.001
-        self.wKL           = 500
+        self.KL_min        = 1.001
+        self.wKL           = 0.5
         self.lr            = lr
         self.lr_decay      = 0.9999
         self.min_lr        = 0.00001
-        self.grad_clip     = 1.
+        self.grad_clip     = 0.99
         self.temperature   = 0.4
 
         self.train_verbose   = train_verbose
@@ -337,14 +337,14 @@ class Trainer:
             loss_kl = self.kullback_leibler_loss(sigma, mu)
             loss_rl = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy,  pi, q)
 
-            rl.append(loss_rl.detach().cpu().numpy())
-            kl.append(loss_kl.detach().cpu().numpy())
+            rl.append(float(loss_rl))
+            kl.append(float(loss_kl))
 
         return np.mean(rl), np.mean(kl)
 
     def train_epoch(self, epoch_no):
         start = time.time()
-
+        
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         
@@ -396,8 +396,8 @@ class Trainer:
                                 epoch_no,
                                 i,
                                 time.time() - start,
-                                loss_rl.item(),
-                                loss_lkl.item()
+                                float(loss_rl),
+                                float(loss_lkl)
                             ))
         
         # validation
