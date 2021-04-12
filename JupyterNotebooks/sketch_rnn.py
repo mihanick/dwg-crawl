@@ -133,12 +133,12 @@ class Trainer:
         
         #self.eta_min     = 0.01
         #self.R           = 0.99995
-        self.KL_min        = 0.001
-        self.wKL           = 500
+        self.KL_min        = 1.001
+        self.wKL           = 0.5
         self.lr            = lr
         self.lr_decay      = 0.9999
         self.min_lr        = 0.00001
-        self.grad_clip     = 1.
+        self.grad_clip     = 0.99
         self.temperature   = 0.4
 
         self.train_verbose   = train_verbose
@@ -272,7 +272,7 @@ class Trainer:
 
     def train_epoch(self, epoch_no):
         start = time.time()
-
+        
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         
