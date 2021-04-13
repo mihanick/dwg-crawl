@@ -8,7 +8,7 @@
             "name": "Run pipeline",
             "type": "python",
             "request": "launch",
-            "program": "test_draw.py",
+            "program": "run.py",
             "console": "integratedTerminal"
         },
     ]

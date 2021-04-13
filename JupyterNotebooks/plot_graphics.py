@@ -161,7 +161,7 @@ def images_from_batch(data, verbose=False):
     result = []
 
     for batch_no in range(data.shape[0]):
-        d = draw.Drawing(3*drawing_size, drawing_size, displayInline=True)
+        d = draw.Drawing(2*drawing_size, drawing_size, displayInline=True)
         sample = data[batch_no]
 
         entscount = 0
