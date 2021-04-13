@@ -11,6 +11,8 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 
+torch.set_printoptions(profile='short')
+
 class EncoderRNN(nn.Module):
     def __init__(self, Nz, enc_hidden_size, dropout, stroke_features, device):
         super().__init__()
@@ -60,13 +62,13 @@ class DecoderRNN(nn.Module):
         self.max_seq_length = max_seq_length
         self.stroke_features = stroke_features
 
-        # wtf init hidden and cell from z
+        # init hidden and cell from z
         self.fc_hc = nn.Linear(Nz, 2 * dec_hidden_size)
 
         # unidirectional lstm
         self.lstm = nn.LSTM(Nz + stroke_features, dec_hidden_size, dropout=dropout)
 
-        # wtf probability distribution parameters from hiddens
+        # probability distribution parameters from hiddens
         logits_no = stroke_features - 2
         self.fc_params = nn.Linear(self.dec_hidden_size, 2 * logits_no * self.M + logits_no)
     
@@ -96,6 +98,7 @@ class DecoderRNN(nn.Module):
         params_mixture = torch.stack(params[:-1])
         # pen up/down
         params_pen = params[-1]
+        # print(params_pen)
 
         # identify mixture parameters:
         pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy = torch.split(params_mixture, 1, 2)
@@ -105,7 +108,7 @@ class DecoderRNN(nn.Module):
         if self.training:
             len_out = self.max_seq_length
 
-        no_logits = self.stroke_features - 2
+        num_logits = self.stroke_features - 2
 
         pi = F.softmax(pi.transpose(0, 1).squeeze(), dim=-1).view(len_out, -1, self.M)
         sigma_x = torch.exp(sigma_x.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
@@ -113,7 +116,7 @@ class DecoderRNN(nn.Module):
         rho_xy = torch.tanh(rho_xy.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
         mu_x = mu_x.transpose(0, 1).squeeze().contiguous().view(len_out, -1, self.M)
         mu_y = mu_y.transpose(0, 1).squeeze().contiguous().view(len_out, -1, self.M)
-        q = F.softmax(params_pen, dim=-1).view(len_out, -1, no_logits)
+        q = F.softmax(params_pen, dim=-1).view(len_out, -1, num_logits)
 
         return pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, hidden, cell
 
@@ -192,9 +195,7 @@ class Trainer:
         batch[max_seq_length,batch_size,stroke_features]
         '''
 
-        mask = torch.zeros(self.max_seq_length, self.batch_size, device=self.device)
-        
-        mask = batch[:, :, 4]
+        mask = 1 - batch[:, :, 4]
 
         dx = torch.stack([batch.data[:, :, 0]] * self.M, 2)
         dy = torch.stack([batch.data[:, :, 1]] * self.M, 2)
@@ -204,7 +205,79 @@ class Trainer:
         p = torch.stack([p1, p2, p3], 2)
 
         return mask, dx, dy, p
-    
+
+    def new_stroke_sample(self, pi, q, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
+        def adjust_temperature(pi_pdf):
+            pi_pdf = np.log(pi_pdf) / self.temperature
+            pi_pdf -= pi_pdf.max()
+            pi_pdf = np.exp(pi_pdf)
+            pi_pdf /= pi_pdf.sum()
+            return pi_pdf
+
+        def sample_bivariate_normal(mu_x, mu_y, sigma_x, sigma_y, rho_xy, temperature, greedy=False):
+            if greedy:
+                return mu_x, mu_y
+            mean = [mu_x, mu_y]
+
+            sigma_x *= np.sqrt(temperature)
+            sigma_y *= np.sqrt(temperature)
+
+            cov = [[sigma_x*sigma_x, rho_xy*sigma_x*sigma_y], [rho_xy*sigma_x*sigma_y, sigma_y*sigma_y]]
+            x = np.random.multivariate_normal(mean, cov, 1)
+            return x[0][0], x[0][1]
+
+        #get mixture index
+        pi = adjust_temperature(pi)
+        pi_idx = np.random.choice(self.M, p=pi)
+
+        #get pen state
+        q = adjust_temperature(q)
+        # TODO: There could be only one output for logits
+        # where q as probability distribution of logits 
+        # q_idx is selected on base of probablities
+        # where should be 1 in data
+        q_idx = np.random.choice(self.stroke_features - 2, p=q)
+        logits = torch.zeros(self.stroke_features - 2)
+        logits[q_idx] = 1
+
+        #get mixture params:
+        mu_x = mu_x.data[pi_idx]
+        mu_y = mu_y.data[pi_idx]
+        sigma_x = sigma_x.data[pi_idx]
+        sigma_y = sigma_y.data[pi_idx]
+        rho_xy = rho_xy.data[pi_idx]
+
+        x, y = sample_bivariate_normal(mu_x, mu_y, sigma_x, sigma_y, rho_xy, self.temperature, greedy=False)
+
+        result = torch.tensor([x, y])
+        result = torch.cat([result, logits])
+        return result
+            
+    def sample_next_state(self, pi, q, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
+        '''
+        pi.shape[1,batch_size,M]
+        q.shape[1,batch_size,stroke_features - 2(for x,y) = 3]
+        mu_x,mu_y,sigma_x,sigma_y,rho_xy.shape[1,batch_size, M]
+        returns next sketch shape[batch_size, stroke_features]
+        '''
+
+        with torch.no_grad():
+            result = torch.zeros(self.batch_size, self.stroke_features)
+
+            for i in range(self.batch_size):
+                #dx, dy, is_pen, is_lift, eos
+                result[i] = self.new_stroke_sample(
+                    pi[0, i].cpu().numpy(),
+                    q[0, i].cpu().numpy(),
+                    mu_x[0, i],
+                    mu_y[0, i],
+                    sigma_x[0, i],
+                    sigma_y[0, i],
+                    rho_xy[0, i]
+                    )
+
+            return result
+
     def reconstruction_loss(self, mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy,  pi, q):
         def bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
             z_x = ((dx - mu_x) / sigma_x) ** 2
@@ -221,7 +294,7 @@ class Trainer:
         pdf = bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy)
 
         LS = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2))) 
-        LP = - torch.sum(p * torch.log(q)) 
+        LP = -torch.sum(p * torch.log(q)) 
 
         result = (LS + LP) / (self.max_seq_length * self.batch_size)
         if torch.isnan(result):
