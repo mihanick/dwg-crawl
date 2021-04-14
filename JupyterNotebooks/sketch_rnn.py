@@ -137,6 +137,7 @@ class Trainer:
         #self.eta_min     = 0.01
         #self.R           = 0.99995
         self.KL_min        = 1.001
+        self.min_reconstruction_loss = 0.0001
         self.wKL           = 0.5
         self.lr            = lr
         self.lr_decay      = 0.9999
@@ -298,6 +299,10 @@ class Trainer:
         result = (LS + LP) / (self.max_seq_length * self.batch_size)
         if torch.isnan(result):
             result = self.KL_min
+        
+        if result < self.min_reconstruction_loss:
+            result = self.min_reconstruction_loss
+            
         return result
 
     def kullback_leibler_loss(self, sigma, mu):
