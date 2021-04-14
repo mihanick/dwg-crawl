@@ -357,6 +357,9 @@ class Trainer:
         self.encoder.train()
         self.decoder.train()
 
+        train_rl_losses =  []
+        train_kl_losses = []
+
         for i, batch in enumerate(self.train_loader):
             # TODO: make this transpose in dataset
             batch = batch[0].to(self.device).transpose(0, 1)
@@ -379,10 +382,10 @@ class Trainer:
             self.enc_optimizer.zero_grad()
             self.dec_optimizer.zero_grad()
 
-            loss_lkl = self.kullback_leibler_loss(sigma, mu)
-            loss_rl = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy,  pi, q)
+            loss_kl = self.kullback_leibler_loss(sigma, mu)
+            loss_rl = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q)
 
-            loss = loss_lkl + loss_rl
+            loss = loss_kl + loss_rl
 
             loss.backward()
 
@@ -403,19 +406,29 @@ class Trainer:
                                 i,
                                 time.time() - start,
                                 float(loss_rl),
-                                float(loss_lkl)
+                                float(loss_kl)
                             ))
-        
-        # validation
-        val_rl, val_lkl = self.CalculateLoaderAccuracy(self.val_loader)
+            train_rl_losses.append(float(loss_rl))
+            train_kl_losses.append(float(loss_kl))
 
-        if self.train_verbose:
-            print('Epoch [{} @ {:4.1f}] validation losses rl:{:1.4f} kl:{:1.4f}'.format(epoch_no, time.time() - start, val_rl, val_lkl))
+        # train
+        train_rl = np.mean(train_rl_losses)
+        train_kl = np.mean(train_kl_losses)
+        # validation
+        val_rl, val_kl = self.CalculateLoaderAccuracy(self.val_loader)
+
+        print('Epoch [{} @ {:4.1f}] train losses: rl:{:1.4f} kl:{:1.4f} validation losses rl:{:1.4f} kl:{:1.4f}'.format(
+            epoch_no, 
+            time.time() - start,
+            train_rl,
+            train_kl,
+            val_rl, 
+            val_kl))
 
         # https://pytorch.org/tutorials/beginner/saving_loading_models.html
         # save model
-        if epoch_no%20==0:
+        if epoch_no % 10 == 0:
             torch.save(self.encoder.state_dict(), 'DimEncoder.model')
             torch.save(self.decoder.state_dict(), 'DimDecoder.model')
 
-        return loss_rl, loss_lkl, val_rl, val_lkl
+        return train_rl, train_kl, val_rl, val_kl
