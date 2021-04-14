@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, SubsetRandomSampler
 from processing import scale_ds
 
 class EntityDataset(Dataset):
-    def __init__(self, pandasData, limit_seq_len=None):
+    def __init__(self, pandasData, limit_seq_len=None, min_seq_length=20):
         self.x_columns = [
             'StartPoint.X', 'StartPoint.Y', 
             'EndPoint.X', 'EndPoint.Y']
@@ -19,6 +19,8 @@ class EntityDataset(Dataset):
         self.y_columns = [
             'XLine1Point.X', 'XLine1Point.Y',
             'XLine2Point.X', 'XLine2Point.Y']
+
+        self.min_seq_length = min_seq_length
 
         self.stroke_columns = ['dx', 'dy', 'is_pen', 'is_dim']
         # dx, dy, is_dim, eos
@@ -54,7 +56,7 @@ class EntityDataset(Dataset):
                     continue
                 
             #skip small groups
-            if seq_len < 20:
+            if seq_len < self.min_seq_length:
                 continue
 
             # reformat dataset to one table [dx, dy, 'is_pen', 'is_dim']
@@ -150,12 +152,12 @@ class EntityDataset(Dataset):
         return self.data[index], self.mask[index]
 
 class DwgDataset:
-    def __init__(self, pickle_file, batch_size=128, limit_seq_len=10000):
+    def __init__(self, pickle_file, batch_size=128, limit_seq_len=10000, min_seq_length=20):
         self.batch_size = batch_size
 
         test_data = pd.read_pickle(pickle_file)
 
-        self.entities = EntityDataset(test_data, limit_seq_len=limit_seq_len)
+        self.entities = EntityDataset(test_data, limit_seq_len=limit_seq_len, min_seq_length=min_seq_length)
 
         data_len = len(self.entities)
 
