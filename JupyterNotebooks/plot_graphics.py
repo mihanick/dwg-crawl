@@ -162,13 +162,20 @@ def images_from_batch(data, verbose=False):
 
     for batch_no in range(data.shape[0]):
         d = draw.Drawing(2*drawing_size, drawing_size, displayInline=True)
-        sample = data[batch_no]
+        seq = data[batch_no]
+
+        # TODO: sample this data already normalized
+        min_coord = torch.min(seq[:, :2])
+        max_coord = torch.max(seq[:, :2])
+        scale = 1/(max_coord - min_coord)
+        seq[:, :2] -= min_coord
+        seq[:, :2] *= scale
 
         entscount = 0
         x = 0
         y = 0
 
-        for stroke in sample:
+        for stroke in seq:
             if verbose:
                 print(stroke)            
             if stroke[4] == 1:
