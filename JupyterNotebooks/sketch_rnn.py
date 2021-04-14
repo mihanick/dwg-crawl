@@ -140,10 +140,10 @@ class Trainer:
         self.min_reconstruction_loss = 0.0001
         self.wKL           = 0.5
         self.lr            = lr
-        self.lr_decay      = 0.9999
-        self.min_lr        = 0.00001
-        self.grad_clip     = 0.99
-        self.temperature   = 0.4
+        self.lr_decay      = 0.99
+        self.min_lr        = 0.000001
+        self.grad_clip     = 1.0
+        self.temperature   = 0.5
 
         self.train_verbose   = train_verbose
         self.dwg_dataset     = dwg_dataset
@@ -296,12 +296,12 @@ class Trainer:
         LS = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2))) 
         LP = -torch.sum(p * torch.log(q)) 
 
-        result = (LS + LP) / (self.max_seq_length * self.batch_size)
+        result = torch.abs((LS + LP) / (self.max_seq_length * self.batch_size))
         if torch.isnan(result):
             result = self.KL_min
         
-        if result < self.min_reconstruction_loss:
-            result = self.min_reconstruction_loss
+        #if result < self.min_reconstruction_loss:
+        #    result = self.min_reconstruction_loss
             
         return result
 
