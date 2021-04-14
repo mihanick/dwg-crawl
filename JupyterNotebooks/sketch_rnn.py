@@ -110,7 +110,7 @@ class DecoderRNN(nn.Module):
 
         num_logits = self.stroke_features - 2
 
-        pi = F.softmax(pi.transpose(0, 1).squeeze(), dim=-1).view(len_out, -1, self.M)
+        pi = F.softmax(pi.transpose(0, 1).squeeze(), dim=0).view(len_out, -1, self.M)
         sigma_x = torch.exp(sigma_x.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
         sigma_y = torch.exp(sigma_y.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
         rho_xy = torch.tanh(rho_xy.transpose(0, 1).squeeze()).view(len_out, -1, self.M)
