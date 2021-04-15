@@ -399,7 +399,7 @@ class Trainer:
             ls /= self.batch_size * self.max_seq_length
             lp /= self.batch_size * self.max_seq_length
 
-            print(ls, lp, float(loss_kl))
+            # print(ls, lp, float(loss_kl))
 
             loss = loss_kl + ls + lp
             loss.backward()
