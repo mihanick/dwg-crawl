@@ -25,23 +25,23 @@ def test_data_drawing():
 
 
 def test_predict_stroke_by_stroke():
-    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=32, limit_seq_len=52, min_seq_length=10)
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=4, limit_seq_len=60)
     trainer = Trainer(dwg_dataset)
 
     trainer.encoder.load_state_dict(torch.load('DimEncoder.model', map_location=trainer.device))
     trainer.decoder.load_state_dict(torch.load('DimDecoder.model', map_location=trainer.device))
     trainer.encoder.eval()
-    trainer.decoder.eval() 
+    trainer.decoder.eval()
 
     for b in dwg_dataset.train_loader:
         
         input_seq = b[0].to(trainer.device).transpose(0, 1)
 
         seq_so_far = torch.zeros_like(input_seq)
-
+        
         for i in range(1, trainer.max_seq_length):
             input_stroke = input_seq[i]
-            seq_so_far[:,:i] = input_seq[:,:i]
+            seq_so_far[:, :i+1] = input_seq[:, :i+1]
             z, _, _ = trainer.encoder(seq_so_far)
 
             # expand z in order it to be able to concatenate with inputs
@@ -54,15 +54,17 @@ def test_predict_stroke_by_stroke():
 
             generated_stroke = trainer.sample_next_state(pi, q, mu_x, mu_y, sigma_x, sigma_y, rho_xy)
 
-            print("input    :", input_stroke.numpy()[0])
-            print("generated:", generated_stroke.numpy()[0])
-            print(" ")
+            iss = input_stroke[0]
+            gss = generated_stroke[0]
+            if iss[4] != 1:
+                print("input    :", iss[2:])
+                print("generated:", gss[2:])
+                print(" ")
 
 test_predict_stroke_by_stroke()
 
-# test_generate_image()
 def test_random_decoder_input():
-    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=1, limit_seq_len=200)
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=4, limit_seq_len=60)
     trainer = Trainer(dwg_dataset)
 
     trainer.encoder.load_state_dict(torch.load('DimEncoder.model', map_location=trainer.device))

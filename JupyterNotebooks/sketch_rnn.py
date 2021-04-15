@@ -71,7 +71,8 @@ class DecoderRNN(nn.Module):
         # probability distribution parameters from hiddens
         logits_no = stroke_features - 2
         self.fc_params = nn.Linear(self.dec_hidden_size, 2 * logits_no * self.M + logits_no)
-    
+        self.dropout_fc_params = nn.Dropout()
+
     def forward(self, inputs, z, hidden_cell=None):
         if hidden_cell is None:
             # init form z
@@ -79,19 +80,18 @@ class DecoderRNN(nn.Module):
             hidden_cell = (hidden.unsqueeze(0).contiguous(), cell.unsqueeze(0).contiguous())
         
         outputs, (hidden, cell) = self.lstm(inputs, hidden_cell)
-
+        outputs = nn.ReLU()(outputs)
         # wtf why?
         # in training we feed the lstm with the whole input in one shot
         # and use all outputs contained in 'outputs', while in generate
         # mode we just feed the last generated sample
-
         if self.training:
             y = self.fc_params(outputs.view(-1, self.dec_hidden_size))
         else:
             y = self.fc_params(hidden.view(-1, self.dec_hidden_size))
-        
+        y = self.dropout_fc_params(y)
+
         # separate pen and mixture params
-        
         # 6 is for pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy
         params = torch.split(y, 6, 1)
         # trajectory
@@ -163,7 +163,7 @@ class Trainer:
         self.M               = 20
 
         self.encoder = EncoderRNN(
-            Nz=self.Nz, 
+            Nz=self.Nz,
             enc_hidden_size=self.enc_hidden_size, 
             stroke_features=self.stroke_features, 
             dropout=self.dropout,
@@ -233,7 +233,7 @@ class Trainer:
         #get pen state
         q = adjust_temperature(q)
         # TODO: There could be only one output for logits
-        # where q as probability distribution of logits 
+        # where q as probability distribution of logits
         # q_idx is selected on base of probablities
         # where should be 1 in data
         q_idx = np.random.choice(self.stroke_features - 2, p=q)
@@ -249,7 +249,7 @@ class Trainer:
 
         x, y = sample_bivariate_normal(mu_x, mu_y, sigma_x, sigma_y, rho_xy, self.temperature, greedy=False)
 
-        result = torch.tensor([x, y])
+        result = torch.FloatTensor([x, y])
         result = torch.cat([result, logits])
         return result
             
@@ -278,7 +278,7 @@ class Trainer:
 
             return result
 
-    def reconstruction_loss(self, mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy,  pi, q):
+    def reconstruction_loss(self, mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q):
         def bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
             z_x = ((dx - mu_x) / sigma_x) ** 2
             z_y = ((dy - mu_y) / sigma_y) ** 2
@@ -289,21 +289,27 @@ class Trainer:
 
             result = exp_ / norm
 
+            # when rho_xy==1 result contains nan 
+            # and it's baAad
+            # torch 1.8.1
+            # result = torch.nan_to_num(result, nan=1.0)
+            result[torch.isnan(result)] = 0.999995
+
             return result
 
         pdf = bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy)
 
-        LS = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2))) 
-        LP = -torch.sum(p * torch.log(q)) 
+        LS = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2)))
+        LP = -torch.sum(p * torch.log(q))
 
-        result = torch.abs((LS + LP) / (self.max_seq_length * self.batch_size))
-        if torch.isnan(result):
-            result = self.KL_min
+        #result = torch.abs((LS + LP) / (self.max_seq_length * self.batch_size))
+        # if torch.isnan(result):
+        #    result = self.KL_min
         
         #if result < self.min_reconstruction_loss:
         #    result = self.min_reconstruction_loss
             
-        return result
+        return LS, LP
 
     def kullback_leibler_loss(self, sigma, mu):
         LKL = -0.5 * torch.sum(1 + sigma - mu**2 - torch.exp(sigma)) / float(self.Nz * self.batch_size)
@@ -320,33 +326,36 @@ class Trainer:
 
         rl = []
         kl = []
+        with torch.no_grad():
+            for i, batch in enumerate(loader):
 
-        for i, batch in enumerate(loader):
-            # TODO: make this transpose in dataset
-            batch = batch[0].to(self.device).transpose(0, 1)
-            lengths = batch[1].to(self.device).transpose(0, 1)
+                # TODO: make this transpose in dataset
+                batch = batch[0].to(self.device).transpose(0, 1)
+                lengths = batch[1].to(self.device).transpose(0, 1)
 
-            # batch, lenghts = make_batch(batch_size)
-            z, mu, sigma = self.encoder(batch)
+                # batch, lenghts = make_batch(batch_size)
+                z, mu, sigma = self.encoder(batch)
 
-            # expand z in order it to be able to concatenate with inputs
-            z_stack = torch.stack([z] * (self.max_seq_length))
+                assert not torch.isnan(z).any(), "Encoder output contains nan"
 
-            # inputs is the concatination of z and batch_inputs:
-            inputs = torch.cat([batch, z_stack], 2)
+                # expand z in order it to be able to concatenate with inputs
+                z_stack = torch.stack([z] * (self.max_seq_length))
 
-            pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, _, _ = self.decoder(inputs, z)
+                # inputs is the concatination of z and batch_inputs:
+                inputs = torch.cat([batch, z_stack], 2)
 
-            # prepare targets:
-            mask, dx, dy, p = self.make_target(batch)
+                pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, _, _ = self.decoder(inputs, z)
 
-            loss_kl = self.kullback_leibler_loss(sigma, mu)
-            loss_rl = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy,  pi, q)
+                # prepare targets:
+                mask, dx, dy, p = self.make_target(batch)
 
-            rl.append(float(loss_rl))
-            kl.append(float(loss_kl))
+                loss_kl = self.kullback_leibler_loss(sigma, mu)
+                ls, lp = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q)
 
-        return np.mean(rl), np.mean(kl)
+                rl.append(float(ls + lp))
+                kl.append(float(loss_kl))
+
+            return np.sum(rl) / (self.batch_size * self.max_seq_length), np.sum(kl)
 
     def train_epoch(self, epoch_no):
         start = time.time()
@@ -359,7 +368,7 @@ class Trainer:
 
         train_rl_losses =  []
         train_kl_losses = []
-
+        loss = 0
         for i, batch in enumerate(self.train_loader):
             # TODO: make this transpose in dataset
             batch = batch[0].to(self.device).transpose(0, 1)
@@ -383,10 +392,16 @@ class Trainer:
             self.dec_optimizer.zero_grad()
 
             loss_kl = self.kullback_leibler_loss(sigma, mu)
-            loss_rl = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q)
+            ls, lp = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q)
+            # dbg_next_state = self.sample_next_state(pi, q, mu_x, mu_y, sigma_x, sigma_y, rho_xy)
+            # print(batch)
+            #print(pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q)
+            ls /= self.batch_size * self.max_seq_length
+            lp /= self.batch_size * self.max_seq_length
 
-            loss = loss_kl + loss_rl
+            print(ls, lp, float(loss_kl))
 
+            loss = loss_kl + ls + lp
             loss.backward()
 
             # grad clip
@@ -400,20 +415,18 @@ class Trainer:
             self.dec_optimizer = self.adjust_lr_decay(self.dec_optimizer)
 
             if self.train_verbose:
-                print('  [{:4.0f}-{:4.0f} @ {:5.1f} sec] RLoss: {:5.5f} KL Loss: {:1.4f}'
+                print('  [{:4.0f}-{:4.0f} @ {:5.1f} sec]'
                             .format(
                                 epoch_no,
                                 i,
-                                time.time() - start,
-                                float(loss_rl),
-                                float(loss_kl)
+                                time.time() - start
                             ))
-            train_rl_losses.append(float(loss_rl))
+            train_rl_losses.append(float(ls + lp))
             train_kl_losses.append(float(loss_kl))
 
         # train
-        train_rl = np.mean(train_rl_losses)
-        train_kl = np.mean(train_kl_losses)
+        train_rl = np.sum(train_rl_losses)
+        train_kl = np.sum(train_kl_losses)
         # validation
         val_rl, val_kl = self.CalculateLoaderAccuracy(self.val_loader)
 
@@ -422,7 +435,7 @@ class Trainer:
             time.time() - start,
             train_rl,
             train_kl,
-            val_rl, 
+            val_rl,
             val_kl))
 
         # https://pytorch.org/tutorials/beginner/saving_loading_models.html

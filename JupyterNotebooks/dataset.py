@@ -166,7 +166,7 @@ class DwgDataset:
 
         val_split  = int(np.floor(validation_fraction * data_len))
         test_split = int(np.floor(test_fraction * data_len))
-        indices = list(range(data_len))
+        indices    = list(range(data_len))
         np.random.seed(42)
 
         np.random.shuffle(indices)
@@ -179,6 +179,6 @@ class DwgDataset:
         val_sampler   = SubsetRandomSampler(val_indices)
         test_sampler  = SubsetRandomSampler(test_indices)
 
-        self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = train_sampler)
-        self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = val_sampler)
-        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = test_sampler)       
+        self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size=batch_size, sampler=train_sampler)
+        self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size=batch_size, sampler=val_sampler)
+        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size=batch_size, sampler=test_sampler)       
