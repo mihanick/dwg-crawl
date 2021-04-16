@@ -13,6 +13,11 @@ import torch.nn.functional as F
 
 torch.set_printoptions(profile='short')
 
+def pretty_print(*print_args):
+    torch.set_printoptions(precision=3, profile="full", sci_mode=False)
+    print(print_args)
+    torch.set_printoptions(profile="short")
+
 class EncoderRNN(nn.Module):
     def __init__(self, Nz, enc_hidden_size, dropout, stroke_features, device):
         super().__init__()

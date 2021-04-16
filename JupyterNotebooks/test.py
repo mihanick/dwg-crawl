@@ -7,7 +7,7 @@ Contains tests for input and output of models and also for loss functions
 import torch
 from dataset import DwgDataset
 from plot_graphics import images_from_batch, save_batch_images
-from sketch_rnn import Trainer
+from sketch_rnn import Trainer, pretty_print
 
 
 def test_data_drawing():
@@ -23,9 +23,8 @@ def test_data_drawing():
 
 # test_data_drawing()
 
-
 def test_predict_stroke_by_stroke():
-    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=4, limit_seq_len=60)
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=1, limit_seq_len=100)
     trainer = Trainer(dwg_dataset)
 
     trainer.encoder.load_state_dict(torch.load('DimEncoder.model', map_location=trainer.device))
@@ -43,7 +42,7 @@ def test_predict_stroke_by_stroke():
             input_stroke = input_seq[i]
             seq_so_far[:, :i+1] = input_seq[:, :i+1]
             z, _, _ = trainer.encoder(seq_so_far)
-
+            #pretty_print(z)
             # expand z in order it to be able to concatenate with inputs
             z_stack = torch.stack([z] * (trainer.max_seq_length))
 
@@ -57,14 +56,14 @@ def test_predict_stroke_by_stroke():
             iss = input_stroke[0]
             gss = generated_stroke[0]
             if iss[4] != 1:
-                print("input    :", iss[2:])
-                print("generated:", gss[2:])
+                pretty_print("input    :", iss[2:])
+                pretty_print("generated:", gss[2:])
                 print(" ")
 
-test_predict_stroke_by_stroke()
+# test_predict_stroke_by_stroke()
 
 def test_random_decoder_input():
-    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=4, limit_seq_len=60)
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size=16, limit_seq_len=100)
     trainer = Trainer(dwg_dataset)
 
     trainer.encoder.load_state_dict(torch.load('DimEncoder.model', map_location=trainer.device))
@@ -96,11 +95,10 @@ def test_random_decoder_input():
         seq[i, :] = a_stroke
 
     generated_images = images_from_batch(seq.transpose(0, 1))
-    print(seq)
-
+    pretty_print(seq[seq[:,:,4]==0])
     i=0
     for img in generated_images:
         img.savePng('img_g/generated' + str(i) + '.png')
         i+=1
 
-# test_random_decoder_input()
+#test_random_decoder_input()
