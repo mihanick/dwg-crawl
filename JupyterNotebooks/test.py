@@ -24,7 +24,7 @@ def test_data_drawing():
 # test_data_drawing()
 
 def test_predict_stroke_by_stroke():
-    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=1, limit_seq_len=100)
+    dwg_dataset = DwgDataset('test_dataset_cluster_labeled_.pickle', batch_size=1, limit_seq_len=60)
     trainer = Trainer(dwg_dataset)
 
     trainer.encoder.load_state_dict(torch.load('DimEncoder.model', map_location=trainer.device))
@@ -60,7 +60,7 @@ def test_predict_stroke_by_stroke():
                 pretty_print("generated:", gss[2:])
                 print(" ")
 
-# test_predict_stroke_by_stroke()
+test_predict_stroke_by_stroke()
 
 def test_random_decoder_input():
     dwg_dataset = DwgDataset('test_dataset_cluster_labeled.pickle', batch_size=16, limit_seq_len=100)

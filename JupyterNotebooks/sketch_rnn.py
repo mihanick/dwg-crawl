@@ -85,7 +85,7 @@ class DecoderRNN(nn.Module):
             hidden_cell = (hidden.unsqueeze(0).contiguous(), cell.unsqueeze(0).contiguous())
         
         outputs, (hidden, cell) = self.lstm(inputs, hidden_cell)
-        outputs = nn.ReLU()(outputs)
+        
         # wtf why?
         # in training we feed the lstm with the whole input in one shot
         # and use all outputs contained in 'outputs', while in generate
@@ -94,7 +94,6 @@ class DecoderRNN(nn.Module):
             y = self.fc_params(outputs.view(-1, self.dec_hidden_size))
         else:
             y = self.fc_params(hidden.view(-1, self.dec_hidden_size))
-        y = self.dropout_fc_params(y)
 
         # separate pen and mixture params
         # 6 is for pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy
@@ -164,7 +163,7 @@ class Trainer:
         self.enc_hidden_size = 256
         self.dec_hidden_size = 512
 
-        self.Nz              = 128
+        self.Nz              = 32
         self.M               = 20
 
         self.encoder = EncoderRNN(
@@ -285,6 +284,9 @@ class Trainer:
             return result
 
     def reconstruction_loss(self, mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q):
+        '''
+            calculates losses of stroke (dx, dy) and pen (p1, p2, p3)
+        '''
         def bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy):
             z_x = ((dx - mu_x) / sigma_x) ** 2
             z_y = ((dy - mu_y) / sigma_y) ** 2
@@ -298,26 +300,24 @@ class Trainer:
             # when rho_xy==1 result contains nan 
             # and it's baAad
             # torch 1.8.1
-            # result = torch.nan_to_num(result, nan=1.0)
+            # result = torch.nan_to_num(result, nan=0.999994)
             result[torch.isnan(result)] = 0.999995
 
             return result
 
         pdf = bivariate_normal_pdf(dx, dy, mu_x, mu_y, sigma_x, sigma_y, rho_xy)
 
-        LS = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2)))
-        LP = -torch.sum(p * torch.log(q))
+        loss_stroke = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2)))
+        loss_pen = -torch.sum(p * torch.log(q))
 
-        #result = torch.abs((LS + LP) / (self.max_seq_length * self.batch_size))
-        # if torch.isnan(result):
-        #    result = self.KL_min
-        
-        #if result < self.min_reconstruction_loss:
-        #    result = self.min_reconstruction_loss
-            
-        return LS, LP
+        return loss_stroke, loss_pen
 
     def kullback_leibler_loss(self, sigma, mu):
+        '''
+        Gotta wiki this. 
+        As far I understand, that's some difference between 
+        stochastic distributions
+        '''
         LKL = -0.5 * torch.sum(1 + sigma - mu**2 - torch.exp(sigma)) / float(self.Nz * self.batch_size)
         # KL_min = torch.Tensor([self.KL_min]).to(self.device)
         # LKL =  torch.max(LKL, KL_min) # * eta_step
@@ -330,38 +330,49 @@ class Trainer:
         self.encoder.eval()
         self.decoder.eval()
 
-        rl = []
+        ls = []
+        lp = []
         kl = []
         with torch.no_grad():
-            for i, batch in enumerate(loader):
-
-                # TODO: make this transpose in dataset
-                batch = batch[0].to(self.device).transpose(0, 1)
-                lengths = batch[1].to(self.device).transpose(0, 1)
-
-                # batch, lenghts = make_batch(batch_size)
-                z, mu, sigma = self.encoder(batch)
-
-                assert not torch.isnan(z).any(), "Encoder output contains nan"
-
-                # expand z in order it to be able to concatenate with inputs
-                z_stack = torch.stack([z] * (self.max_seq_length))
-
-                # inputs is the concatination of z and batch_inputs:
-                inputs = torch.cat([batch, z_stack], 2)
-
-                pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, _, _ = self.decoder(inputs, z)
-
-                # prepare targets:
-                mask, dx, dy, p = self.make_target(batch)
-
-                loss_kl = self.kullback_leibler_loss(sigma, mu)
-                ls, lp = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q)
-
-                rl.append(float(ls + lp))
+            for i, b in enumerate(loader):
+                batch = b[0].to(self.device).transpose(0, 1)
+                loss_kl, ls_, lp_ = self.loss_on_batch(batch)
+                ls.append(float(ls_))
+                lp.append(float(lp_))
                 kl.append(float(loss_kl))
 
-            return np.sum(rl) / (self.batch_size * self.max_seq_length), np.sum(kl)
+            return np.mean(ls), np.mean(lp), np.mean(kl)
+
+    def loss_on_batch(self, batch):
+        '''
+        forwards batch through decoder and encoder
+        and calculates losses
+
+        returns
+        ls - loss stroke
+        lp - loss pen
+        lkl - loss kullback leibler
+        '''
+        z, mu, sigma = self.encoder(batch)
+
+        # expand z in order it to be able to concatenate with inputs
+        z_stack = torch.stack([z] * (self.max_seq_length))
+
+        # inputs is the concatination of z and batch_inputs:
+        inputs = torch.cat([batch, z_stack], 2)
+
+        pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, _, _ = self.decoder(inputs, z)
+
+        # prepare targets:
+        mask, dx, dy, p = self.make_target(batch)
+
+        self.enc_optimizer.zero_grad()
+        self.dec_optimizer.zero_grad()
+
+        loss_kl = self.kullback_leibler_loss(sigma, mu)
+        loss_sketch, loss_pen = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q)
+
+        return loss_sketch, loss_pen, loss_kl
 
     def train_epoch(self, epoch_no):
         start = time.time()
@@ -372,42 +383,17 @@ class Trainer:
         self.encoder.train()
         self.decoder.train()
 
-        train_rl_losses =  []
+        train_ls_losses =  []
+        train_lp_losses =  []
         train_kl_losses = []
         loss = 0
         for i, batch in enumerate(self.train_loader):
             # TODO: make this transpose in dataset
             batch = batch[0].to(self.device).transpose(0, 1)
-            lengths = batch[1].to(self.device).transpose(0, 1)
 
-            # batch, lenghts = make_batch(batch_size)
-            z, mu, sigma = self.encoder(batch)
+            loss_stroke, loss_pen, loss_kl = self.loss_on_batch(batch)
 
-            # expand z in order it to be able to concatenate with inputs
-            z_stack = torch.stack([z] * (self.max_seq_length))
-
-            # inputs is the concatination of z and batch_inputs:
-            inputs = torch.cat([batch, z_stack], 2)
-
-            pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, _, _ = self.decoder(inputs, z)
-
-            # prepare targets:
-            mask, dx, dy, p = self.make_target(batch)
-
-            self.enc_optimizer.zero_grad()
-            self.dec_optimizer.zero_grad()
-
-            loss_kl = self.kullback_leibler_loss(sigma, mu)
-            ls, lp = self.reconstruction_loss(mask, dx, dy, p, mu_x, mu_y, sigma_x, sigma_y, rho_xy, pi, q)
-            # dbg_next_state = self.sample_next_state(pi, q, mu_x, mu_y, sigma_x, sigma_y, rho_xy)
-            # print(batch)
-            #print(pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q)
-            ls /= self.batch_size * self.max_seq_length
-            lp /= self.batch_size * self.max_seq_length
-
-            # print(ls, lp, float(loss_kl))
-
-            loss = loss_kl + ls + lp
+            loss = loss_kl + loss_stroke + loss_pen
             loss.backward()
 
             # grad clip
@@ -420,28 +406,25 @@ class Trainer:
             self.enc_optimizer = self.adjust_lr_decay(self.enc_optimizer)
             self.dec_optimizer = self.adjust_lr_decay(self.dec_optimizer)
 
-            if self.train_verbose:
-                print('  [{:4.0f}-{:4.0f} @ {:5.1f} sec]'
-                            .format(
-                                epoch_no,
-                                i,
-                                time.time() - start
-                            ))
-            train_rl_losses.append(float(ls + lp))
+            train_ls_losses.append(float(loss_stroke))
+            train_lp_losses.append(float(loss_pen))
             train_kl_losses.append(float(loss_kl))
 
         # train
-        train_rl = np.sum(train_rl_losses)
-        train_kl = np.sum(train_kl_losses)
+        train_ls = np.mean(train_ls_losses)
+        train_lp = np.mean(train_lp_losses)
+        train_kl = np.mean(train_kl_losses)
         # validation
-        val_rl, val_kl = self.CalculateLoaderAccuracy(self.val_loader)
+        val_ls, val_lp, val_kl = self.CalculateLoaderAccuracy(self.val_loader)
 
-        print('Epoch [{} @ {:4.1f}] train losses: rl:{:1.4f} kl:{:1.4f} validation losses rl:{:1.4f} kl:{:1.4f}'.format(
-            epoch_no, 
+        print('Epoch [{} @ {:4.1f}] train losses: ls:{:1.4f} lp:{:1.4f} kl:{:1.4f} validation losses ls:{:1.4f} lp:{:1.4f} kl:{:1.4f}'.format(
+            epoch_no,
             time.time() - start,
-            train_rl,
+            train_ls,
+            train_lp,
             train_kl,
-            val_rl,
+            val_ls,
+            val_lp,
             val_kl))
 
         # https://pytorch.org/tutorials/beginner/saving_loading_models.html
@@ -450,4 +433,4 @@ class Trainer:
             torch.save(self.encoder.state_dict(), 'DimEncoder.model')
             torch.save(self.decoder.state_dict(), 'DimDecoder.model')
 
-        return train_rl, train_kl, val_rl, val_kl
+        return train_ls, train_lp, train_kl, val_ls, val_lp, val_kl

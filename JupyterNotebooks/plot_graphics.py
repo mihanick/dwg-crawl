@@ -40,7 +40,7 @@ def draw_set(pnt_set, labels, core_indices):
     
     plt.show()
 
-def plot_history(train_rl_losses, train_kl_losses, val_rl_losses, val_kl_losses):
+def plot_history(train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl):
     '''
     Plots learning history in jupyter
     '''
@@ -48,29 +48,21 @@ def plot_history(train_rl_losses, train_kl_losses, val_rl_losses, val_kl_losses)
 
     # https://stackabuse.com/matplotlib-plot-multiple-line-plots-same-and-different-scales/
     fig, ax = plt.subplots()
-    ax.plot(train_rl_losses, label="train_rl", color='red')
-    ax.plot(val_rl_losses, label="val_rl", color='brown')
-    #train_rl, ax = plt.plot(train_rl_losses)
-    # ax.set_label("train rl")
-    ax.tick_params(axis='y', labelcolor='red')
-    ax.set_ylabel('Reconstruction loss @ epoch')
+    ax.plot(train_ls, label="train_ls", color='red')
+    ax.plot(val_ls, label="val_ls", color='brown')
+    
+    ax.plot(val_lp, label="train_lp", color='orange')
+    ax.plot(val_lp, label="val_lp", color='magenta')
+    
+    ax.tick_params(axis='y')
+    ax.set_ylabel('Stroke loss, pen loss @ epoch')
     
     ax2 = ax.twinx()
-    ax2.plot(train_kl_losses, label="train_kl", color='green')
-    ax2.plot(val_kl_losses, label="val_kl", color='blue')
+    ax2.plot(train_lkl, label="train_kl", color='teal')
+    ax2.plot(val_lkl, label="val_kl", color='blue')
      
-    #train_kl, ax2 = plt.plot(train_kl_losses)
-    #ax2.set_label("train kl")
     ax2.tick_params(axis='y', labelcolor='green')
     ax2.set_ylabel('Kullback Leiber loss @ epoch')
-    
-    #val_rl, = plt.plot(val_rl_losses)
-    #val_rl.set_label("val rl")
-
-    #ax2.plot(val_kl_losses, label="val_kl")
-    #val_kl, = plt.plot(val_kl_losses)
-    #val_kl.set_label("val kl")
-
 
     ax.legend(loc="upper left")
     ax2.legend(loc='upper right')

@@ -16,20 +16,26 @@ def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.0
         lr=lr,
         train_verbose=train_verbose)
 
-    train_kl_losses = []
-    train_rl_losses = []
-    val_kl_losses   = []
-    val_rl_losses   = []
+    
+    train_ls = []
+    train_lp = []
+    train_lkl = []
+
+    val_ls = []
+    val_lp = []
+    val_lkl = []
     
     for epoch in range(epochs):
-        test_rl, train_kl, val_rl, val_kl = trainer.train_epoch(epoch)
-        train_kl_losses.append(train_kl)
-        train_rl_losses.append(test_rl)
-        val_kl_losses.append(val_kl)
-        val_rl_losses.append(val_rl)
+        train_ls_, train_lp_, train_lkl_, val_ls_, val_lp_, val_lkl_ = trainer.train_epoch(epoch)
+        train_ls.append(train_ls_)
+        train_lp.append(train_lp_)
+        train_lkl.append(train_lkl_)
+        val_ls.append(val_ls_)
+        val_lp.append(val_lp_)
+        val_lkl.append(val_lkl_)
 
     # Calculate test accuracy
-    train_kl, test_rl = trainer.CalculateLoaderAccuracy(trainer.test_loader)
-    print('Test losses rl:{:1.4f} kl:{:1.4f}'.format(test_rl, train_kl))
+    test_ls, test_lp, test_lkl = trainer.CalculateLoaderAccuracy(trainer.test_loader)
+    print('Test losses ls:{:1.4f} lp:{:1.4f} kl:{:1.4f}'.format(test_ls, test_lp, test_lkl))
 
-    return train_rl_losses, train_kl_losses, val_rl_losses, val_kl_losses, test_rl, train_kl
+    return train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl
