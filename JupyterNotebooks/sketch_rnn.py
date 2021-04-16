@@ -145,8 +145,8 @@ class Trainer:
         self.min_reconstruction_loss = 0.0001
         self.wKL           = 0.5
         self.lr            = lr
-        self.lr_decay      = 0.99
-        self.min_lr        = 0.000001
+        self.lr_decay      = 0.98
+        self.min_lr        = 1e-6
         self.grad_clip     = 1.0
         self.temperature   = 0.5
 
@@ -228,6 +228,7 @@ class Trainer:
             sigma_y *= np.sqrt(temperature)
 
             cov = [[sigma_x*sigma_x, rho_xy*sigma_x*sigma_y], [rho_xy*sigma_x*sigma_y, sigma_y*sigma_y]]
+            
             x = np.random.multivariate_normal(mean, cov, 1)
             return x[0][0], x[0][1]
 
@@ -246,11 +247,11 @@ class Trainer:
         logits[q_idx] = 1
 
         #get mixture params:
-        mu_x = mu_x.data[pi_idx]
-        mu_y = mu_y.data[pi_idx]
-        sigma_x = sigma_x.data[pi_idx]
-        sigma_y = sigma_y.data[pi_idx]
-        rho_xy = rho_xy.data[pi_idx]
+        mu_x = mu_x.data[pi_idx].cpu().numpy()
+        mu_y = mu_y.data[pi_idx].cpu().numpy()
+        sigma_x = sigma_x.data[pi_idx].cpu().numpy()
+        sigma_y = sigma_y.data[pi_idx].cpu().numpy()
+        rho_xy = rho_xy.data[pi_idx].cpu().numpy()
 
         x, y = sample_bivariate_normal(mu_x, mu_y, sigma_x, sigma_y, rho_xy, self.temperature, greedy=False)
 
