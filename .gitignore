@@ -231,3 +231,4 @@ JupyterNotebooks/.vs/*
 /JupyterNotebooks/img_g/*.png
 JupyterNotebooks/DimDecoder.model
 JupyterNotebooks/DimEncoder.model
+JupyterNotebooks/img_g/predictions.gif

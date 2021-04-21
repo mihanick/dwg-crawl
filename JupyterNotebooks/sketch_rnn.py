@@ -336,10 +336,10 @@ class Trainer:
         with torch.no_grad():
             for i, b in enumerate(loader):
                 batch = b[0].to(self.device).transpose(0, 1)
-                loss_kl, ls_, lp_ = self.loss_on_batch(batch)
+                ls_, lp_, lkl_ = self.loss_on_batch(batch)
                 ls.append(float(ls_))
                 lp.append(float(lp_))
-                kl.append(float(loss_kl))
+                kl.append(float(lkl_))
 
             return np.mean(ls), np.mean(lp), np.mean(kl)
 
