@@ -25,7 +25,7 @@ class EncoderRNN(nn.Module):
         self.stroke_features = stroke_features
         self.device = device
 
-        self.lstm = nn.LSTM(stroke_features, self.enc_hidden_size, dropout=dropout, bidirectional=True)
+        self.lstm = nn.LSTM(stroke_features, self.enc_hidden_size, bidirectional=True)
 
         #mu and sigma layers from lstm last output
         self.fc_mu = nn.Linear(2 * self.enc_hidden_size, Nz)
@@ -71,7 +71,7 @@ class DecoderRNN(nn.Module):
         self.fc_hc = nn.Linear(Nz, 2 * dec_hidden_size)
 
         # unidirectional lstm
-        self.lstm = nn.LSTM(Nz + stroke_features, dec_hidden_size, dropout=dropout)
+        self.lstm = nn.LSTM(Nz + stroke_features, dec_hidden_size)
 
         # probability distribution parameters from hiddens
         logits_no = stroke_features - 2
@@ -339,10 +339,10 @@ class Trainer:
         with torch.no_grad():
             for i, b in enumerate(loader):
                 batch = b[0].to(self.device).transpose(0, 1)
-                loss_kl, ls_, lp_ = self.loss_on_batch(batch)
+                ls_, lp_, lkl_ = self.loss_on_batch(batch)
                 ls.append(float(ls_))
                 lp.append(float(lp_))
-                kl.append(float(loss_kl))
+                kl.append(float(lkl_))
 
             return np.mean(ls), np.mean(lp), np.mean(kl)
 

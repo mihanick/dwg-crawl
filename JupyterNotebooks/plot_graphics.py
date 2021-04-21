@@ -51,7 +51,7 @@ def plot_history(train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl):
     ax.plot(train_ls, label="train_ls", color='red')
     ax.plot(val_ls, label="val_ls", color='brown')
     
-    ax.plot(val_lp, label="train_lp", color='orange')
+    ax.plot(train_lp, label="train_lp", color='orange')
     ax.plot(val_lp, label="val_lp", color='magenta')
     
     ax.tick_params(axis='y')
