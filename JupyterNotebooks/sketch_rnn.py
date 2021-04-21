@@ -310,6 +310,9 @@ class Trainer:
         loss_stroke = -torch.sum(mask * torch.log(1e-5 + torch.sum(pi * pdf, 2)))
         loss_pen = -torch.sum(p * torch.log(q))
 
+        loss_pen /= self.max_seq_length
+        loss_stroke /= self.max_seq_length
+
         return loss_stroke, loss_pen
 
     def kullback_leibler_loss(self, sigma, mu):
