@@ -76,7 +76,6 @@ class DecoderRNN(nn.Module):
         # probability distribution parameters from hiddens
         logits_no = stroke_features - 2
         self.fc_params = nn.Linear(self.dec_hidden_size, 2 * logits_no * self.M + logits_no)
-        self.dropout_fc_params = nn.Dropout()
 
     def forward(self, inputs, z, hidden_cell=None):
         if hidden_cell is None:
@@ -125,7 +124,7 @@ class DecoderRNN(nn.Module):
         return pi, mu_x, mu_y, sigma_x, sigma_y, rho_xy, q, hidden, cell
 
 class Trainer:
-    def __init__(self, dwg_dataset, lr=0.001, train_verbose=True):
+    def __init__(self, dwg_dataset, lr=0.001, train_verbose=True, preload_model=False):
         self.device = torch.device("cpu")
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
@@ -181,6 +180,10 @@ class Trainer:
             stroke_features=self.stroke_features, 
             device=self.device)
         
+        if preload_model:
+            self.encoder.load_state_dict(torch.load('DimEncoder.model', map_location=self.device))
+            self.decoder.load_state_dict(torch.load('DimDecoder.model', map_location=self.device))
+            
         self.encoder.to(self.device)
         self.decoder.to(self.device)
 
@@ -302,6 +305,7 @@ class Trainer:
             # torch 1.8.1
             # result = torch.nan_to_num(result, nan=0.999994)
             result[torch.isnan(result)] = 0.999995
+            
 
             return result
 
@@ -420,7 +424,7 @@ class Trainer:
         # validation
         val_ls, val_lp, val_kl = self.CalculateLoaderAccuracy(self.val_loader)
 
-        print('Epoch [{} @ {:4.1f}] train losses: ls:{:1.4f} lp:{:1.4f} kl:{:1.4f} validation losses ls:{:1.4f} lp:{:1.4f} kl:{:1.4f}'.format(
+        print('Epoch [{}@{:4.1f}sec] train losses: ls:{:1.4f} lp:{:1.4f} kl:{:1.4f} validation losses ls:{:1.4f} lp:{:1.4f} kl:{:1.4f}'.format(
             epoch_no,
             time.time() - start,
             train_ls,
