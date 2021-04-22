@@ -198,8 +198,21 @@ class Trainer:
         '''
         batch[max_seq_length,batch_size,stroke_features]
         '''
+        batch_size = batch.shape[1]
+        
+        # number of strokes before eos
+        current_seq_lengths = torch.sum((batch[:, :, 4] == 0).long(), dim=0)
+        mask = torch.zeros(self.max_seq_length, batch_size)
 
-        mask = 1 - batch[:, :, 4]
+        # mask should be 1s one before current seq lenths, 0s after
+        for i, batch_seq_len in enumerate(current_seq_lengths):
+            mask[:int(batch_seq_len)-1, i] = 1
+
+        # test mask is correct:
+        # https://stackoverflow.com/questions/62150659/how-to-convert-a-tensor-of-booleans-to-ints-in-pytorch
+        difference_between_batch_eos_and_mask = torch.argmin((1-batch[:, :, 4] == mask).long(), dim=0)
+        # place to start zeros is one less than seq_len
+        assert (difference_between_batch_eos_and_mask == current_seq_lengths - 1).all()
 
         dx = torch.stack([batch.data[:, :, 0]] * self.M, 2)
         dy = torch.stack([batch.data[:, :, 1]] * self.M, 2)
