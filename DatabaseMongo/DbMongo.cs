@@ -154,7 +154,32 @@ namespace DwgDump.Data
 				files.InsertOne(doc);
 		}
 
-		public void SaveObjectData(string objJson, string fileId)
+
+		public void SaveObjectData(List<string> objJsons, string fileId = "", string groupId = "")
+		{
+			List<BsonDocument> all = new List<BsonDocument>();
+
+			foreach (var jsn in objJsons)
+				try
+				{
+					if (string.IsNullOrEmpty(jsn))
+						return;
+
+					BsonDocument doc = BsonDocument.Parse(jsn);
+					doc["FileId"] = fileId;
+					doc["GroupId"] = groupId;
+
+					all.Add(doc);
+				}
+				catch (System.Exception e)
+				{
+					Debug.WriteLine(e.Message);
+				}
+
+			objects.InsertMany(all);
+		}
+
+		public void SaveObjectData(string objJson, string fileId = "")
 		{
 			try
 			{
@@ -179,6 +204,12 @@ namespace DwgDump.Data
 				{ "Scanned", false },
 				{ "ClassName", "File" }
 			};
+#if DEBUG
+			//filter = new QueryDocument
+			//{
+			//	{ "ClassName", "File" }
+			//};
+#endif
 
 			// Not efficient to obtain all collection, but 'files' cooolection shouldn't bee too large
 			// http://stackoverflow.com/questions/3975290/produce-a-random-number-in-a-range-using-c-sharp
@@ -199,12 +230,6 @@ namespace DwgDump.Data
 				Path = file["Path"].ToString(),
 				Scanned = file["Scanned"].ToBoolean()
 			};
-
-			// Check db size is close to maximum
-			// FileInfo Fi = new FileInfo(dbPath);
-			// long maxsize = 2000*1024*1024;
-			// if (Fi.Length > maxsize)
-			// return null;
 
 			return result;
 		}
