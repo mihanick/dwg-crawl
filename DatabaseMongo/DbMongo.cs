@@ -17,11 +17,11 @@ namespace DwgDump.Data
 		// Папка куда сохраняются все dwg
 		public string DataDir = @"C:\git\dwg-crawl\Data";
 
-		private string server = "mihanick.mcad.local";
+		private string server = "localhost";
 		private int port = 27017;
 		private string user = "admin";
 		private string securityDbName = "admin";
-		private string dbName = "geometry";
+		private string dbName = "geometry2";
 
 		private static DbMongo instance;
 		public static DbMongo Instance
@@ -50,22 +50,34 @@ namespace DwgDump.Data
 
 		private void Connect()
 		{
-			string password = System.IO.File.ReadAllText(@"C:\git\dwg-crawl\DatabaseMongo\DbCredentials.txt");
+			// Try to connect to external server with password
+			try
+			{
+				string password = System.IO.File.ReadAllText(@"C:\git\dwg-crawl\DatabaseMongo\DbCredentials.txt");
 
-			// https://stackoverflow.com/questions/44513786/error-on-mongodb-authentication
-			MongoClientSettings settings = new MongoClientSettings();
-			settings.Server = new MongoServerAddress(this.server, this.port);
+				// https://stackoverflow.com/questions/44513786/error-on-mongodb-authentication
+				MongoClientSettings settings = new MongoClientSettings();
+				settings.Server = new MongoServerAddress(this.server, this.port);
 
-			settings.UseTls = false;
-			settings.SslSettings = new SslSettings();
-			settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
+				settings.UseTls = false;
+				settings.SslSettings = new SslSettings();
+				settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
 
-			MongoIdentity identity = new MongoInternalIdentity(this.securityDbName, this.user);
-			MongoIdentityEvidence evidence = new PasswordEvidence(password);
+				MongoIdentity identity = new MongoInternalIdentity(this.securityDbName, this.user);
+				MongoIdentityEvidence evidence = new PasswordEvidence(password);
 
-			settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
+				settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
 
-			client = new MongoClient(settings);
+				client = new MongoClient(settings);
+			}
+			catch (Exception e)
+			{
+				// Unable to connect
+			}
+
+			// otherwise try to connect to localhost
+			if (client == null)
+				client = new MongoClient();
 
 			db = client.GetDatabase(this.dbName);
 		}
@@ -105,7 +117,7 @@ namespace DwgDump.Data
 			//objects.CreateIndex("ClassName");
 			//objects.CreateIndex("ObjectId");
 			//objects.CreateIndex("FileId");
-		
+
 		}
 
 		private void Clear()
