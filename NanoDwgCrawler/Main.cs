@@ -1,51 +1,57 @@
 ﻿using DwgDump.Data;
-using Teigha.Runtime;
-
+using Multicad;
+using Multicad.DatabaseServices;
+using Multicad.Runtime;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 
 namespace DwgDump
 {
-	public class Main : IExtensionApplication
+	public static class Main
 	{
-		// http://through-the-interface.typepad.com/through_the_interface/2013/01/displaying-a-dialog-on-autocad-startup-using-net.html
-		// Класс автоматически подгружает логер событий при загрузке приложения
-		private int initCount = 0;
-		public void Initialize()
+		static CrawlAcDbDocument currentDocument = null;
+
+
+		[CommandMethod("sfd", CommandFlags.NoCheck | CommandFlags.NoPrefix)]
+		public static void ScanFolder()
 		{
-			if (initCount == 0)
-			{
-				initCount++;
-			}
-			if (initCount == 1)
-				Commands.WriteDocuments(true);
+			DirectoryScanner.Scan(@"C:\Users\mihan\Desktop\DwgCrawlTest");
 		}
 
-		public void Terminate()
+		/// <summary>
+		/// Opens unscanned document
+		/// </summary>
+		[CommandMethod("grd", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Session)]
+		public static void GetDocument()
 		{
-		}
-	}
-
-	public class Commands
-	{
-		[CommandMethod("Dump2db")]
-		public static void Dump2db()
-		{
-			WriteDocuments(false);
-		}
-
-		public static void WriteDocuments(bool closeAfterComplete = true)
-		{
-			DbMongo db = new DbMongo();
+			DbMongo db = DbMongo.Instance;
 			//While Get random dwg from database that not scanned
-			CrawlDocument crawlDoc = db.GetNewRandomUnscannedDocument();
-			while (crawlDoc != null)
-			{
-				CrawlAcDbDocument cDoc = new CrawlAcDbDocument(crawlDoc);
+			var doc = db.GetNewRandomUnscannedDocument();
 
-				cDoc.DumpDocument();
-				crawlDoc = db.GetNewRandomUnscannedDocument();
+			if (doc != null)
+			{
+				// You will only see it once
+				db.SetDocumentScanned(doc.FileId);
+
+				currentDocument = new CrawlAcDbDocument(doc);
 			}
-			if (closeAfterComplete)
-				HostMgd.ApplicationServices.Application.Quit();
+		}
+
+		/// <summary>
+		/// Writes selection as a fragment to database
+		/// </summary>
+		[CommandMethod("fra", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Redraw)]
+		public static void WriteFragment()
+		{
+			List<McObjectId> currentSelection = new List<McObjectId>(McObjectManager.SelectionSet.CurrentSelection);
+			if (currentSelection.Count == 0)
+				currentSelection = McObjectManager.SelectObjects("Select fragment").ToList();
+
+			// каждый набор объектов со своим Guid группы
+			var groupId = Guid.NewGuid().ToString();
+			currentDocument.DumpEntities(currentSelection, groupId);
 		}
 	}
 }
