@@ -2,35 +2,20 @@
 using System.Text;
 using System;
 using System.Diagnostics;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 [DebuggerStepThrough]
-public class JsonHelper
+public class CrawlJsonHelper
 {
-	public static string To<T>(T obj)
+	public static string Serialize(object o, string className = "")
 	{
-		string retVal = null;
-		System.Runtime.Serialization.Json.DataContractJsonSerializer serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(obj.GetType());
-		using (MemoryStream ms = new MemoryStream())
-		{
-			serializer.WriteObject(ms, obj);
+		var jsn = JsonConvert.SerializeObject(o);
+		JObject j = JObject.Parse(jsn);
 
-			retVal = Encoding.UTF8.GetString
-				(ms.ToArray());
-		}
+		if (!string.IsNullOrEmpty(className))
+			j["ClassName"] = className;
 
-		return retVal;
-	}
-
-	public static T From<T>(string json)
-	{
-		T obj = Activator.CreateInstance<T>();
-		using (MemoryStream ms = new MemoryStream(Encoding.Unicode.GetBytes(json)))
-		{
-			System.Runtime.Serialization.Json.DataContractJsonSerializer serializer = new System.Runtime.Serialization.Json.DataContractJsonSerializer(obj.GetType());
-			obj = (T)serializer.ReadObject(ms);
-		}
-
-		return obj;
+		return j.ToString();
 	}
 }
-
