@@ -1,14 +1,18 @@
 ﻿using DwgDump.Data;
 using DwgDump.Enitites;
 using DwgDump.Util;
-using HostMgd.ApplicationServices;
-using HostMgd.EditorInput;
+using Multicad;
+using Multicad.DatabaseServices;
+using Multicad.DatabaseServices.StandardObjects;
+using Multicad.Dimensions;
+using Multicad.Geometry;
+using Multicad.Symbols;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
-using Teigha.DatabaseServices;
-using TeighaApp = HostMgd.ApplicationServices.Application;
 
 namespace DwgDump
 {
@@ -17,7 +21,7 @@ namespace DwgDump
 		private readonly string fullPath;
 		private readonly string fileId;
 
-		private readonly Document teighaDocument;
+		private readonly McDocument Document;
 
 		private DbMongo Db => DbMongo.Instance;
 
@@ -54,450 +58,572 @@ namespace DwgDump
 			string path = Path.Combine(DbMongo.Instance.DataDir, crawlDoc.FileId + ".dwg");
 			FileInfo info = new FileInfo(path);
 			if (!IsFileinUse(info))
-				this.teighaDocument = TeighaApp.DocumentManager.Open(path);
+			{
+				this.Document = McDocumentsManager.OpenDocument(path, true);
+
+				DumpDocumentDescription();
+			}
 		}
 
-		public void DumpDocument()
+		private void DumpDocumentDescription()
 		{
+			try
+			{
+				// also run all blocks
+				var ids = this.Document.GetBlocks();
+				// TODO: Maybe we don't need it for now
+
+				// all layer definitions
+				foreach (var layername in McObjectManager.CurrentStyle.GetLayers())
+				{
+					var layerRecord = McObjectManager.CurrentStyle.GetLayer(layername);
+
+					string objId = layerRecord.ToString();
+
+					CrawlAcDbLayerTableRecord cltr = new CrawlAcDbLayerTableRecord()
+					{
+						Name = layerRecord.Name,
+
+						// BUG: Not implemented
+						// this.Linetype = layerRecord.LineType.Name;
+
+						LineWeight = layerRecord.LineWeight.ToString(),
+						IsFrozen = layerRecord.IsFrozen,
+						// BUG: Not implemented
+						// this.IsHidden = layerRecord.IsHidden;
+						IsOff = layerRecord.IsOff,
+						IsPlottable = layerRecord.IsPlottable,
+						Color = layerRecord.Color.ToString(),
+
+						ObjectId = layerRecord.ID.ToString()
+					};
+
+					string objectJson = CrawlJsonHelper.Serialize(cltr);
+
+					this.Db.SaveObjectData(objectJson, this.fileId);
+				}
+
+				// Run all xrefs
+				List<McObjectId> xrefs = this.Document.GetXRefs();
+				// TODO: Beacuse in current dataset no xref will be present
+			}
+			catch (Exception e)
+			{
+				CrawlDebug.WriteLine(e.Message);
+				// Cannot dump layers and xrefs
+			}
+		}
+
+		public void DumpEntities()
+		{
+			// If document wasn't loaded correctly
+			if (this.Document == null)
+				return;
 			// nanoCAD can crash, or exception or whatever...
 			// so there will be only one try per document
 			// so we first set document scanned, 
 			// than try to process it
 			Db.SetDocumentScanned(this.fileId);
 
-			// If document wasn't loaded correctly
-			if (this.teighaDocument == null)
-				return;
+			var filter = new ObjectFilter();
+			filter.AddDoc(this.Document);
+			filter.AllObjects = true;
 
-			try
-			{
-				using (Transaction tr = this.teighaDocument.TransactionManager.StartTransaction())
-				{
-					PromptSelectionResult r = this.teighaDocument.Editor.SelectAll();
-
-					// for all entities in drawing
-					foreach (SelectedObject obj in r.Value)
-					{
-						string objId = obj.ObjectId.ToString();
-						string objectJson = DumpEntity2json(obj.ObjectId);
-						string objectClass = obj.ObjectId.ObjectClass.Name;
-
-						if (!string.IsNullOrEmpty(objectJson))
-							this.Db.SaveObjectData(objectJson, this.fileId);
-					}
-
-					// also run all blocks
-					List<ObjectId> blocks = GetBlocks(this.teighaDocument);
-					foreach (ObjectId btrId in blocks)
-					{
-						BlockTableRecord btr = (BlockTableRecord)btrId.GetObject(OpenMode.ForRead);
-						DocumentFromBlockOrProxy(btrId, this.fileId);
-					}
-
-					// all layer definitions
-					// http://forums.autodesk.com/t5/net/how-to-get-all-names-of-layers-in-a-drawing-by-traversal-layers/td-p/3371751
-					LayerTable lt = (LayerTable)this.teighaDocument.Database.LayerTableId.GetObject(OpenMode.ForRead);
-					foreach (ObjectId ltr in lt)
-					{
-						string objId = ltr.ToString();
-						string objectClass = ltr.ObjectClass.Name;
-						LayerTableRecord layerTblRec = (LayerTableRecord)ltr.GetObject(OpenMode.ForRead);
-
-						CrawlAcDbLayerTableRecord cltr = new CrawlAcDbLayerTableRecord(layerTblRec);
-						string objectJson = JsonHelper.To<CrawlAcDbLayerTableRecord>(cltr);
-
-						this.Db.SaveObjectData(objectJson, this.fileId);
-					}
-
-					// Run all xefs
-					List<CrawlDocument> xrefs = GetXrefs(this.teighaDocument);
-					foreach (CrawlDocument theXref in xrefs)
-					{
-						CrawlAcDbDocument cDoc = new CrawlAcDbDocument(theXref);
-						Db.InsertIntoFiles(theXref);
-						cDoc.DumpDocument();
-					}
-				}
-				this.teighaDocument.CloseAndDiscard();
-			}
-			catch (Exception er)
-			{
-				CrawlDebug.WriteLine(er.Message);
-			}
+			// каждый набор объектов со своим Guid группы
+			var groupId = Guid.NewGuid().ToString();
+			DumpEntities(filter.GetObjects(), groupId);
 		}
 
-		private void DocumentFromBlockOrProxy(ObjectId objId, string parentFileId)
+		public void DumpEntities(List<McObjectId> entityIds, string groupId)
 		{
-			//http://www.theswamp.org/index.php?topic=37860.0
-			Document aDoc = Application.DocumentManager.GetDocument(objId.Database);
-
-			if (objId.ObjectClass.Name == "AcDbBlockTableRecord")
-			{
-				BlockTableRecord btr = (BlockTableRecord)objId.GetObject(OpenMode.ForRead);
-				CrawlAcDbBlockTableRecord cBtr = new CrawlAcDbBlockTableRecord(btr, this.fullPath)
-				{
-					BlockId = Guid.NewGuid().ToString(),
-					FileId = parentFileId
-				};
-
-				string blockJson = JsonHelper.To<CrawlAcDbBlockTableRecord>(cBtr);
-
-				this.Db.InsertIntoFiles(blockJson);
-
-				using (Transaction tr = aDoc.TransactionManager.StartTransaction())
-				{
-					foreach (ObjectId obj in btr)
-					{
-						string objectJson = DumpEntity2json(obj);
-						// string objectClass = obj.ObjectClass.Name;
-
-						this.Db.SaveObjectData(objectJson, cBtr.BlockId);
-					}
-				}
-			}
-			else if (objId.ObjectClass.Name == "AcDbProxyEntity")
-			{
-				Entity ent = (Entity)objId.GetObject(OpenMode.ForRead);
-				using (DBObjectCollection dbo = new DBObjectCollection())
-				{
-					ent.Explode(dbo);
-
-					CrawlAcDbProxyEntity cPxy = new CrawlAcDbProxyEntity((ProxyEntity)ent)
-					{
-						BlockId = Guid.NewGuid().ToString(),
-						FileId = parentFileId
-					};
-
-					string pxyJson = JsonHelper.To<CrawlAcDbProxyEntity>(cPxy);
-
-					this.Db.InsertIntoFiles(pxyJson);
-
-					for (int i = 0; i < dbo.Count; i++)
-					{
-						DBObject obj = dbo[i];
-
-						if (obj == null)
-							continue;
-
-						// BUG: Exploded ids will be null
-						string objectJson = DumpEntity2json(obj.Id);
-
-						this.Db.SaveObjectData(objectJson, cPxy.BlockId);
-					}
-				}
-			}
+			this.Db.SaveObjectData(ConvertEntities2json(entityIds), this.fileId, groupId);
 		}
 
-		private string DumpEntity2json(ObjectId id_platf)
+		private string ConvertSingleEntity2json(McObject mcObj)
 		{
 			string result = "";
 
-			if (id_platf.IsNull)
-				return result;
+			// Check primitive is a single entity
 
-			try
+			if (mcObj is DbLine line)
 			{
-				// Всякое может случиться
-				// Открываем переданный в функцию объект на чтение, преобразуем его к Entity
-				Entity ent = (Entity)id_platf.GetObject(OpenMode.ForRead);
-
-				//Далее последовательно проверяем класс объекта на соответствие классам основных примитивов
-
-				if (id_platf.ObjectClass.Name == "AcDbLine")
-				{
-					// Если объект - отрезок (line)
-					CrawlAcDbLine kline = new CrawlAcDbLine((Line)ent); //Преобразуем к типу линия
-					result = JsonHelper.To<CrawlAcDbLine>(kline);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbPolyline")
-				{
-					// Если объект - полилиния
-					Polyline kpLine = (Polyline)ent;
-					CrawlAcDbPolyline jpline = new CrawlAcDbPolyline(kpLine);
-					result = JsonHelper.To<CrawlAcDbPolyline>(jpline);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDb2dPolyline")
-				{
-					// 2D полилиния - такие тоже попадаются
-					Polyline2d kpLine = (Polyline2d)ent;
-					CrawlAcDbPolyline jpline = new CrawlAcDbPolyline(kpLine);
-					result = JsonHelper.To<CrawlAcDbPolyline>(jpline);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDb3dPolyline")
-				{
-					// 2D полилиния - такие тоже попадаются
-					Polyline3d kpLine = (Polyline3d)ent;
-
-					CrawlAcDbPolyline jpline = new CrawlAcDbPolyline(kpLine);
-					result = JsonHelper.To<CrawlAcDbPolyline>(jpline);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbText")
-				{
-					// Текст
-					DBText dbtxt = (DBText)ent;
-					CrawlAcDbText jtext = new CrawlAcDbText(dbtxt);
-					result = JsonHelper.To<CrawlAcDbText>(jtext);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbMText")
-				{
-					// Мтекст
-					MText mtxt = (MText)ent;
-					CrawlAcDbMText jtext = new CrawlAcDbMText(mtxt);
-					result = JsonHelper.To<CrawlAcDbMText>(jtext);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbArc")
-				{
-					// Дуга
-					Arc arc = (Arc)ent;
-					CrawlAcDbArc cArc = new CrawlAcDbArc(arc);
-					result = JsonHelper.To<CrawlAcDbArc>(cArc);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbCircle")
-				{
-					// Окружность
-					Circle circle = (Circle)ent;
-					CrawlAcDbCircle cCircle = new CrawlAcDbCircle(circle);
-					result = JsonHelper.To<CrawlAcDbCircle>(cCircle);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbEllipse")
-				{
-					// Эллипс
-					Ellipse el = (Ellipse)ent;
-					CrawlAcDbEllipse cEll = new CrawlAcDbEllipse(el);
-					result = JsonHelper.To<CrawlAcDbEllipse>(cEll);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbAlignedDimension")
-				{
-					// Размер повернутый
-					AlignedDimension dim = (AlignedDimension)ent;
-
-					CrawlAcDbAlignedDimension rDim = new CrawlAcDbAlignedDimension(dim);
-					result = JsonHelper.To<CrawlAcDbAlignedDimension>(rDim);
-				}
-
-				else if (id_platf.ObjectClass.Name == "AcDbRotatedDimension")
-				{
-					// Размер повернутый
-					RotatedDimension dim = (RotatedDimension)ent;
-
-					CrawlAcDbRotatedDimension rDim = new CrawlAcDbRotatedDimension(dim);
-					result = JsonHelper.To<CrawlAcDbRotatedDimension>(rDim);
-				}
-
-				else if (id_platf.ObjectClass.Name == "AcDbPoint3AngularDimension")
-				{
-					// Угловой размер по 3 точкам
-					Point3AngularDimension dim = (Point3AngularDimension)ent;
-
-					CrawlAcDbPoint3AngularDimension rDim = new CrawlAcDbPoint3AngularDimension(dim);
-					result = JsonHelper.To<CrawlAcDbPoint3AngularDimension>(rDim);
-				}
-
-				else if (id_platf.ObjectClass.Name == "AcDbLineAngularDimension2")
-				{//Еще угловой размер по точкам
-					LineAngularDimension2 dim = (LineAngularDimension2)ent;
-
-					CrawlAcDbLineAngularDimension2 rDim = new CrawlAcDbLineAngularDimension2(dim);
-					result = JsonHelper.To<CrawlAcDbLineAngularDimension2>(rDim);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbDiametricDimension")
-				{
-					// Размер диаметра окружности
-					DiametricDimension dim = (DiametricDimension)ent;
-					CrawlAcDbDiametricDimension rDim = new CrawlAcDbDiametricDimension(dim);
-					result = JsonHelper.To<CrawlAcDbDiametricDimension>(rDim);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbArcDimension")
-				{
-					// Дуговой размер
-					ArcDimension dim = (ArcDimension)ent;
-					CrawlAcDbArcDimension rDim = new CrawlAcDbArcDimension(dim);
-					result = JsonHelper.To<CrawlAcDbArcDimension>(rDim);
-
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbRadialDimension")
-				{
-					// Радиальный размер
-					RadialDimension dim = (RadialDimension)ent;
-					CrawlAcDbRadialDimension rDim = new CrawlAcDbRadialDimension(dim);
-					result = JsonHelper.To<CrawlAcDbRadialDimension>(rDim);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbAttributeDefinition")
-				{
-					// Атрибут блока
-					AttributeDefinition ad = (AttributeDefinition)ent;
-
-					CrawlAcDbAttributeDefinition atd = new CrawlAcDbAttributeDefinition(ad);
-					result = JsonHelper.To<CrawlAcDbAttributeDefinition>(atd);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbHatch")
-				{
-					// Штриховка
-					Teigha.DatabaseServices.Hatch htch = ent as Teigha.DatabaseServices.Hatch;
-
-					CrawlAcDbHatch cHtch = new CrawlAcDbHatch(htch);
-					result = JsonHelper.To<CrawlAcDbHatch>(cHtch);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbSpline")
-				{
-					// Сплайн
-					Spline spl = ent as Spline;
-
-					CrawlAcDbSpline cScpline = new CrawlAcDbSpline(spl);
-					result = JsonHelper.To<CrawlAcDbSpline>(cScpline);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbPoint")
-				{
-					// Точка
-					DBPoint Pnt = ent as DBPoint;
-					CrawlAcDbPoint pt = new CrawlAcDbPoint(Pnt);
-					result = JsonHelper.To<CrawlAcDbPoint>(pt);
-				}
-
-				else if (id_platf.ObjectClass.Name == "AcDbBlockReference")
-				{
-					// Блок
-					BlockReference blk = ent as BlockReference;
-					CrawlAcDbBlockReference cBlk = new CrawlAcDbBlockReference(blk);
-
-					result = JsonHelper.To<CrawlAcDbBlockReference>(cBlk);
-
-					//newDocument(id_platf, result);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbProxyEntity")
-				{
-					// Прокси
-					ProxyEntity pxy = ent as ProxyEntity;
-
-					CrawlAcDbProxyEntity cBlk = new CrawlAcDbProxyEntity(pxy);
-
-					result = JsonHelper.To<CrawlAcDbProxyEntity>(cBlk);
-
-					DocumentFromBlockOrProxy(id_platf, result);
-				}
-				else if (id_platf.ObjectClass.Name == "AcDbSolid")
-				{
-					// Солид 2Д
-					Solid solid = (Solid)ent;
-
-
-					CrawlAcDbSolid cSld = new CrawlAcDbSolid(solid);
-
-					result = JsonHelper.To<CrawlAcDbSolid>(cSld);
-
-				}
-				/*
-		else if (id_platf.ObjectClass.Name == "AcDbLeader")
-		{  //Выноска Autocad
-			Leader ld = (Leader)ent;
-
-			if (ld.EndPoint.Z != 0 || ld.StartPoint.Z != 0)
+				result = ConvertSingleEntityGeometry(line.Line);
+			}
+			else if (mcObj is DbPolyline pline)
 			{
-				//ed.WriteMessage("DEBUG: Преобразован объект: Выноска Autocad");
+				result = ConvertSingleEntityGeometry(pline.Polyline);
+			}
+			else if (mcObj is DbText dbtxt)
+			{
+				result = ConvertSingleEntityGeometry(dbtxt.Text);
+			}
+			else if (mcObj is DbCircArc arc)
+			{
+				result = ConvertSingleEntityGeometry(arc.Arc);
+			}
+			else if (mcObj is DbCircle circle)
+			{
+				// Окружность
+				CrawlCircle cCircle = new CrawlCircle()
+				{
+					Center = new CrawlPoint3d(circle.Center.X, circle.Center.Y, circle.Center.Z),
+					Radius = circle.Radius
+				};
+				result = CrawlJsonHelper.Serialize(cCircle);
+			}
+			else if (mcObj is DbEllipticArc ellipse)
+			{
+				// Эллипс
+				Crawlellipse cEll = new Crawlellipse()
+				{
+					EndPoint = new CrawlPoint3d(ellipse.EllipArc.EndPoint.X, ellipse.EllipArc.EndPoint.Y, ellipse.EllipArc.EndPoint.Z),
+					StartPoint = new CrawlPoint3d(ellipse.EllipArc.StartPoint.X, ellipse.EllipArc.StartPoint.Y, ellipse.EllipArc.StartPoint.Z),
+					Center = new CrawlPoint3d(ellipse.EllipArc.Center.X, ellipse.EllipArc.Center.Y, ellipse.EllipArc.Center.Z),
 
-				ld.EndPoint = new Point3d(ld.EndPoint.X, ld.EndPoint.Y, 0);
-				ld.StartPoint = new Point3d(ld.StartPoint.X, ld.StartPoint.Y, 0);
+					MajorAxisVector = new CrawlPoint3d(ellipse.EllipArc.MajorAxis.X, ellipse.EllipArc.MajorAxis.Y, ellipse.EllipArc.MajorAxis.Z),
+					MinorAxisVector = new CrawlPoint3d(ellipse.EllipArc.MinorAxis.X, ellipse.EllipArc.MinorAxis.Y, ellipse.EllipArc.MinorAxis.Z)
 
-				result = true;
-			};
+				};
+				result = CrawlJsonHelper.Serialize(cEll);
+			}
+			else if (mcObj is McLinearDimension dim)
+			{
+				// Размер повернутый
+				var x1 = dim.GetPosition(0);
+				var x2 = dim.GetPosition(1);
+				LinearDimension cDim = new LinearDimension()
+				{
+					XLine1Point = new CrawlPoint3d(x1.X, x1.Y, x1.Z),
+					XLine2Point = new CrawlPoint3d(x2.X, x2.Y, x2.Z),
+					DimLinePoint = new CrawlPoint3d(dim.LinePosition.X, dim.LinePosition.Y, dim.LinePosition.Z),
+					TextPosition = new CrawlPoint3d(dim.TextPosition.X, dim.TextPosition.Y, dim.TextPosition.Z),
+					DimensionText = dim.Text,
+					DimensionStyleName = dim.DimensionStyle.ToString()
+				};
+				result = CrawlJsonHelper.Serialize(cDim);
+			}
+			else if (mcObj is McAngularDimension dima)
+			{
+				// Угловой размер по 3 точкам
+				AngularDimension cDim = new AngularDimension()
+				{
+					XLine1Point = new CrawlPoint3d(dima.GetPosition(0).X, dima.GetPosition(0).Y, dima.GetPosition(0).Z),
+					XLine2Point = new CrawlPoint3d(dima.GetPosition(1).X, dima.GetPosition(1).Y, dima.GetPosition(1).Z),
+					CenterPoint = new CrawlPoint3d(dima.Center.X, dima.Center.Y, dima.Center.Z),
+					TextPosition = new CrawlPoint3d(dima.TextPosition.X, dima.TextPosition.Y, dima.TextPosition.Z),
 
+					DimensionText = dima.Text,
+					DimensionStyleName = dima.DimensionStyle.ToString()
+
+				};
+				result = CrawlJsonHelper.Serialize(cDim);
+			}
+			else if (mcObj is McDiametralDimension dimd)
+			{
+				// Размер диаметра окружности
+				DiameterDimension cDim = new DiameterDimension()
+				{
+					ArcStartAngle = dimd.ArcStartAngle,
+					ArcEndAngle = dimd.ArcEndAngle,
+					Center = new CrawlPoint3d(dimd.Center.X, dimd.Center.Y, dimd.Center.Z),
+					Pos1 = new CrawlPoint3d(dimd.GetPosition(0).X, dimd.GetPosition(0).Y, dimd.GetPosition(0).Z),
+
+					TextPosition = new CrawlPoint3d(dimd.TextPosition.X, dimd.TextPosition.Y, dimd.TextPosition.Z),
+					DimensionText = dimd.Text,
+
+					DimensionStyleName = dimd.DimensionStyle.ToString()
+				};
+				result = CrawlJsonHelper.Serialize(cDim);
+			}
+			else if (mcObj is McArcDimension dimArc)
+			{
+				// Дуговой размер
+				ArcDimension cDim = new ArcDimension()
+				{
+
+					Radius = dimArc.Radius,
+					Center = new CrawlPoint3d(dimArc.Center.X, dimArc.Center.Y, dimArc.Center.Z),
+
+					TextPosition = new CrawlPoint3d(dimArc.TextPosition.X, dimArc.TextPosition.Y, dimArc.TextPosition.Z),
+
+					DimensionText = dimArc.Text,
+					DimensionStyleName = dimArc.DimensionStyle.ToString()
+				};
+				result = CrawlJsonHelper.Serialize(cDim);
+			}
+			else if (mcObj is McRadialDimension dimr)
+			{
+				// Радиальный размер
+				RadialDimension cDim = new RadialDimension()
+				{
+					ArcEndAngle = dimr.ArcEndAngle,
+					ArcStartAngle = dimr.ArcEndAngle,
+					Radius = dimr.Radius,
+
+					Center = new CrawlPoint3d(dimr.Center.X, dimr.Center.Y, dimr.Center.Z),
+
+					Position = new CrawlPoint3d(dimr.Position.X, dimr.Position.Y, dimr.Position.Z),
+
+					TextPosition = new CrawlPoint3d(dimr.TextPosition.X, dimr.TextPosition.Y, dimr.TextPosition.Z),
+
+					DimensionText = dimr.Text,
+					DimensionStyleName = dimr.DimensionStyle.ToString()
+
+				};
+				result = CrawlJsonHelper.Serialize(cDim);
+			}
+			else if (mcObj is DbSpline spline)
+			{
+				return ConvertSingleEntityGeometry(spline.Spline);
+			}
+			else if (mcObj is DbPoint pnt)
+			{
+				CrawlAcDbPoint cpt = new CrawlAcDbPoint()
+				{
+					Position = new CrawlPoint3d(pnt.Position.X, pnt.Position.Y, pnt.Position.Z)
+				};
+				result = CrawlJsonHelper.Serialize(cpt);
+			}
+			else if (mcObj is McConnectionBreak br)
+			{
+				Break cBreak = new Break()
+				{
+					StartPoint = new CrawlPoint3d(br.StartPoint.X, br.StartPoint.Y, br.StartPoint.Z),
+					EndPoint = new CrawlPoint3d(br.EndPoint.X, br.EndPoint.Y, br.EndPoint.Z)
+				};
+				result = CrawlJsonHelper.Serialize(cBreak, "Break");
+			}
+			else if (mcObj is McNotePosition mcNote)
+			{
+				var cNote = new CrawlNote()
+				{
+					FirstLine = mcNote.FirstLine,
+					SecondLine = mcNote.SecondLine,
+					Origin = new CrawlPoint3d(mcNote.Origin.X, mcNote.Origin.Y, mcNote.Origin.Z)
+				};
+
+				for (int i = 0; i < mcNote.Leader.Childs.Count; i++)
+				{
+					var child = mcNote.Leader.Childs[i];
+					CrawlPoint3d start = new CrawlPoint3d(child.Start.X, child.Start.Y, child.Start.Y);
+					CrawlPoint3d end = new CrawlPoint3d(child.End.X, child.End.Y, child.End.Y);
+					cNote.Lines.Add(new CrawlLine(start, end));
+				}
+
+				result = CrawlJsonHelper.Serialize(cNote, "McNotePosition");
+			}
+			else if (mcObj is McNoteComb combNote)
+			{
+				var cNote = new CrawlNote()
+				{
+					FirstLine = combNote.FirstLine,
+					SecondLine = combNote.SecondLine,
+					Origin = new CrawlPoint3d(combNote.Start.X, combNote.Start.Y, combNote.Start.Z)
+				};
+
+				for (int i = 0; i < combNote.Leader.Childs.Count; i++)
+				{
+					var child = combNote.Leader.Childs[i];
+					CrawlPoint3d start = new CrawlPoint3d(child.Start.X, child.Start.Y, child.Start.Y);
+					CrawlPoint3d end = new CrawlPoint3d(child.End.X, child.End.Y, child.End.Y);
+					cNote.Lines.Add(new CrawlLine(start, end));
+				}
+
+				result = CrawlJsonHelper.Serialize(cNote, "McNoteComb");
+			}
+			else if (mcObj is McNoteChain chainNote)
+			{
+				var cNote = new CrawlNote()
+				{
+					FirstLine = chainNote.FirstLine,
+					SecondLine = chainNote.SecondLine,
+					Origin = new CrawlPoint3d(chainNote.Origin.X, chainNote.Origin.Y, chainNote.Origin.Z)
+				};
+
+				for (int i = 0; i < chainNote.Leader.Childs.Count; i++)
+				{
+					var child = chainNote.Leader.Childs[i];
+					CrawlPoint3d start = new CrawlPoint3d(child.Start.X, child.Start.Y, child.Start.Y);
+					CrawlPoint3d end = new CrawlPoint3d(child.End.X, child.End.Y, child.End.Y);
+					cNote.Lines.Add(new CrawlLine(start, end));
+				}
+				result = CrawlJsonHelper.Serialize(cNote, "McNoteChain");
+			}
+			else if (mcObj is McNoteKnot mcNoteKnot)
+			{
+				var cNote = new CrawlNote()
+				{
+					FirstLine = mcNoteKnot.Knot,
+					SecondLine = mcNoteKnot.Note,
+					Origin = new CrawlPoint3d(mcNoteKnot.Center.X, mcNoteKnot.Center.Y, mcNoteKnot.Center.Z)
+				};
+
+				result = CrawlJsonHelper.Serialize(cNote, "McNoteKnot");
+			}
+			else if (mcObj is McNoteLinearMark mcNoteL)
+			{
+				var cNote = new CrawlNote()
+				{
+					FirstLine = mcNoteL.FirstLine,
+					SecondLine = mcNoteL.SecondLine,
+				};
+				cNote.Lines.Add(
+					new CrawlLine(
+						new CrawlPoint3d(mcNoteL.FirstPnt.X, mcNoteL.FirstPnt.Y, mcNoteL.FirstPnt.Z),
+						new CrawlPoint3d(mcNoteL.SecondPnt.X, mcNoteL.SecondPnt.Y, mcNoteL.SecondPnt.Z)
+					)
+				);
+
+				result = CrawlJsonHelper.Serialize(cNote, "McNoteLinear");
+			}
+			else if (mcObj is McSectionVS section)
+			{
+				var cSection = new Section()
+				{
+					Name = section.Word,
+					Vertices = section.Points
+					.Select(pt => new CrawlPoint3d(pt.X, pt.Y, pt.Z))
+					.ToList()
+				};
+
+				result = CrawlJsonHelper.Serialize(cSection, "Section");
+			}
+			else if (mcObj is McSymbolVS vs)
+			{
+				var cText = new CrawlText()
+				{
+					TextString = vs.Word,
+					Position = new CrawlPoint3d(vs.Origin.X, vs.Origin.Y, vs.Origin.Z)
+				};
+				result = CrawlJsonHelper.Serialize(cText, "ViewDesignation");
+			}
+
+			else if (mcObj is McConnectionFix fx)
+			{
+				CrawlPoint3d start = new CrawlPoint3d(fx.BasePoint.X, fx.BasePoint.Y, fx.BasePoint.Z);
+				CrawlPoint3d end = new CrawlPoint3d(fx.FixPoint.X, fx.FixPoint.Y, fx.FixPoint.Y);
+
+				var cNote = new CrawlNote()
+				{
+					FirstLine = fx.StrAbove,
+					SecondLine = fx.StrUnder,
+					Origin = start
+				};
+
+				cNote.Lines.Add(new CrawlLine(start, end));
+
+				result = CrawlJsonHelper.Serialize(cNote, "WeldDesignation");
+			}
+			else if (mcObj is McRange rng)
+			{
+				var cRange = new CrawlPolyline()
+				{
+
+				};
+
+				cRange.Vertices.Add(new CrawlPoint3d(rng.FirstBoundPosition.X, rng.FirstBoundPosition.Y, rng.FirstBoundPosition.Z));
+				cRange.Vertices.Add(new CrawlPoint3d(rng.BasePosition.X, rng.BasePosition.Y, rng.BasePosition.Z));
+				cRange.Vertices.Add(new CrawlPoint3d(rng.SecondBoundPosition.X, rng.SecondBoundPosition.Y, rng.SecondBoundPosition.Z));
+
+				result = CrawlJsonHelper.Serialize(cRange, "RangeDistributionDesignation");
+			}
+			else if (mcObj is McAxisEntity ax)
+			{
+				var aaa = (McBasicAxis.McAxisSpecificLinear)ax.Axis;
+
+				var cAxis = new AxisLinear()
+				{
+					Name = aaa.Markers.First.Value,
+					StartPoint = new CrawlPoint3d(aaa.StartPoint.X, aaa.StartPoint.Y, aaa.StartPoint.Z),
+					EndPoint = new CrawlPoint3d(aaa.EndPoint.X, aaa.EndPoint.Y, aaa.EndPoint.Z)
+				};
+
+				result = CrawlJsonHelper.Serialize(cAxis);
+			}
+
+			// Not implemented multicad geometry, like hatch
+			else if (mcObj is McEntity enti)
+			{
+				if (enti.GeometryCache.Count == 1)
+				{
+					result = ConvertSingleEntityGeometry(enti.GeometryCache[0]);
+				}
+			}
+
+			// Populate entity with common properties
+			if (!string.IsNullOrEmpty(result))
+			{
+				var mcent = mcObj.Cast<McDbEntity>();
+				JObject jo = JObject.Parse(result);
+				jo["Layer"] = mcent.Layer;
+				jo["ObjectId"] = mcent.ID.ToString();
+				jo["Linetype"] = mcent.LineTypeName;
+				jo["LineWeight"] = mcent.LineWeight.ToString();
+				jo["Color"] = mcent.Color.ToString();
+			}
+
+			return result;
 		}
-		/*
-	else if (id_platf.ObjectClass.Name == "AcDbPolygonMesh")
-	{
-		 BUG: В платформе нет API для доступа к вершинам сетей AcDbPolygonMesh и AcDbPolygonMesh и AcDbSurface
 
-	}
-	else if (id_platf.ObjectClass.Name == "AcDbSolid")
-	{
-		 BUG: Чтобы плющить Solid-ы нужны API функции 3d
-	}
-	else if (id_platf.ObjectClass.Name == "AcDbRegion")
-	{
-		Region rgn = ent as Region;
-		BUG: нет свойств у региона
-	}
+		private string ConvertSingleEntityGeometry(EntityGeometry eg)
+		{
+			var result = string.Empty;
 
-	*/
+			switch (eg.GeometryType)
+			{
+				case EntityGeomType.kHatch:
+					var hatch = eg.HatchGeom;
+					var cHatch = new CrawlHatch()
+					{
+						PatternName = hatch.PatternName,
+						Loops = hatch.Contours
+							.Select(contour => new CrawlPolyline()
+							{
+								Vertices =
+									contour.Points
+										.Select(p => new CrawlPoint3d(p.X, p.Y, p.Z))
+										.ToList()
+							})
+							.ToList()
+					};
+					return CrawlJsonHelper.Serialize(cHatch);
+				case EntityGeomType.kLine:
+					CrawlLine cline = new CrawlLine()
+					{
+						EndPoint = new CrawlPoint3d(eg.LineSeg.EndPoint.X, eg.LineSeg.EndPoint.Y, eg.LineSeg.EndPoint.Z),
+						StartPoint = new CrawlPoint3d(eg.LineSeg.StartPoint.X, eg.LineSeg.StartPoint.Y, eg.LineSeg.StartPoint.Z)
+					};
+
+					return CrawlJsonHelper.Serialize(cline);
+				case EntityGeomType.kPolyline:
+					CrawlPolyline pline = new CrawlPolyline()
+					{
+						Vertices =
+							eg.Polyline.Points
+								.Select(p => new CrawlPoint3d(p.X, p.Y, p.Z))
+								.ToList()
+					};
+					return CrawlJsonHelper.Serialize(pline);
+				case EntityGeomType.kCircArc:
+					CrawlArc cArc = new CrawlArc()
+					{
+						EndPoint = new CrawlPoint3d(eg.CircArc.EndPoint.X, eg.CircArc.EndPoint.Y, eg.CircArc.EndPoint.Z),
+						StartPoint = new CrawlPoint3d(eg.CircArc.StartPoint.X, eg.CircArc.StartPoint.Y, eg.CircArc.StartPoint.Z),
+						Center = new CrawlPoint3d(eg.CircArc.Center.X, eg.CircArc.Center.Y, eg.CircArc.Center.Z),
+
+						Radius = eg.CircArc.Radius
+					};
+					return CrawlJsonHelper.Serialize(cArc);
+				case EntityGeomType.kText:
+					CrawlText ctext = new CrawlText()
+					{
+						Position = new CrawlPoint3d(eg.Text.Origin.X, eg.Text.Origin.Y, eg.Text.Origin.Z),
+						TextString = eg.Text.Text
+					};
+					return CrawlJsonHelper.Serialize(ctext);
+				case EntityGeomType.kSpline:
+					// Сплайн
+					var spline = eg.Nurb;
+					Spline cScpline = new Spline();
+
+					for (int i = 0; i < spline.NumFitPoints; i++)
+						if (spline.GetFitPointAt(i, out Point3d pnt))
+							cScpline.Vertices.Add(new CrawlPoint3d(pnt.X, pnt.Y, pnt.Z));
+
+					for (int i = 0; i < spline.NumControlPoints; i++)
+					{
+						var pnt = spline.ControlPointAt(i);
+						cScpline.ControlPoints.Add(new CrawlPoint3d(pnt.X, pnt.Y, pnt.Z));
+					}
+
+					return CrawlJsonHelper.Serialize(cScpline);
+				default:
+					return result;
+			}
+		}
+
+		private List<string> ConvertEntities2json(IEnumerable<McObjectId> entityIds)
+		{
+			List<string> jsons = new List<string>();
+			foreach (var id_platf in entityIds)
+			{
+				if (id_platf.IsNull)
+					return null;
+
+				var ent = id_platf.GetObject();
+
+				// Всякое может случиться
+				var singleRes = ConvertSingleEntity2json(ent);
+
+				if (!string.IsNullOrEmpty(singleRes))
+					jsons.Add(singleRes);
+
+				else if (ent is McBlockRef blk)
+				{
+					// Блоки разбиваем
+					var blockContents = blk.DbEntity.Explode();
+					foreach (EntityGeometry blockOneEntityGeometry in blockContents)
+					{
+						var blockEntityJson = ConvertSingleEntityGeometry(blockOneEntityGeometry);
+						if (!string.IsNullOrEmpty(blockEntityJson))
+						{
+							var mcent = blk.DbEntity;
+							JObject jo = JObject.Parse(blockEntityJson);
+							jo["Layer"] = mcent.Layer;
+							jo["ObjectId"] = mcent.ID.ToString();
+							jo["Linetype"] = mcent.LineTypeName;
+							jo["LineWeight"] = mcent.LineWeight.ToString();
+							jo["Color"] = mcent.Color.ToString();
+
+							jsons.Add(jo.ToString());
+						}
+					}
+				}
+				else if (ent is McEntity enti)
+				{
+					List<string> notImplementedGuids = new List<string>()
+					{
+						"a9b900a6-1b65-4f9c-bee9-d5751a9c4484", // Level mark not implemented in API
+						"592b8316-9dc5-4c8a-98be-6aaef93747a1", // level mark anchor
+						"e02ceca0-2e91-4b7d-9a69-e3e9ebd027c6" // Solid
+					};
+					if (notImplementedGuids.Contains(ent.ClassID.ToString()))
+						continue;
+
+					McObjectManager.SelectionSet.SetSelection(ent.ID);
+					CrawlDebug.WriteLine("[TODO] Не могу обработать тип объекта: " + ent.GetType().Name + ent.ClassID.ToString());
+					// throw new NotImplementedException(ent.ClassID.ToString());
+
+					var geom = enti.GeometryCache;
+
+					if (geom.Count == 0)
+					{
+						CrawlDebug.WriteLine("[TODO] Не могу обработать класс объекта: " + ent.ClassID);
+						// Try to explode entity
+						geom = enti.DbEntity.Explode();
+					}
+
+					foreach (var eg in geom)
+					{
+						var singleGeom = ConvertSingleEntityGeometry(eg);
+						if (!string.IsNullOrEmpty(singleGeom))
+							jsons.Add(singleGeom);
+					}
+				}
 				else
 				{
 					// Если объект не входит в число перечисленных типов,
-					// то выводим в командную строку класс этого необработанного объекта
+					// то выводим ошибку, выставляем селекцию по объекту
 
-					CrawlDebug.WriteLine("[TODO] Не могу обработать тип объекта: " + id_platf.ObjectClass.Name);
+					McObjectManager.SelectionSet.SetSelection(id_platf);
+					CrawlDebug.WriteLine("[TODO] Не могу обработать тип объекта: " + ent.ToString());
+
+					throw new NotImplementedException();
 				}
+
+				ent.Cast<McDbEntity>().Color = Color.DarkSeaGreen;
 			}
-			catch (System.Exception ex)
-			{
-				// Если что-то сломалось, то в командную строку выводится ошибка
-				CrawlDebug.WriteLine("Не могу преобразовать - ошибка: " + ex.Message);
-			}
-
-			// Возвращаем значение функции
-			return result;
+			return jsons;
 		}
-
-		/// <summary>
-		/// Функция возвращает список блоков с их атрибутами
-		/// </summary>
-		/// <param name="aDoc"></param>
-		/// <returns></returns>
-		private List<ObjectId> GetBlocks(Document aDoc)
-		{
-			Database aDocDatabase = aDoc.Database;
-
-
-			// Находим таблицу описаний блоков 
-			BlockTable blkTbl = (BlockTable)aDocDatabase.BlockTableId
-				.GetObject(OpenMode.ForRead, false, true);
-
-			// Открываем таблицу записей текущего чертежа
-			BlockTableRecord bt =
-				(BlockTableRecord)aDocDatabase.CurrentSpaceId
-					.GetObject(OpenMode.ForRead);
-
-			// Переменная списка блоков
-			List<ObjectId> bNames = new List<ObjectId>();
-
-			// Пример итерации по таблице определений блоков
-			// https://sites.google.com/site/bushmansnetlaboratory/sendbox/stati/multipleattsync
-			// Как я понимаю, здесь пробегается по всем таблицам записей,
-			// в которых определения блоков не являются анонимными
-			// и не являются листами
-			foreach (BlockTableRecord btr in blkTbl.Cast<ObjectId>().Select(n =>
-				(BlockTableRecord)n.GetObject(OpenMode.ForRead, false))
-				.Where(n => !n.IsAnonymous && !n.IsLayout))
-			{
-
-				bNames.Add(btr.ObjectId);
-
-				btr.Dispose();
-			};
-
-			return bNames;
-		}
-
-
-		private List<CrawlDocument> GetXrefs(Document aDoc)
-		{
-			// http://adndevblog.typepad.com/autocad/2012/06/finding-all-xrefs-in-the-current-database-using-cnet.html
-			XrefGraph xGraph = aDoc.Database.GetHostDwgXrefGraph(false);
-			int numXrefs = xGraph.NumNodes;
-			List<CrawlDocument> result = new List<CrawlDocument>();
-
-			for (int i = 0; i < numXrefs; i++)
-			{
-				XrefGraphNode xrefNode = xGraph.GetXrefNode(i);
-
-				if (xrefNode.XrefStatus == XrefStatus.Resolved)
-				{
-					//Document theDoc = TeighaApp.DocumentManager.GetDocument(xrefNode.Database);
-					CrawlDocument acDoc = new CrawlDocument(xrefNode.Database.Filename);
-					result.Add(acDoc);
-				}
-			}
-			return result;
-		}
-
 	}
 }
