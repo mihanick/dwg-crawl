@@ -1,4 +1,4 @@
-﻿namespace DwgDump.Util
+﻿namespace DwgDump
 {
 	using Multicad.AplicationServices;
 	using System;
