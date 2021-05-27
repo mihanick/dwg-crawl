@@ -82,6 +82,59 @@ namespace DwgDump.Data
 			db = client.GetDatabase(this.dbName);
 		}
 
+		public IEnumerable<string> GetIdsFromDoc(string fileId)
+		{
+			QueryDocument filter = new QueryDocument
+			{
+				{ "FileId", fileId }
+			};
+
+			var res = objects.Find(filter);
+
+			return res
+				.ToList()
+				.Select(ob => ob.ToBsonDocument())
+				.Select(bd => bd["ObjectId"].ToString());
+		}
+
+		public IEnumerable<CrawlDocument> GetAllScannedDocuments()
+		{
+			List<CrawlDocument> result = new List<CrawlDocument>();
+
+			QueryDocument filter = new QueryDocument
+			{
+				{ "Scanned", true },
+				{ "ClassName", "File" }
+			};
+
+			var res = this.files.Find(filter);
+			foreach (var found in res.ToList())
+			{
+				var ff = found.ToBsonDocument();
+
+				result.Add(
+					new CrawlDocument
+					{
+						ClassName = "File",
+						FileId = ff["FileId"].ToString(),
+						Hash = ff["Hash"].ToString(),
+						Path = ff["Path"].ToString(),
+						Scanned = ff["Scanned"].ToBoolean()
+					}
+				);
+			}
+
+			return result;
+		}
+
+		public void UpdateObject(string objectId, string objectJson)
+		{
+			var newObjJson = BsonDocument.Parse(objectJson);
+
+			var filter = new QueryDocument("ObjectId", objectId);
+			objects.UpdateOne(filter, newObjJson);
+		}
+
 		// StackOverflow
 		private bool CollectionExists(
 			IMongoDatabase database, string collectionName)
@@ -166,47 +219,32 @@ namespace DwgDump.Data
 				files.InsertOne(doc);
 		}
 
-
-		public void SaveObjectData(List<string> objJsons, string fileId = "", string groupId = "")
+		public void SaveObjectData(List<string> objJsons)
 		{
 			List<BsonDocument> all = new List<BsonDocument>();
 
 			foreach (var jsn in objJsons)
-				try
-				{
-					if (string.IsNullOrEmpty(jsn))
-						return;
+			{
+				if (string.IsNullOrEmpty(jsn))
+					return;
 
-					BsonDocument doc = BsonDocument.Parse(jsn);
-					doc["FileId"] = fileId;
-					doc["GroupId"] = groupId;
+				BsonDocument doc = BsonDocument.Parse(jsn);
 
-					all.Add(doc);
-				}
-				catch (System.Exception e)
-				{
-					Debug.WriteLine(e.Message);
-				}
+				all.Add(doc);
+			}
 
 			objects.InsertMany(all);
 		}
 
-		public void SaveObjectData(string objJson, string fileId = "")
+		public void UpdateFileLayers(List<string> layerJson, string fileId)
 		{
-			try
-			{
-				if (string.IsNullOrEmpty(objJson))
-					return;
+			var layers = new BsonArray();
+			foreach (var jL in layerJson)
+				layers.Add(BsonDocument.Parse(jL));
 
-				BsonDocument doc = BsonDocument.Parse(objJson);
-				doc["FileId"] = fileId;
-				//doc.Add("FileId", fileId);
-				objects.InsertOne(doc);
-			}
-			catch (System.Exception e)
-			{
-				Debug.WriteLine(e.Message);
-			}
+			var filter = new QueryDocument("FileId", fileId);
+			var update = Builders<BsonDocument>.Update.Set("Layers", layers);
+			files.UpdateOne(filter, update);
 		}
 
 		public CrawlDocument GetNewRandomUnscannedDocument()

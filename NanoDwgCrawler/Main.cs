@@ -1,4 +1,5 @@
 ﻿using DwgDump.Data;
+using DwgDump.Enitites;
 using Multicad;
 using Multicad.DatabaseServices;
 using Multicad.Runtime;
@@ -13,7 +14,6 @@ namespace DwgDump
 	{
 		static CrawlAcDbDocument currentDocument = null;
 
-
 		[CommandMethod("sfd", CommandFlags.NoCheck | CommandFlags.NoPrefix)]
 		public static void ScanFolder()
 		{
@@ -24,18 +24,18 @@ namespace DwgDump
 		/// Opens unscanned document
 		/// </summary>
 		[CommandMethod("grd", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Session)]
-		public static void GetDocument()
+		public static void GetRandomUnscannedDocument()
 		{
-			DbMongo db = DbMongo.Instance;
 			//While Get random dwg from database that not scanned
-			var doc = db.GetNewRandomUnscannedDocument();
+			var doc = DbMongo.Instance.GetNewRandomUnscannedDocument();
 
 			if (doc != null)
 			{
 				// You will only see it once
-				db.SetDocumentScanned(doc.FileId);
+				DbMongo.Instance.SetDocumentScanned(doc.FileId);
 
 				currentDocument = new CrawlAcDbDocument(doc);
+				currentDocument.DoOpen();
 			}
 		}
 
@@ -51,7 +51,39 @@ namespace DwgDump
 
 			// каждый набор объектов со своим Guid группы
 			var groupId = Guid.NewGuid().ToString();
-			currentDocument.DumpEntities(currentSelection, groupId);
+			CrawlAcDbDocument.DumpFragment(currentSelection, currentDocument.FileId, groupId);
+		}
+
+		/// <summary>
+		/// Rescans saved fragments to update objects' fileds in database
+		/// </summary>
+		[CommandMethod("rescan", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Session)]
+		public static void Rescan()
+		{
+			foreach (CrawlDocument doc in DbMongo.Instance.GetAllScannedDocuments())
+			{
+				currentDocument = new CrawlAcDbDocument(doc);
+				currentDocument.DoOpen();
+
+				foreach (string objId in DbMongo.Instance.GetIdsFromDoc(doc.FileId))
+				{
+					// BUG: This won't work as McObjectIds are not persistent between sessions
+
+					McObjectId id = new McObjectId(new Guid(objId));
+					if (id.IsNull)
+						continue;
+
+					var obj = id.GetObject();
+					if (obj != null)
+					{
+						var cent = Converters.From(id);
+
+						DbMongo.Instance.UpdateObject(id.ToString(), Converters.Serialize(cent));
+					}
+				}
+
+				currentDocument.Document.Close();
+			}
 		}
 	}
 }

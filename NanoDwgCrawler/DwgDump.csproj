@@ -40,8 +40,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="multiContent\Converters.cs" />
     <Compile Include="multiContent\CrawlDebug.cs" />
-    <Compile Include="multiContent\cJson.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="multiContent\CrawlAcDbDocument.cs" />
     <Compile Include="multiContent\CrawlPont3d.cs" />
