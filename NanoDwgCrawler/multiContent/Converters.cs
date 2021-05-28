@@ -418,6 +418,7 @@ namespace DwgDump.Enitites
 			if (res != null)
 				if (dbe != null)
 				{
+					res.Handle = dbe.ID.Handle;
 					res.Color = dbe.Color.ToString();
 					res.Layer = dbe.Layer;
 					res.Linetype = dbe.LineType.ToString();

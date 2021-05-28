@@ -28,6 +28,8 @@ namespace DwgDump.Enitites
 		public string GroupId;
 		[DataMember]
 		public string BlockId;
+		[DataMember]
+		public long Handle;
 
 		public void Copy(CrawlEntity ent)
 		{

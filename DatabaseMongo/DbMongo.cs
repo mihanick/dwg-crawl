@@ -82,7 +82,7 @@ namespace DwgDump.Data
 			db = client.GetDatabase(this.dbName);
 		}
 
-		public IEnumerable<string> GetIdsFromDoc(string fileId)
+		public IEnumerable<long> GetHandlesFromDoc(string fileId)
 		{
 			QueryDocument filter = new QueryDocument
 			{
@@ -94,7 +94,7 @@ namespace DwgDump.Data
 			return res
 				.ToList()
 				.Select(ob => ob.ToBsonDocument())
-				.Select(bd => bd["ObjectId"].ToString());
+				.Select(bd => bd.GetValue("Handle", 0).ToInt64());
 		}
 
 		public IEnumerable<CrawlDocument> GetAllScannedDocuments()
@@ -127,12 +127,28 @@ namespace DwgDump.Data
 			return result;
 		}
 
-		public void UpdateObject(string objectId, string objectJson)
+		public void UpdateObject(long handle, string objectJson)
 		{
-			var newObjJson = BsonDocument.Parse(objectJson);
+			try
+			{
+				var newObjJson = BsonDocument.Parse(objectJson);
 
-			var filter = new QueryDocument("ObjectId", objectId);
-			objects.UpdateOne(filter, newObjJson);
+				QueryDocument filter = new QueryDocument
+				{
+					{ "Handle", handle }
+				};
+				var d = objects.Find(filter).FirstOrDefault();
+				newObjJson["FileId"] = d["FileId"];
+				newObjJson["BlockId"] = d["BlockId"];
+				newObjJson["GroupId"] = d["GroupId"];
+
+				objects.ReplaceOne(filter, newObjJson);
+				// objects.UpdateOne(filter, newObjJson);
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine(e);
+			}
 		}
 
 		// StackOverflow

@@ -65,11 +65,9 @@ namespace DwgDump
 				currentDocument = new CrawlAcDbDocument(doc);
 				currentDocument.DoOpen();
 
-				foreach (string objId in DbMongo.Instance.GetIdsFromDoc(doc.FileId))
+				foreach (long handle in DbMongo.Instance.GetHandlesFromDoc(doc.FileId))
 				{
-					// BUG: This won't work as McObjectIds are not persistent between sessions
-
-					McObjectId id = new McObjectId(new Guid(objId));
+					McObjectId id = McObjectId.FromHandle(handle);
 					if (id.IsNull)
 						continue;
 
@@ -78,7 +76,7 @@ namespace DwgDump
 					{
 						var cent = Converters.From(id);
 
-						DbMongo.Instance.UpdateObject(id.ToString(), Converters.Serialize(cent));
+						DbMongo.Instance.UpdateObject(handle, Converters.Serialize(cent));
 					}
 				}
 
