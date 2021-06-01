@@ -84,5 +84,14 @@ namespace DwgDump
 				currentDocument.Document.Close();
 			}
 		}
+
+		[CommandMethod("ccs", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Session)]
+		public static void CloseAll()
+		{
+			foreach (McDocument doc in McDocumentsManager.GetDocuments())
+			{
+				doc.Close();
+			}
+		}
 	}
 }
