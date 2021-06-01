@@ -378,6 +378,19 @@ namespace DwgDump.Enitites
 				var blockContents = blk.DbEntity.Explode();
 				block.Contents = ConvertComplexEntity(blockContents, block.ObjectId);
 			}
+			else if (mcObj.ClassID.ToString() == "a9b900a6-1b65-4f9c-bee9-d5751a9c4484")
+			{
+				var dbE = mcObj.Cast<McDbEntity>();
+				var mcPs = mcObj.Cast<McPropertySource>();
+				var txt = mcPs.ObjectProperties[""].ToString();
+
+				var LevelNoteEnity = new CrawlText()
+				{
+					ClassName = "LevelMark",
+					Position = Pt(dbE.BoundingBox.BasePoint),
+					TextString = txt
+				};
+			}
 			else if (mcObj is McEntity enti)
 			{
 				if (notImplementedGuids.Contains(mcObj.ClassID.ToString()))
