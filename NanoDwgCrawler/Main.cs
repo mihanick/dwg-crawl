@@ -52,7 +52,7 @@ namespace DwgDump
 
 			// каждый набор объектов со своим Guid группы
 			var groupId = Guid.NewGuid().ToString();
-			CrawlAcDbDocument.DumpFragment(currentSelection, currentDocument.FileId, groupId);
+			CrawlAcDbDocument.DumpFragment(currentSelection, currentDocument?.FileId, groupId);
 		}
 
 		/// <summary>

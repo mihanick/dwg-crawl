@@ -384,7 +384,7 @@ namespace DwgDump.Enitites
 			{
 				var dbE = mcObj.Cast<McDbEntity>();
 				var mcPs = mcObj.Cast<McPropertySource>();
-				var txt = mcPs.ObjectProperties[""].ToString();
+				var txt = mcPs.ObjectProperties["Text"].ToString();
 
 				var LevelNoteEnity = new CrawlText()
 				{
@@ -392,6 +392,8 @@ namespace DwgDump.Enitites
 					Position = Pt(dbE.BoundingBox.BasePoint),
 					TextString = txt
 				};
+
+				res = LevelNoteEnity;
 			}
 			else if (mcObj is McEntity enti)
 			{
