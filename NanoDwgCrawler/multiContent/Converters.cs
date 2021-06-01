@@ -58,6 +58,8 @@ namespace DwgDump.Enitites
 		public static CrawlEntity From(McObjectId id)
 		{
 			var mcObj = id.GetObject();
+			if (mcObj == null)
+				return null;
 
 			CrawlEntity res = null;
 
@@ -570,7 +572,7 @@ namespace DwgDump.Enitites
 
 		private static readonly List<string> notImplementedGuids = new List<string>()
 					{
-						"a9b900a6-1b65-4f9c-bee9-d5751a9c4484", // Level mark not implemented in API
+
 						"592b8316-9dc5-4c8a-98be-6aaef93747a1", // level mark anchor
 						"e02ceca0-2e91-4b7d-9a69-e3e9ebd027c6" // Solid
 					};

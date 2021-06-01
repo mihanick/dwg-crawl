@@ -17,7 +17,8 @@ namespace DwgDump
 		[CommandMethod("sfd", CommandFlags.NoCheck | CommandFlags.NoPrefix)]
 		public static void ScanFolder()
 		{
-			DirectoryScanner.Scan(@"C:\Users\mihan\Desktop\DwgCrawlTest");
+			// DirectoryScanner.Scan(@"C:\Users\mihan\Desktop\DwgCrawlTest");
+			DirectoryScanner.Scan(@"C:\py\Data");
 		}
 
 		/// <summary>
