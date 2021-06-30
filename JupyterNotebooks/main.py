@@ -13,7 +13,7 @@ from model import DimRnn
 from accuracy import calculate_accuracy, CalculateLoaderAccuracy
 from chamfer_distance_loss import ChamferDistance
 
-def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=15):
+def run(batch_size=4, pickle_file='test_dataset_groups.pickle', lr=0.001, epochs=3):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")

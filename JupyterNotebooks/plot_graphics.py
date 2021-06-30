@@ -148,7 +148,7 @@ def generate_file(group, verbose=False, entities_limit=25000, save_file=True):
         # d.saveSvg('img/' + fileid + '.svg')
     return r    
 
-def draw_sample(x, y, verbose = False):
+def draw_sample(x, y, prediction=None,verbose = False):
     # print(x.shape,y.shape)
     drawing_size = 200
     
@@ -191,8 +191,21 @@ def draw_sample(x, y, verbose = False):
 
         d.append(dim)
         entscount = entscount + 1    
-            
-    print('entities:', entscount)        
+    if prediction is not None:
+        dim = draw.Lines(
+                prediction[0].item(),
+                prediction[1].item(),
+                prediction[2].item(),
+                prediction[3].item(),
+                close = False,
+                fill='#eeee00',
+                stroke = 'red',
+                stroke_width = '2'
+        )
+
+        d.append(dim)
+    
+    # print('entities:', entscount)        
     #https://pypi.org/project/drawSvg/
     d.setPixelScale(2)
     r = d.rasterize()
