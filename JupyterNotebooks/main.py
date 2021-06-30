@@ -13,7 +13,7 @@ from model import DimRnn
 from accuracy import calculate_accuracy, CalculateLoaderAccuracy
 from chamfer_distance_loss import ChamferDistance
 
-def run(batch_size=4, pickle_file='test_dataset_groups.pickle', lr=0.001, epochs=3):
+def run(batch_size=4, pickle_file='test_dataset_groups.pickle', lr=0.001, epochs=3, verbose=False):
     device = torch.device("cpu")
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -66,14 +66,15 @@ def run(batch_size=4, pickle_file='test_dataset_groups.pickle', lr=0.001, epochs
             train_accuracy = calculate_accuracy(out, y)
 
             with torch.no_grad():
-                print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.5f} Chamfer distance: {:1.4f}'
-                        .format(
-                            epoch,
-                            i,
-                            time.time() - start,
-                            float(loss_value),
-                            train_accuracy
-                        ))
+                if verbose:
+                    print('[{:4.0f}-{:4.0f} @ {:5.1f} sec] Loss: {:5.5f} Chamfer distance: {:1.4f}'
+                            .format(
+                                epoch,
+                                i,
+                                time.time() - start,
+                                float(loss_value),
+                                train_accuracy
+                            ))
                 
         train_history.append(float(train_accuracy))
         loss_history.append(float(loss_accumulated))
