@@ -191,12 +191,14 @@ def draw_sample(x, y, prediction=None,verbose = False):
 
         d.append(dim)
         entscount = entscount + 1    
-    if prediction is not None:
+        
+    if prediction != None:
+        pred = prediction*drawing_size
         dim = draw.Lines(
-                prediction[0].item(),
-                prediction[1].item(),
-                prediction[2].item(),
-                prediction[3].item(),
+                pred[0].item(),
+                pred[1].item(),
+                pred[2].item(),
+                pred[3].item(),
                 close = False,
                 fill='#eeee00',
                 stroke = 'red',
