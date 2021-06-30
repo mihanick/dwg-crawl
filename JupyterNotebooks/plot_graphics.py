@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import torch
 from IPython.display import Image
 from IPython.display import clear_output
+from processing import expand_columns, normalize, query_collection_to_dataframe
 
 # https://pypi.org/project/drawSvg/
 # !pip install drawsvg
@@ -19,13 +20,16 @@ except:
 
 def generate_image_by_id(collection, fileId):
     data = query_collection_to_dataframe(collection, fileId)
-    cols_to_expand = ['XLine1Point', 'XLine2Point','StartPoint','EndPoint','Position']
+
+    cols_to_expand = ['XLine1Point', 'XLine2Point', 'StartPoint', 'EndPoint', 'Position']
     data = expand_columns(data, cols_to_expand)
-    data = normalize(data, to_size = 400)
-    generate_file(data)
+    
+    data = normalize(data, to_size=200)
+    
+    d = generate_file(group=data, verbose=False, save_file=True)
     
     filename = 'img/' + fileId + '.png'
-    return filename      
+    return filename, d      
     
 def draw_set(pnt_set, labels, core_indices):
     unique_labels = set(labels)
@@ -68,25 +72,25 @@ def plot_history(loss_history, train_history, val_history):
     plt.legend()
     plt.show()
 
-def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
+def generate_file(group, verbose=False, entities_limit=25000, save_file=True):
     # print(group.info())
     
     # skip small drawings
-    if (len(group)<10):
+    if (len(group) < 10):
         return
     
-    fileid = group.iloc[0]['FileId']
+    fileid = group.iloc[0]['GroupId']
     if len(fileid) == 0:
         return
     
     filename = 'img/' + fileid + '.png'
-    d = draw.Drawing(800, 200, origin=(0,0), displayInline = False)
+    d = draw.Drawing(400, 200, origin=(0, 0), displayInline = False)
     
     entscount = 0
     for row_index, row in group.iterrows():
         if verbose:
             print(row)
-        if row['ClassName'] == 'AcDbLine':
+        if row['ClassName'] == 'Line':
             # print('StartPoint.X', row['StartPoint.X'])
             # print('StartPoint.Y', row['StartPoint.Y'])
             # print('EndPoint.X', row['EndPoint.X'])
@@ -98,34 +102,33 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
                     row['StartPoint.Y'],
                     row['EndPoint.X'],
                     row['EndPoint.Y'],
-                    close = False,
+                    close=False,
                     fill='#eeee00',
-                    stroke = 'black'))
+                    stroke='black'))
             entscount = entscount + 1
         # https://github.com/cduck/drawSvg/blob/master/drawSvg/elements.py
-        if row['ClassName'] == 'AcDbText':
-
+        if row['ClassName'] == 'Text':
             d.append(
                 draw.Text(
                     row['TextString'],
                     6,
                     row['Position.X'],
                     row['Position.Y'],
-                    center = False
+                    center=False
                 )
             )
             entscount = entscount + 1
-        if row['ClassName'] == 'AcDbRotatedDimension':
+        if row['ClassName'] == 'AlignedDimension':
 
             dim = draw.Lines(
                     row['XLine1Point.X'],
                     row['XLine1Point.Y'],
                     row['XLine2Point.X'],
                     row['XLine2Point.Y'],
-                    close = False,
+                    close=False,
                     fill='#eeee00',
-                    stroke = 'blue',
-                    stroke_width = '1'
+                    stroke='blue',
+                    stroke_width='1'
             )
             
             # https://github.com/cduck/drawSvg
@@ -134,15 +137,15 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
             entscount = entscount + 1    
         if entscount > entities_limit:
             break
-            
-    print('id:',fileid,'entities:', entscount)        
+
+    print('id:', fileid, 'entities:', entscount)
     #https://pypi.org/project/drawSvg/
     d.setPixelScale(2)
     r = d.rasterize()
     
     if save_file:
         d.savePng(filename)
-    #d.saveSvg(filename+'.svg')
+        # d.saveSvg('img/' + fileid + '.svg')
     return r    
 
 def draw_sample(x, y, verbose = False):

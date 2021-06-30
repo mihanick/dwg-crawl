@@ -9,50 +9,87 @@ def query_collection_to_dataframe(mongo_collection, fileId):
     query = {
         '$or':[
             {
-                'ClassName' : 'AcDbLine',
+                'ClassName' : 'Line',
                 'EndPoint' : {'$ne' : None},
                 'StartPoint' : {'$ne' : None},
-                'FileId' : fileId
+                'GroupId' : fileId
             },
             {
+                'ClassName': 'Text',
                 'Position' : {'$ne' : None},
-                'FileId' : fileId
+                'GroupId' : fileId
             },
             {
-                'ClassName' : 'AcDbRotatedDimension',
+                'ClassName' : 'AlignedDimension',
                 'XLine1Point' : {'$ne' : None},
                 'XLine2Point' : {'$ne' : None},
-                'FileId' : fileId
+                'GroupId' : fileId
             }
         ]
     }
 
-    df = pd.DataFrame(list(mongo_collection.find(query)))
+    all_entities = list(mongo_collection.find(query))
+
+    query = {
+                'ClassName': 'Polyline',
+                'GroupId' : fileId
+            }
+
+    polylines = list(mongo_collection.find(query))
+
+    for pline in polylines:
+        line = pline
+        line['ClassName'] = 'Line'
+
+        for i, vertix in enumerate(pline['Vertices']):
+            if i==0:
+                continue
+            line['StartPoint'] = pline['Vertices'][i - 1]
+            line['EndPoint'] = vertix
+            all_entities.append(line)
+
+
+    df = pd.DataFrame(all_entities)
     return df
 
-def normalize(df, to_size = 100):
-    cols = []
-    for column in df.columns:
-        m = ".X" in column or ".Y" in column
-        if m:
-            cols.append(column)
 
-    coords = df[cols].fillna(0).to_numpy()
+
+def normalize(df, to_size=100):
+    xcols = []
+    ycols = []
+    for column in df.columns:
+        if ".X" in column:
+            xcols.append(column)
+        if ".Y" in column:
+            ycols.append(column)
     
+    cols = xcols + ycols
+
+    coords = df[cols]
+    max_coord_x = df[xcols].max().max()
+    max_coord_y = df[ycols].max().max()
+    min_coord_x = df[xcols].min().min()
+    min_coord_y = df[ycols].min().min()
+
+    diff_x = max_coord_x - min_coord_x
+    diff_y = max_coord_y - min_coord_y
+
+    diff = max(diff_x, diff_y)
+
+    # https://stackoverflow.com/questions/38134012/pandas-dataframe-fillna-only-some-columns-in-place
+    #coords[xcols] = coords[xcols].fillna(min_coord_x)
+    #coords[ycols] = coords[ycols].fillna(min_coord_y)
+
     # https://stackoverflow.com/questions/44471801/zero-size-array-to-reduction-operation-maximum-which-has-no-identity
-    if (not np.any(coords)):
+    if (not np.any(coords.to_numpy())):
         return df
     
     # print(coords)
-    
-    diff = np.max(coords) - np.min(coords)
-    min_coord = np.min(coords)
-
     scale = to_size/diff
 
     # print(min_coord, scale)
-    v = (coords - min_coord)*scale
-    df[cols] = v
+    df[xcols] = (coords[xcols] - min_coord_x)*scale
+    df[ycols] = (coords[ycols] - min_coord_y)*scale
         
     return  df
     
