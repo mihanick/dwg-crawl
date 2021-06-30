@@ -48,11 +48,11 @@ def plot_history(train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl):
 
     # https://stackabuse.com/matplotlib-plot-multiple-line-plots-same-and-different-scales/
     fig, ax = plt.subplots()
-    ax.plot(train_ls, label="train_ls", color='red')
-    ax.plot(val_ls, label="val_ls", color='orange')
+    ax.plot(train_ls, label="train_ls", color='orange')
+    ax.plot(val_ls, label="val_ls", color='red')
     
-    ax.plot(train_lp, label="train_lp", color='green')
-    ax.plot(val_lp, label="val_lp", color='lime')
+    ax.plot(train_lp, label="train_lp", color='lime')
+    ax.plot(val_lp, label="val_lp", color='green')
     
     ax.tick_params(axis='y')
     ax.set_ylabel('Stroke loss, pen loss @ epoch')
@@ -61,7 +61,7 @@ def plot_history(train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl):
     ax2.plot(train_lkl, label="train_kl", color='cyan')
     ax2.plot(val_lkl, label="val_kl", color='blue')
      
-    ax2.tick_params(axis='y', labelcolor='green')
+    ax2.tick_params(axis='y')
     ax2.set_ylabel('Kullback Leiber loss @ epoch')
 
     ax.legend(loc="upper left")

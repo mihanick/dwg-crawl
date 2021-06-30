@@ -25,7 +25,7 @@ class EncoderRNN(nn.Module):
         self.stroke_features = stroke_features
         self.device = device
 
-        self.lstm = nn.LSTM(stroke_features, self.enc_hidden_size, bidirectional=True)
+        self.lstm = nn.LSTM(stroke_features, self.enc_hidden_size, bidirectional=True, dropout=dropout)
 
         #mu and sigma layers from lstm last output
         self.fc_mu = nn.Linear(2 * self.enc_hidden_size, Nz)
@@ -71,7 +71,7 @@ class DecoderRNN(nn.Module):
         self.fc_hc = nn.Linear(Nz, 2 * dec_hidden_size)
 
         # unidirectional lstm
-        self.lstm = nn.LSTM(Nz + stroke_features, dec_hidden_size)
+        self.lstm = nn.LSTM(Nz + stroke_features, dec_hidden_size, dropout=dropout)
 
         # probability distribution parameters from hiddens
         logits_no = stroke_features - 2
@@ -132,10 +132,10 @@ class Trainer:
         self.enc_hidden_size = 256
         self.dec_hidden_size = 512
 
-        self.Nz              = 128
+        self.Nz              = 64
         self.M               = 20
 
-        self.dropout         = 0.9
+        self.dropout         = 0.45
         
         #self.eta_min     = 0.01
         #self.R           = 0.99995
@@ -143,9 +143,9 @@ class Trainer:
         self.min_reconstruction_loss = 0.0001
         self.wKL           = 0.5
         self.lr            = lr
-        self.lr_decay      = 0.98
-        self.min_lr        = 1e-6
-        self.grad_clip     = 1.0
+        self.lr_decay      = 0.99
+        self.min_lr        = 1e-9
+        self.grad_clip     = 0.9
         self.temperature   = 0.5
 
         self.train_verbose   = train_verbose
@@ -158,12 +158,6 @@ class Trainer:
         self.stroke_features = dwg_dataset.entities.stroke_features
         self.max_seq_length  = dwg_dataset.entities.max_seq_length
         self.batch_size      = dwg_dataset.batch_size
-
-        self.enc_hidden_size = 256
-        self.dec_hidden_size = 512
-
-        self.Nz              = 32
-        self.M               = 20
 
         self.encoder = EncoderRNN(
             Nz=self.Nz,
@@ -205,7 +199,7 @@ class Trainer:
         
         # number of strokes before eos
         current_seq_lengths = torch.sum((batch[:, :, 4] == 0).long(), dim=0)
-        mask = torch.zeros(self.max_seq_length, batch_size)
+        mask = torch.zeros(self.max_seq_length, batch_size, device=self.device)
 
         # mask should be 1s one before current seq lenths, 0s after
         for i, batch_seq_len in enumerate(current_seq_lengths):
@@ -338,7 +332,7 @@ class Trainer:
         As far I understand, that's some difference between 
         stochastic distributions
         '''
-        LKL = -0.5 * torch.sum(1 + sigma - mu**2 - torch.exp(sigma)) / float(self.Nz * self.batch_size)
+        LKL = -0.5 * torch.sum(1 + sigma - mu**2 - torch.exp(sigma)) / float(self.Nz)
         # KL_min = torch.Tensor([self.KL_min]).to(self.device)
         # LKL =  torch.max(LKL, KL_min) # * eta_step
         if torch.isnan(LKL):
