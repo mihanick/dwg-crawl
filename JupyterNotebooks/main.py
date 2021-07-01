@@ -9,14 +9,13 @@ from torch import nn
 from sketch_rnn import Trainer, DecoderRNN, EncoderRNN
 from dataset import DwgDataset
 
-def run(batch_size=32, pickle_file='test_dataset_cluster_labeled.pickle', lr=0.008, epochs=5, train_verbose=True, limit_seq_len=200):
+def run(batch_size=32, pickle_file='test_dataset_groups.pickle', lr=0.008, epochs=5, train_verbose=True, limit_seq_len=200):
     dwg_dataset = DwgDataset(pickle_file=pickle_file, batch_size=batch_size, limit_seq_len=limit_seq_len)
     trainer = Trainer(
         dwg_dataset,
         lr=lr,
         train_verbose=train_verbose)
 
-    
     train_ls = []
     train_lp = []
     train_lkl = []

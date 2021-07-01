@@ -28,12 +28,7 @@ class EntityDataset(Dataset):
 
         df = pandasData.dropna(how='all', subset=(self.x_columns + self.y_columns))
 
-        # drop unclustered data, 
-        # i.e. outlier points that has not been cluster labeled
-        # i.e label==-1
-        df = df.drop(df[df["label"] == -1].index)
-
-        groupped = df.groupby(['FileId', 'label'])
+        groupped = df.groupby(['GroupId'])
         keys = list(groupped.groups.keys())
         
         self.groupped = groupped
