@@ -25,12 +25,7 @@ class EntityDataset(Dataset):
 
         df = pandasData.dropna(how='all', subset=(self.x_columns + self.y_columns))
         
-        # drop unclustered data, 
-        # i.e. outlier points that has not been cluster labeled
-        # i.e label==-1
-        df = df.drop(df[df["label"] == -1].index)
-        
-        groupped = df.groupby(['FileId', 'label'])
+        groupped = df.groupby(['GroupId'])
         keys = list(groupped.groups.keys())
         
         self.groupped = groupped
@@ -117,6 +112,6 @@ class DwgDataset:
                 y[i] = yy
             return x, y
 
-        self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = train_sampler, collate_fn=custom_collate, drop_last=True)
-        self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = val_sampler, collate_fn=custom_collate, drop_last=True)
-        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size = batch_size, sampler = test_sampler, collate_fn=custom_collate)       
+        self.train_loader = torch.utils.data.DataLoader(self.entities, batch_size=batch_size, sampler=train_sampler, collate_fn=custom_collate, drop_last=True)
+        self.val_loader   = torch.utils.data.DataLoader(self.entities, batch_size=batch_size, sampler=val_sampler, collate_fn=custom_collate, drop_last=True)
+        self.test_loader  = torch.utils.data.DataLoader(self.entities, batch_size=batch_size, sampler=test_sampler, collate_fn=custom_collate)       
