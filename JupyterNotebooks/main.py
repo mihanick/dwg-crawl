@@ -27,10 +27,10 @@ def run(batch_size=4, pickle_file='test_dataset_groups.pickle', lr=0.001, epochs
     ent_features = dwg_dataset.entities.ent_features
     dim_features = dwg_dataset.entities.dim_features
 
-    #loss = nn.MSELoss()
-    loss = ChamferDistance(device)
+    loss = nn.MSELoss()
+    # loss = ChamferDistance(device)
 
-    model = DimRnn(ent_features=ent_features, dim_features=dim_features, hidden_size=1024, enforced_device=device)
+    model = DimRnn(ent_features=ent_features, dim_features=dim_features, hidden_size=128, enforced_device=device)
     model.to(device)
 
     lr = lr
