@@ -40,76 +40,79 @@ class EntityDataset(Dataset):
 
         for key in keys:
             _group = groupped.get_group(key)
-            
-            group_df = _group[self.x_columns + self.y_columns]
-            group_df, _ = scale_ds(group_df)
+            for i in range(10):
+                group_df = _group[self.x_columns + self.y_columns]
+                group_df, _ = scale_ds(group_df)
 
-            seq_len = len(group_df)
+                # https://stackoverflow.com/questions/29576430/shuffle-dataframe-rows
+                group_df = group_df.sample(frac=1).reset_index(drop=True)
 
-            if limit_seq_len is not None:
-                if seq_len > limit_seq_len:
+                seq_len = len(group_df)
+
+                if limit_seq_len is not None:
+                    if seq_len > limit_seq_len:
+                        continue
+                    
+                #skip small groups
+                if seq_len < self.min_seq_length:
                     continue
+
+                # reformat dataset to one table [dx, dy, 'is_pen', 'is_dim']
+                # is_pen = 1 for dims and lines, is_pen = 0 for pen transition
+                # is_dim = 1 for dimensions
+
+                # https://www.datasciencelearner.com/how-to-merge-two-columns-in-pandas/
+                group_df['is_dim'] = np.where(group_df['EndPoint.X'].isna(), 1, 0)
+                group_df['StartPoint.X'] = np.where(group_df['is_dim'] == 1, group_df['XLine1Point.X'], group_df['StartPoint.X'])
+                group_df['StartPoint.Y'] = np.where(group_df['is_dim'] == 1, group_df['XLine1Point.Y'], group_df['StartPoint.Y'])
+                group_df['EndPoint.X'] = np.where(group_df['is_dim'] == 1, group_df['XLine2Point.X'], group_df['EndPoint.X'])
+                group_df['EndPoint.Y'] = np.where(group_df['is_dim'] == 1, group_df['XLine2Point.Y'], group_df['EndPoint.Y'])
                 
-            #skip small groups
-            if seq_len < self.min_seq_length:
-                continue
 
-            # reformat dataset to one table [dx, dy, 'is_pen', 'is_dim']
-            # is_pen = 1 for dims and lines, is_pen = 0 for pen transition
-            # is_dim = 1 for dimensions
+                # calculated numpy data
+                # for each line of group_df
+                # we will add 2 lines in npd:
+                # one for pen movement from end of (prevx, prevy) to current x1,x2 (is_pen=0)
+                # and one for pen drawing from x1,y1 to x2,y2
+                # is_dim will be written to numpy data as well
+                npd = np.zeros((seq_len*2, 4), dtype=np.float)
 
-            # https://www.datasciencelearner.com/how-to-merge-two-columns-in-pandas/
-            group_df['is_dim'] = np.where(group_df['EndPoint.X'].isna(), 1, 0)
-            group_df['StartPoint.X'] = np.where(group_df['is_dim'] == 1, group_df['XLine1Point.X'], group_df['StartPoint.X'])
-            group_df['StartPoint.Y'] = np.where(group_df['is_dim'] == 1, group_df['XLine1Point.Y'], group_df['StartPoint.Y'])
-            group_df['EndPoint.X'] = np.where(group_df['is_dim'] == 1, group_df['XLine2Point.X'], group_df['EndPoint.X'])
-            group_df['EndPoint.Y'] = np.where(group_df['is_dim'] == 1, group_df['XLine2Point.Y'], group_df['EndPoint.Y'])
-            
+                prevx = 0
+                prevy = 0
 
-            # calculated numpy data
-            # for each line of group_df
-            # we will add 2 lines in npd:
-            # one for pen movement from end of (prevx, prevy) to current x1,x2 (is_pen=0)
-            # and one for pen drawing from x1,y1 to x2,y2
-            # is_dim will be written to numpy data as well
-            npd = np.zeros((seq_len*2, 4), dtype=np.float)
+                # TODO: More optimization needed, like npd[:]
+                i = 0
+                for  row  in group_df[['StartPoint.X', 'StartPoint.Y', 'EndPoint.X', 'EndPoint.Y', 'is_dim']].values:
+                    x1 = row[0]
+                    y1 = row[1]
+                    x2 = row[2]
+                    y2 = row[3]
 
-            prevx = 0
-            prevy = 0
+                    npd[2*i + 1, 3] = row[4]
 
-            # TODO: More optimization needed, like npd[:]
-            i = 0
-            for  row  in group_df[['StartPoint.X', 'StartPoint.Y', 'EndPoint.X', 'EndPoint.Y', 'is_dim']].values:
-                x1 = row[0]
-                y1 = row[1]
-                x2 = row[2]
-                y2 = row[3]
+                    npd[2*i + 1, 0] = x2 - x1
+                    npd[2*i + 1, 1] = y2 - y1
+                    npd[2*i + 1, 2] = 1
 
-                npd[2*i + 1, 3] = row[4]
+                    npd[2*i, 0] = x1 - prevx
+                    npd[2*i, 1] = y1 - prevy
+                    npd[2*i, 2] = 0
 
-                npd[2*i + 1, 0] = x2 - x1
-                npd[2*i + 1, 1] = y2 - y1
-                npd[2*i + 1, 2] = 1
+                    prevx = x2
+                    prevy = y2
+                    
+                    #print (row)
+                    # print (npd[2*i:2*i+2])
 
-                npd[2*i, 0] = x1 - prevx
-                npd[2*i, 1] = y1 - prevy
-                npd[2*i, 2] = 0
-
-                prevx = x2
-                prevy = y2
+                    i+=1
                 
-                #print (row)
-                # print (npd[2*i:2*i+2])
+                #print(group_df)
+                #print(npd)
+                
+                if max_seq_length < npd.shape[0]:
+                    max_seq_length = npd.shape[0]
 
-                i+=1
-            
-            #print(group_df)
-            #print(npd)
-            
-            if max_seq_length < npd.shape[0]:
-                max_seq_length = npd.shape[0]
-
-            calculated_data.append(npd)
+                calculated_data.append(npd)
 
         self.max_seq_length = max_seq_length + 2 # add sos and eos
 

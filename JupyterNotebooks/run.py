@@ -9,6 +9,6 @@ run(
     pickle_file="test_dataset_groups.pickle",
     train_verbose=False,
     batch_size=4,
-    limit_seq_len=60,
+    limit_seq_len=2500,
     epochs=5,
     lr=0.0006)
