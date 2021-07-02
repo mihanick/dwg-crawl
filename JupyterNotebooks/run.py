@@ -10,5 +10,5 @@ run(
     train_verbose=False,
     batch_size=4,
     limit_seq_len=2500,
-    epochs=5,
+    epochs=15,
     lr=0.0006)

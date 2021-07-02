@@ -38,7 +38,7 @@ class EntityDataset(Dataset):
 
         max_seq_length = 0
         
-        print(groupped.get_group('0335ebcf-8848-4c70-8a97-04195d5816b9'))
+        # print(groupped.get_group('0335ebcf-8848-4c70-8a97-04195d5816b9'))
         
         for key in keys:
             if key != '0335ebcf-8848-4c70-8a97-04195d5816b9':
@@ -156,7 +156,7 @@ class EntityDataset(Dataset):
         return self.data[index], self.mask[index]
 
 class DwgDataset:
-    def __init__(self, pickle_file, batch_size=128, limit_seq_len=10000, min_seq_length=20):
+    def __init__(self, pickle_file, batch_size=128, limit_seq_len=10000, min_seq_length=10):
         self.batch_size = batch_size
 
         test_data = pd.read_pickle(pickle_file)
