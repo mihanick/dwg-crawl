@@ -81,7 +81,7 @@ class Trainer:
         self.n_distributions    = 20
         self.kl_div_loss_weight = 0.8
         self.grad_clip          = 1.0
-        self.temperature        = 0.4
+        self.temperature        = 0.1
 
         self.encoder = EncoderRNN(self.d_z, self.enc_hidden_size, stroke_features=self.stroke_features)
         self.decoder = DecoderRNN(self.d_z, self.dec_hidden_size, self.n_distributions, stroke_features=self.stroke_features)

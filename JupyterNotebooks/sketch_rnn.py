@@ -129,10 +129,10 @@ class Trainer:
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
 
-        self.enc_hidden_size = 256
-        self.dec_hidden_size = 512
+        self.enc_hidden_size = 512
+        self.dec_hidden_size = 1024
 
-        self.Nz              = 64
+        self.Nz              = 128
         self.M               = 20
 
         self.dropout         = 0.45
@@ -146,7 +146,7 @@ class Trainer:
         self.lr_decay      = 0.99
         self.min_lr        = 1e-9
         self.grad_clip     = 0.9
-        self.temperature   = 0.5
+        self.temperature   = 0.35
 
         self.train_verbose   = train_verbose
         self.dwg_dataset     = dwg_dataset

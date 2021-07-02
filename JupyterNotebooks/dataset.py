@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, SubsetRandomSampler
 from processing import scale_ds
 
 class EntityDataset(Dataset):
-    def __init__(self, pandasData, limit_seq_len=None, min_seq_length=20):
+    def __init__(self, pandasData, limit_seq_len=None, min_seq_length=10):
         self.x_columns = [
             'StartPoint.X', 'StartPoint.Y', 
             'EndPoint.X', 'EndPoint.Y']
@@ -26,8 +26,8 @@ class EntityDataset(Dataset):
         # dx, dy, is_dim, eos
         self.stroke_features = len(self.stroke_columns) + 1
 
-        df = pandasData.dropna(how='all', subset=(self.x_columns + self.y_columns))
-
+        #df = pandasData.dropna(how='all', subset=(self.x_columns + self.y_columns))
+        df = pandasData.dropna(how='all', subset=self.x_columns)
         groupped = df.groupby(['GroupId'])
         keys = list(groupped.groups.keys())
         
@@ -37,15 +37,21 @@ class EntityDataset(Dataset):
         calculated_data = []
 
         max_seq_length = 0
-
+        
+        print(groupped.get_group('0335ebcf-8848-4c70-8a97-04195d5816b9'))
+        
         for key in keys:
+            if key != '0335ebcf-8848-4c70-8a97-04195d5816b9':
+                continue
+                
             _group = groupped.get_group(key)
-            for i in range(10):
+           
+            for k in range(8):
                 group_df = _group[self.x_columns + self.y_columns]
                 group_df, _ = scale_ds(group_df)
 
                 # https://stackoverflow.com/questions/29576430/shuffle-dataframe-rows
-                group_df = group_df.sample(frac=1).reset_index(drop=True)
+                #group_df = group_df.sample(frac=1).reset_index(drop=True)
 
                 seq_len = len(group_df)
 
