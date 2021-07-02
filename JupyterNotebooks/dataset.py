@@ -51,7 +51,7 @@ class EntityDataset(Dataset):
                 group_df, _ = scale_ds(group_df)
 
                 # https://stackoverflow.com/questions/29576430/shuffle-dataframe-rows
-                #group_df = group_df.sample(frac=1).reset_index(drop=True)
+                # group_df = group_df.sample(frac=1).reset_index(drop=True)
 
                 seq_len = len(group_df)
 

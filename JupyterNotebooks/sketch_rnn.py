@@ -129,13 +129,13 @@ class Trainer:
         if torch.cuda.is_available():
             self.device = torch.device("cuda")
 
-        self.enc_hidden_size = 512
-        self.dec_hidden_size = 1024
+        self.enc_hidden_size = 2048 #256
+        self.dec_hidden_size = 2048 #512
 
-        self.Nz              = 128
+        self.Nz              = 512 #64
         self.M               = 20
 
-        self.dropout         = 0.45
+        self.dropout         = 0.25
         
         #self.eta_min     = 0.01
         #self.R           = 0.99995
@@ -146,7 +146,7 @@ class Trainer:
         self.lr_decay      = 0.99
         self.min_lr        = 1e-9
         self.grad_clip     = 0.9
-        self.temperature   = 0.35
+        self.temperature   = 0.5
 
         self.train_verbose   = train_verbose
         self.dwg_dataset     = dwg_dataset
@@ -324,7 +324,7 @@ class Trainer:
         loss_pen /= self.max_seq_length
         loss_stroke /= self.max_seq_length
 
-        return loss_stroke, loss_pen
+        return abs(loss_stroke), abs(loss_pen)
 
     def kullback_leibler_loss(self, sigma, mu):
         '''
