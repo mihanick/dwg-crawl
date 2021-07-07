@@ -8,7 +8,7 @@
             "name": "Run pipeline",
             "type": "python",
             "request": "launch",
-            "program": "evaluate.py",
+            "program": "debug.py",
             "console": "integratedTerminal"
         },
     ]
