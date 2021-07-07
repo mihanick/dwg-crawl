@@ -2,15 +2,16 @@
 Train functions to run from console or jupyter
 '''
 
+import collections
+from math import inf, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-from IPython.display import Image
-from IPython.display import clear_output
-
 import imageio
 import glob
+import math
 
+from processing import query_collection_to_dataframe, expand_columns, normalize
 
 # https://pypi.org/project/drawSvg/
 # !pip install drawsvg
@@ -20,30 +21,7 @@ try:
     import drawSvg as draw
 except:
     print('Could not import drawSvg')
-
-def draw_set(pnt_set, labels, core_indices):
-    unique_labels = set(labels)
     
-    colors = [plt.cm.Spectral(each) for each in (np.linspace(0,1,len(unique_labels)))]
-    
-    core_samples_mask = np.zeros_like(labels, dtype=bool)
-    core_samples_mask[core_indices] = True
-
-    plt.figure(figsize=(10,10))
-
-    for k, col in zip(unique_labels, colors):
-        if k == -1:
-            col = [0, 0, 0, 1]
-        class_member_mask = (labels == k)
-
-        xyz = pnt_set[class_member_mask & core_samples_mask]
-        plt.plot(xyz[:, 0], xyz[:, 1], 'o', markerfacecolor=tuple(col),  markeredgecolor="k", markersize=10)
-        
-        xyz = pnt_set[class_member_mask & ~core_samples_mask]
-        plt.plot(xyz[:, 0], xyz[:, 1], 'o', markerfacecolor=tuple(col),  markeredgecolor="k", markersize=6)
-    
-    plt.show()
-
 def plot_history(train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl):
     '''
     Plots learning history in jupyter
@@ -72,25 +50,21 @@ def plot_history(train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl):
     ax2.legend(loc='upper right')
     plt.show()
 
-def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
+def generate_file(group, verbose=False, save_file=False, draw_dimensions=False, draw_texts=False, main_stroke='2'):
     # print(group.info())
     
-    # skip small drawings
-    if (len(group)<10):
-        return
-    
-    fileid = group.iloc[0]['FileId']
+    fileid = group.iloc[0]['GroupId']
     if len(fileid) == 0:
         return
     
-    filename = 'img/' + fileid + '.png'
-    d = draw.Drawing(800, 200, origin=(0,0), displayInline = False)
+    file_name = 'img/' + fileid + '.png'
+    d = draw.Drawing(512, 512, origin=(0, 0), displayInline=False)
     
-    entscount = 0
-    for row_index, row in group.iterrows():
+    ents_count = 0
+    for _, row in group.iterrows():
         if verbose:
             print(row)
-        if row['ClassName'] == 'AcDbLine':
+        if row['ClassName'] == 'Line':
             # print('StartPoint.X', row['StartPoint.X'])
             # print('StartPoint.Y', row['StartPoint.Y'])
             # print('EndPoint.X', row['EndPoint.X'])
@@ -102,52 +76,122 @@ def generate_file(group, verbose = False, entities_limit = 1e9, save_file=True):
                     row['StartPoint.Y'],
                     row['EndPoint.X'],
                     row['EndPoint.Y'],
-                    close = False,
+                    close=False,
                     fill='#eeee00',
-                    stroke = 'black'))
-            entscount = entscount + 1
-        # https://github.com/cduck/drawSvg/blob/master/drawSvg/elements.py
-        if row['ClassName'] == 'AcDbText':
+                    stroke='black',
+                    stroke_width=main_stroke))
+            ents_count = ents_count + 1
+        if row['ClassName'] == 'Arc':
+            cx = row['Center.X']
+            cy = row['Center.Y']
+            sx = row['StartPoint.X']
+            sy = row['StartPoint.Y']
+            ex = row['EndPoint.X']
+            ey = row['EndPoint.Y']
+            v_start = [sx - cx, sy - cy]
+            v_end = [ex - cx, ey - cy]
+            r = sqrt( v_start[0] * v_start[0]  + v_start[1] * v_start[1])
+            if v_start[0] == 0:
+                start_angle = math.degrees(math.atan(np.sign(v_start[1]) * math.inf))
+            else:
+                start_angle = math.degrees(math.atan2(v_start[1] , v_start[0]))
+            if v_end[0] == 0:
+                end_angle = math.degrees(math.atan(np.sign(v_end[1]) * math.inf))
+            else:
+                end_angle = math.degrees(math.atan2(v_end[1] , v_end[0]))
 
+            if start_angle < 0:
+                start_angle += 360
+            if end_angle < 0:
+                end_angle += 360
+
+            if (v_start[0]* v_end[1] -  v_start[1]*v_end[0]) < 0:
+                (end_angle,start_angle) = (start_angle, end_angle)
+            # print(start_angle, end_angle, v_start[0]* v_end[1] -  v_start[1]*v_end[0])
+            
+            d.append(
+                draw.Arc(
+                    cx=cx,
+                    cy=cy,
+                    r=r,
+                    startDeg=start_angle,
+                    endDeg=end_angle,
+                    stroke='black',
+                    stroke_width=main_stroke,
+                    fill='none')
+            )
+            ents_count = ents_count + 1
+
+        if row['ClassName'] == 'Circle':
+            cx = row['Center.X']
+            cy = row['Center.Y']
+            r = row['Radius']
+
+            d.append(
+                draw.Circle(
+                    cx=cx,
+                    cy=cy,
+                    r=r,
+                    stroke='black',
+                    stroke_width=main_stroke,
+                    fill='none')
+            )
+            ents_count = ents_count + 1
+
+        # https://github.com/cduck/drawSvg/blob/master/drawSvg/elements.py
+        if row['ClassName'] == 'Text' and draw_texts:
             d.append(
                 draw.Text(
                     row['TextString'],
-                    6,
+                    20,
                     row['Position.X'],
                     row['Position.Y'],
-                    center = False
+                    center=False
                 )
             )
-            entscount = entscount + 1
-        if row['ClassName'] == 'AcDbRotatedDimension':
+            ents_count = ents_count + 1
 
-            dim = draw.Lines(
-                    row['XLine1Point.X'],
-                    row['XLine1Point.Y'],
-                    row['XLine2Point.X'],
-                    row['XLine2Point.Y'],
-                    close = False,
-                    fill='#eeee00',
-                    stroke = 'blue',
-                    stroke_width = '1'
-            )
-            
+        if row['ClassName'] == 'AlignedDimension' and draw_dimensions:
             # https://github.com/cduck/drawSvg
-            # dim.appendTitle(row['DimensionText'])
-            d.append(dim)
-            entscount = entscount + 1    
-        if entscount > entities_limit:
-            break
+
+            dim_x_coords = [row['XLine1Point.X'], row['XLine2Point.X'], row['DimLinePoint.X']] 
+            dim_y_coords = [row['XLine1Point.Y'], row['XLine2Point.Y'], row['DimLinePoint.Y']] 
+
+            x = min(dim_x_coords)
+            y = min(dim_y_coords)
+            width = max(dim_x_coords) - x
+            height = max(dim_y_coords) - y
+
+            d.append(
+                draw.Rectangle(
+                    x=x,
+                    y=y,
+                    width=width, 
+                    height=height,
+                    stroke='blue',
+                    fill='none',
+                    stroke_width='1'))
             
-    print('id:',fileid,'entities:', entscount)        
+            d.append(
+                draw.Text(
+                    row['DimensionText'],
+                    10,
+                    row['DimLinePoint.X'],
+                    row['DimLinePoint.Y'],
+                    center=False,
+                    stroke='blue'))
+
+            ents_count = ents_count + 1
+
+    print('id:', fileid, 'entities:', ents_count)
     #https://pypi.org/project/drawSvg/
-    d.setPixelScale(2)
+    d.setPixelScale(1)
     r = d.rasterize()
     
     if save_file:
-        d.savePng(filename)
-    #d.saveSvg(filename+'.svg')
-    return r    
+        d.savePng(file_name)
+        # d.saveSvg('img/' + fileid + '.svg')
+    return r, file_name
 
 def images_from_batch(data, verbose=False):
     #print(data.shape)
@@ -215,15 +259,13 @@ def images_from_batch(data, verbose=False):
         
     return result
 
-
 def save_batch_images(data):
     vv = images_from_batch(data)
     for i, img in enumerate(vv):
         img.savePng('img_g/img'+str(i)+'.png')
 
-
 def plot_generated_stroke_over_sequence(sequence, predicted_stroke=None, batch_number=0):
-    sequence = sequence[:,batch_number,:].cpu().numpy()
+    sequence = sequence[:, batch_number, :].cpu().numpy()
     
     x = 0
     y = 0

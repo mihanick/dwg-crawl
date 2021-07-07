@@ -1,3 +1,7 @@
+# from drawSvg.elements import DrawingBasicElement
+
+# https://stackoverflow.com/questions/16249736/how-to-import-data-from-mongodb-to-pandas
+
 import pymongo
 import pandas as pd
 import numpy as np
@@ -5,54 +9,155 @@ import math
 
 from pymongo import MongoClient
 
-def query_collection_to_dataframe(mongo_collection, fileId):
+def build_data():
+    client = MongoClient('mongodb://192.168.0.104:27017')
+    db = client.geometry2
+    objects = db.objects
+
+    fileidsWithDims = list(objects.find().distinct('GroupId'))
+    df = pd.DataFrame()
+
+    result_ids = []
+    for fileId in fileidsWithDims:
+        data = query_collection_to_dataframe(objects, fileId)
+        if data is not None:
+            df = pd.concat([df, data])
+            result_ids.append(fileId)
+
+    df['ClassName'] = df['ClassName'].astype('category')
+    df['GroupId'] = df['GroupId'].astype('category')
+
+    return df, result_ids
+
+def query_collection_to_dataframe(mongo_collection, fileId, max_entities=25000, min_entities=8):
+    '''
+    Queries mongo collection to dataframe.
+    Expands certain columns, like StartPoint to StartPoint.X, StartPoint.Y
+    Scales each sample
+    Returns pandas dataframe with given columns
+    '''
+    # first we query mongo collection for lines, texts and dimensions
     query = {
         '$or':[
             {
-                'ClassName' : 'AcDbLine',
-                'EndPoint' : {'$ne' : None},
-                'StartPoint' : {'$ne' : None},
-                'FileId' : fileId
+                'ClassName' : 'Line',
+                'EndPoint'  : {'$ne' : None},
+                'StartPoint': {'$ne' : None},
+                'GroupId'   : fileId
             },
             {
+                'ClassName' : 'Arc',
+                'EndPoint'  : {'$ne' : None},
+                'StartPoint': {'$ne' : None},
+                'Center'    : {'$ne' : None},
+                'GroupId'   : fileId
+            },
+            {
+                'Radius': {'$ne' : None},
+                'Center'    : {'$ne' : None},
+                'GroupId'   : fileId
+            },
+            {
+                'ClassName': 'Text',
                 'Position' : {'$ne' : None},
-                'FileId' : fileId
+                'GroupId'  : fileId
             },
             {
-                'ClassName' : 'AcDbRotatedDimension',
-                'XLine1Point' : {'$ne' : None},
-                'XLine2Point' : {'$ne' : None},
-                'FileId' : fileId
+                'ClassName'     : 'AlignedDimension',
+                'XLine1Point'   : {'$ne' : None},
+                'XLine2Point'   : {'$ne' : None},
+                'DimensionText' : {'$ne':None},
+                'GroupId'       : fileId
             }
         ]
     }
 
-    df = pd.DataFrame(list(mongo_collection.find(query)))
-    return df
-
-def normalize(df, to_size = 100):
-    cols = []
-    for column in df.columns:
-        m = ".X" in column or ".Y" in column
-        if m:
-            cols.append(column)
-
-    coords = df[cols].fillna(0).to_numpy()
+    # than we query collection for polylines 
     
+    all_entities = list(mongo_collection.find(query))
+
+    query = {
+                'ClassName': 'Polyline',
+                'GroupId' : fileId
+            }
+    polylines = list(mongo_collection.find(query))
+
+    # and add each polyline segment as line
+    for pline in polylines:
+        line = pline
+        line['ClassName'] = 'Line'
+
+        for i, vertix in enumerate(pline['Vertices']):
+            if i==0:
+                continue
+            line['StartPoint'] = pline['Vertices'][i - 1]
+            line['EndPoint'] = vertix
+            all_entities.append(line)
+
+    # now we create dataframe
+    if (len(all_entities) < min_entities or len(all_entities) > max_entities):
+        return
+
+    df = pd.DataFrame(all_entities)
+
+    # We expand object point columns to point coordinates
+    cols_to_expand = ['XLine1Point', 'XLine2Point', 'StartPoint', 'EndPoint', 'Position', 'DimLinePoint', 'Center']
+    description_cols = ['GroupId', 'ClassName', 'TextString', 'DimensionText', 'Radius']
+    df = expand_columns(df, cols_to_expand)
+
+    # and return only dataframe with given columns
+    dataframe_cols = []
+    for col in cols_to_expand:
+        dataframe_cols.append(col+'.X')
+        dataframe_cols.append(col+'.Y')
+    dataframe_cols += description_cols
+
+    for col in dataframe_cols:
+        if col not in df.columns:
+            df[col] = np.nan
+
+    # we normalize dataframe
+    df = normalize(df)
+
+    return df[dataframe_cols]
+
+def normalize(df, to_size=512):
+    xcols = []
+    ycols = []
+    for column in df.columns:
+        if ".X" in column:
+            xcols.append(column)
+        if ".Y" in column:
+            ycols.append(column)
+    
+    cols = xcols + ycols
+
+    coords = df[cols]
+    max_coord_x = df[xcols].max().max()
+    max_coord_y = df[ycols].max().max()
+    min_coord_x = df[xcols].min().min()
+    min_coord_y = df[ycols].min().min()
+
+    diff_x = max_coord_x - min_coord_x
+    diff_y = max_coord_y - min_coord_y
+
+    diff = max(diff_x, diff_y)
+
+    # https://stackoverflow.com/questions/38134012/pandas-dataframe-fillna-only-some-columns-in-place
+    #coords[xcols] = coords[xcols].fillna(min_coord_x)
+    #coords[ycols] = coords[ycols].fillna(min_coord_y)
+
     # https://stackoverflow.com/questions/44471801/zero-size-array-to-reduction-operation-maximum-which-has-no-identity
-    if (not np.any(coords)):
+    if (not np.any(coords.to_numpy())):
         return df
     
     # print(coords)
-    
-    diff = np.max(coords) - np.min(coords)
-    min_coord = np.min(coords)
-
     scale = to_size/diff
 
     # print(min_coord, scale)
-    v = (coords - min_coord)*scale
-    df[cols] = v
+    df[xcols] = (coords[xcols] - min_coord_x) * scale
+    df[ycols] = (coords[ycols] - min_coord_y) * scale
+    df['Radius'] = df['Radius'] * scale
         
     return  df
     
@@ -83,45 +188,7 @@ def expand_columns(df, column_names):
         res = pd.concat([res, res1], axis = 1)
     return res
 
-def Col2Numpy(series, column_names):
-    '''
-    Splits json data {'ClassName':.., 'X':..,'Y':...,'Z':...} 
-    of each column in column_names
-    into columns 'column_name.X', 'column_name.Y',..
-    '''
-    
-    # As each point columns is a json of {ClassName, X, Y, Z}
-    # We break them into x, y, z columns and drop ClassName column
-    
-    result = pd.DataFrame()
-    
-    for col_name in column_names:
-        # we don't split nan rows
-        points = series[col_name].dropna(how="all")
-        
-        # get only row values and store index
-        values = points.values.tolist()
-        indexes = points.index
-        
-        # create sub-dataframe parsing json in values
-        # and assign it stored index
-        res = pd.DataFrame(data= values, index = indexes)
-        
-        # drop "Point3d" class name (if frame not empty)
-        if len(res)>0:
-            res = res.drop(columns=['ClassName'])
-
-        # join columns with input dataframe
-        result = pd.concat([result, res])
-    return result
-
 def scale_ds(x):
-    '''
-    Scales dataset by difference between max and min
-
-    returns scaled dataset and calculated scale
-    '''
-
     _x1 = x.fillna(0).to_numpy()
     
     mn = _x1.min()
