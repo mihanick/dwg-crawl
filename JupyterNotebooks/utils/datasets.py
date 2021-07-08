@@ -2,6 +2,7 @@ import glob
 import random
 import os
 import numpy as np
+from numpy.core.numeric import zeros_like
 
 import torch
 
@@ -93,7 +94,12 @@ class ListDataset(Dataset):
 
         labels = None
         if os.path.exists(label_path):
-            labels = np.loadtxt(label_path).reshape(-1, 5)
+            read_labels = np.loadtxt(label_path)
+            if read_labels.size > 0:
+                labels = read_labels.reshape(-1, 5)
+            else:
+                labels = np.zeros_like(1,5)
+
             # Extract coordinates for unpadded + unscaled image
             x1 = w * (labels[:, 1] - labels[:, 3]/2)
             y1 = h * (labels[:, 2] - labels[:, 4]/2)
