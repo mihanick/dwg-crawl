@@ -229,6 +229,7 @@ JupyterNotebooks/tests/.ipynb_checkpoints/*
 JupyterNotebooks/.vs/*
 *.pyperf
 /JupyterNotebooks/img_g/*.png
-JupyterNotebooks/DimDecoder.model
-JupyterNotebooks/DimEncoder.model
+JupyterNotebooks/*.model
 JupyterNotebooks/img_g/predictions.gif
+JupyterNotebooks/data/*
+JupyterNotebooks/config/yolov3.weights

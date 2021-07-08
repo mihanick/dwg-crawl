@@ -9,23 +9,38 @@ import math
 
 from pymongo import MongoClient
 
-def build_data():
-    client = MongoClient('mongodb://192.168.0.104:27017')
-    db = client.geometry2
-    objects = db.objects
-
-    fileidsWithDims = list(objects.find().distinct('GroupId'))
-    df = pd.DataFrame()
-
+def build_data(rebuild=False):
+    pickle_file = 'test_dataset_groups.pickle'
+    group_ids_file = 'ids.txt'
     result_ids = []
-    for fileId in fileidsWithDims:
-        data = query_collection_to_dataframe(objects, fileId)
-        if data is not None:
-            df = pd.concat([df, data])
-            result_ids.append(fileId)
 
-    df['ClassName'] = df['ClassName'].astype('category')
-    df['GroupId'] = df['GroupId'].astype('category')
+    if rebuild:
+        client = MongoClient('mongodb://192.168.0.104:27017')
+        db = client.geometry2
+        objects = db.objects
+
+        fileidsWithDims = list(objects.find().distinct('GroupId'))
+        df = pd.DataFrame()
+
+        
+        for fileId in fileidsWithDims:
+            data = query_collection_to_dataframe(objects, fileId)
+            if data is not None:
+                df = pd.concat([df, data])
+                result_ids.append(fileId)
+
+        df['ClassName'] = df['ClassName'].astype('category')
+        df['GroupId'] = df['GroupId'].astype('category')
+
+        df.to_pickle(pickle_file)
+        with open(group_ids_file, 'w') as f:
+            for id in result_ids:
+                f.write(id+'\n')
+
+    else:
+        df = pd.read_pickle(pickle_file)
+        with open(group_ids_file) as f:
+            result_ids = f.read().splitlines()
 
     return df, result_ids
 

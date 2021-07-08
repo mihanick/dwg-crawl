@@ -50,7 +50,7 @@ def plot_history(train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl):
     ax2.legend(loc='upper right')
     plt.show()
 
-def generate_file(group, verbose=False, save_file=False, draw_dimensions=False, draw_texts=False, main_stroke='2'):
+def generate_file(group, path=None, verbose=False, save_file=False, draw_dimensions=False, draw_texts=False, main_stroke='2'):
     # print(group.info())
     
     fileid = group.iloc[0]['GroupId']
@@ -58,6 +58,9 @@ def generate_file(group, verbose=False, save_file=False, draw_dimensions=False, 
         return
     
     file_name = 'img/' + fileid + '.png'
+    if path:
+        file_name = path
+
     d = draw.Drawing(512, 512, origin=(0, 0), displayInline=False)
     
     ents_count = 0
