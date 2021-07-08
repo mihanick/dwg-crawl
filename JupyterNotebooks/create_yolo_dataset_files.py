@@ -1,4 +1,5 @@
-import os
+from pathlib import Path
+from sys import path
 import numpy as np
 
 from processing import  build_data
@@ -12,33 +13,29 @@ test_split_index = round(test_fraction * len(ids))
 np.random.seed(42)
 np.random.shuffle(ids)
 
-train_images_path = "data/dwg/images/train"
-if not os.path.exists(train_images_path):
-        os.mkdir(train_images_path)
-train_labels_path = "data/dwg/labels/train"
-if not os.path.exists(train_labels_path):
-        os.mkdir(train_labels_path)
+train_images_path = Path("data/dwg/images/train")
+train_images_path.mkdir(parents=True,exist_ok=True)
+train_labels_path = Path("data/dwg/labels/train")
+train_labels_path.mkdir(parents=True,exist_ok=True)
 train_desc_file_path = "data/dwg/train.txt"
 
 
-val_images_path = "data/dwg/images/val"
-if not os.path.exists(val_images_path):
-        os.mkdir(val_images_path)
-val_labels_path = "data/dwg/labels/val"
-if not os.path.exists(val_labels_path):
-        os.mkdir(val_labels_path)
+val_images_path = Path("data/dwg/images/val")
+val_images_path.mkdir(parents=True,exist_ok=True)
+val_labels_path = Path("data/dwg/labels/val")
+val_labels_path.mkdir(parents=True,exist_ok=True)
 val_desc_file_path = "data/dwg/val.txt"
 
 with open(train_desc_file_path, "w") as train_desc_file:
         with open(val_desc_file_path, "w") as val_desc_file:
                 for i, id in enumerate(ids):
                         desc_file = train_desc_file
-                        image_folder = train_images_path
-                        label_folder = train_labels_path
+                        image_folder = str(train_images_path)
+                        label_folder = str(train_labels_path)
                         if i < test_split_index:
                                 desc_file = val_desc_file
-                                image_folder = val_images_path
-                                label_folder = val_labels_path
+                                image_folder = str(val_images_path)
+                                label_folder = str(val_labels_path)
 
                         image_file_name = "{}/{}.png".format(image_folder, id)
                         label_file_name = "{}/{}.txt".format(label_folder, id)
