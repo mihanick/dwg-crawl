@@ -98,7 +98,7 @@ class ListDataset(Dataset):
             if read_labels.size > 0:
                 labels = read_labels.reshape(-1, 5)
             else:
-                labels = np.zeros_like(1,5)
+                labels = np.zeros((1,5))
 
             # Extract coordinates for unpadded + unscaled image
             x1 = w * (labels[:, 1] - labels[:, 3]/2)
