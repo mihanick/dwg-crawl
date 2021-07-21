@@ -1,40 +1,105 @@
-'''
-Main program for model training and evaluation in python console
-version 4. For SketchRNN and straight sequence of entities
-'''
-# https://code.visualstudio.com/docs/remote/wsl-tutorial
+# https://towardsdatascience.com/training-yolo-for-object-detection-in-pytorch-with-your-custom-dataset-the-simple-way-1aa6f56cf7d9
+
+from __future__ import division
+
+from models import *
+from utils.utils import *
+from utils.datasets import *
+from utils.parse_config import *
+
+import os
+import sys
+import time
+import datetime
+import argparse
 
 import torch
-from torch import nn
-from sketch_rnn import Trainer, DecoderRNN, EncoderRNN
-from dataset import DwgDataset
+from torch.utils.data import DataLoader
+from torchvision import datasets
+from torchvision import transforms
+from torch.autograd import Variable
+import torch.optim as optim
 
-def run(batch_size=32, pickle_file='test_dataset_groups.pickle', lr=0.008, epochs=5, train_verbose=True, limit_seq_len=200):
-    dwg_dataset = DwgDataset(pickle_file=pickle_file, batch_size=batch_size, limit_seq_len=limit_seq_len)
-    trainer = Trainer(
-        dwg_dataset,
-        lr=lr,
-        train_verbose=train_verbose)
+def run(
+        use_cuda=False,
+        class_path="config/dwg.names",
+        data_config_path="config/dwg.data",
+        model_config_path="config/yolov3.cfg",
+        weights_path="config/yolov3.weights",
+        batch_size=4,
+        epochs=20,
+        checkpoint_interval=1,
+        checkpoint_dir="checkpoints",
+        n_cpu=0
+    ):
+    cuda = torch.cuda.is_available() and use_cuda
 
-    train_ls = []
-    train_lp = []
-    train_lkl = []
+    os.makedirs("checkpoints", exist_ok=True)
 
-    val_ls = []
-    val_lp = []
-    val_lkl = []
-    
+    classes = load_classes(class_path)
+
+    # Get data configuration
+    data_config = parse_data_config(data_config_path)
+    train_path = data_config["train"]
+
+    # Get hyper parameters
+    hyperparams = parse_model_config(model_config_path)[0]
+    learning_rate = float(hyperparams["learning_rate"])
+    momentum = float(hyperparams["momentum"])
+    decay = float(hyperparams["decay"])
+    burn_in = int(hyperparams["burn_in"])
+
+    # Initiate model
+    model = Darknet(model_config_path)
+    model.load_weights(weights_path)
+    #model.apply(weights_init_normal)
+
+    if cuda:
+        model = model.cuda()
+
+    model.train()
+
+    # Get dataloader
+    dataloader = torch.utils.data.DataLoader(
+        ListDataset(train_path), batch_size=batch_size, shuffle=False, num_workers=n_cpu
+    )
+
+    Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
+
+    optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()))
+
     for epoch in range(epochs):
-        train_ls_, train_lp_, train_lkl_, val_ls_, val_lp_, val_lkl_ = trainer.train_epoch(epoch)
-        train_ls.append(train_ls_)
-        train_lp.append(train_lp_)
-        train_lkl.append(train_lkl_)
-        val_ls.append(val_ls_)
-        val_lp.append(val_lp_)
-        val_lkl.append(val_lkl_)
+        for batch_i, (_, imgs, targets) in enumerate(dataloader):
+            imgs = Variable(imgs.type(Tensor))
+            targets = Variable(targets.type(Tensor), requires_grad=False)
 
-    # Calculate test accuracy
-    test_ls, test_lp, test_lkl = trainer.CalculateLoaderAccuracy(trainer.test_loader)
-    print('Test losses ls:{:1.4f} lp:{:1.4f} kl:{:1.4f}'.format(test_ls, test_lp, test_lkl))
+            optimizer.zero_grad()
 
-    return train_ls, train_lp, train_lkl, val_ls, val_lp, val_lkl
+            loss = model(imgs, targets)
+
+            loss.backward()
+            optimizer.step()
+
+            print(
+                "[Epoch %d/%d, Batch %d/%d] [Losses: x %f, y %f, w %f, h %f, conf %f, cls %f, total %f, recall: %.5f, precision: %.5f]"
+                % (
+                    epoch,
+                    epochs,
+                    batch_i,
+                    len(dataloader),
+                    model.losses["x"],
+                    model.losses["y"],
+                    model.losses["w"],
+                    model.losses["h"],
+                    model.losses["conf"],
+                    model.losses["cls"],
+                    loss.item(),
+                    model.losses["recall"],
+                    model.losses["precision"],
+                )
+            )
+
+            model.seen += imgs.size(0)
+
+        if epoch % checkpoint_interval == 0:
+            model.save_weights("%s/%d.weights" % (checkpoint_dir, epoch))
