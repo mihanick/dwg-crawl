@@ -93,7 +93,7 @@ class ListDataset(Dataset):
         label_path = self.label_files[index % len(self.img_files)].rstrip()
 
         labels = None
-        if os.path.exists(label_path):
+        if os.path.exists(label_path) and os.path.getsize(label_path) > 0:
             read_labels = np.loadtxt(label_path)
             if read_labels.size > 0:
                 labels = read_labels.reshape(-1, 5)

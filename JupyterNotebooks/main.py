@@ -81,7 +81,7 @@ def run(
             optimizer.step()
 
             print(
-                "[Epoch %d/%d, Batch %d/%d] [Losses: x %f, y %f, w %f, h %f, conf %f, cls %f, total %f, recall: %.5f, precision: %.5f]"
+                "[%d/%d]-[%d/%d] [Losses: x %.4f, y %.4f, w %.4f, h %.4f, conf %.4f, cls %.4f, total %.4f, recall: %.3f, precision: %.3f]"
                 % (
                     epoch,
                     epochs,
