@@ -66,8 +66,8 @@ with open(train_desc_file_path, "w") as train_desc_file:
                                         bb_width = max(dim_x_coords) - x
                                         bb_height = max(dim_y_coords) - y
 
-                                        bb_center_x = x + (bb_width / 2)
-                                        bb_center_y = y + (bb_height / 2)
+                                        bb_center_x = x# + (bb_width / 2)
+                                        bb_center_y = y# + (bb_height / 2)
 
                                         label_file.write("{} {} {} {} {} \n".format(
                                                 category,
