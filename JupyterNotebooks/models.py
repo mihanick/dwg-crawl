@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image
 
 from utils.parse_config import *
-from utils.utils import build_targets
+from utils.utils import build_targets, load_classes, non_max_suppression
 from collections import defaultdict
 
 ##import matplotlib.pyplot as plt
@@ -350,3 +350,25 @@ class Darknet(nn.Module):
                 conv_layer.weight.data.cpu().numpy().tofile(fp)
 
         fp.close()
+
+
+def CalculatePrediction(batch_of_images, model=None):
+    if model is None:
+        config_path='config/yolov3.cfg'
+        # weights_path='./15.weights'
+        weights_path = './checkpoints/19.weights'
+        class_path='config/dwg.names'
+
+        # Load model and weights
+        model = Darknet(config_path)
+        model.load_weights(weights_path)
+
+    model.eval()
+
+    conf_thres = 0.8
+    nms_thres = 0.4
+
+    detections = model(batch_of_images)
+    detections_suppressed = non_max_suppression(detections, 87, conf_thres, nms_thres)
+
+    return detections_suppressed

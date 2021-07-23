@@ -153,7 +153,7 @@ def non_max_suppression(prediction, num_classes, conf_thres=0.5, nms_thres=0.4):
         # Detections ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
         detections = torch.cat((image_pred[:, :5], class_conf.float(), class_pred.float()), 1)
         # Iterate through all predicted classes
-        unique_labels = detections[:, -1].cpu().unique()
+        unique_labels = detections[:, -1].detach().cpu().unique()
         if prediction.is_cuda:
             unique_labels = unique_labels.cuda()
         for c in unique_labels:
@@ -256,3 +256,70 @@ def build_targets(
 def to_categorical(y, num_classes):
     """ 1-hot encodes a tensor """
     return torch.from_numpy(np.eye(num_classes, dtype="uint8")[y])
+
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from PIL import Image
+from models import *
+import random
+
+def PlotImageAndPrediction(image, target, detections):
+    '''
+    inputs: 
+    image shape width * height * num_channels
+    target shape true_number_bbxes_on_drawing * [class==0, bb_center_x, bb_center_y, width, height]
+    detections shape detected_number_of_bboxes * ["x", "y", "w", "h", "conf", "cls", "recall", "precision"]
+    '''
+    # we need image to be h*w*channels
+    img = np.transpose(image.numpy(), axes=[1, 2, 0])
+
+    plt.figure()
+    fig, ax = plt.subplots(1, figsize=(12, 9))
+    
+    # TODO: Show white image
+    ax.imshow(img)
+    
+    im_size = img.shape[0]
+    # Get bounding-box colors
+    cmap = plt.get_cmap('tab20b')
+    colors = [cmap(i) for i in np.linspace(0, 1, 20)]
+
+    if detections is not None:
+        if len(detections.shape) > 1:
+            unique_labels = detections[:, -1].unique()
+        else:
+            unique_labels = [detections[-1]]
+
+        n_cls_preds = len(unique_labels)
+        bbox_colors = random.sample(colors, n_cls_preds)
+        # browse detections and draw bounding boxes
+        for x1, y1, x2, y2, conf, cls_conf, cls_pred in detections:
+            box_h = (y2 - y1)
+            box_w = (x2 - x1)
+            color = bbox_colors[int(np.where(unique_labels == int(cls_pred))[0])]
+            bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=1, edgecolor=color, facecolor='none')
+            ax.add_patch(bbox)
+            plt.text(x1, y1, s="{0:.0%}".format(conf.item()), color=color, verticalalignment='top')
+    if target is not None:
+        for tt in target:
+            cls = tt[0]
+            box_h = tt[4] * im_size
+            box_w = tt[3] * im_size
+
+            x1 = tt[1] * im_size - box_w / 2
+            y1 = im_size * (1 - tt[2]) - box_h/2
+            # print(x1,y1,box_w,box_h)
+            color = bbox_colors[int(np.where(unique_labels == int(cls))[0])]
+            bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=3, edgecolor=color, facecolor='none')
+            ax.add_patch(bbox)
+            plt.text(x1, y1, s="dim", color=color, verticalalignment='top')
+
+    # ax.invert_yaxis()
+    # plt.axis('off')
+
+    # save image
+    # plt.savefig(img_path.replace(".png", "-det.png"), bbox_inches='tight', pad_inches=0.0)
+
+    return plt.show()
+

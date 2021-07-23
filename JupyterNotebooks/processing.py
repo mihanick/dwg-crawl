@@ -44,13 +44,26 @@ def build_data(rebuild=False):
 
     return df, result_ids
 
-def query_collection_to_dataframe(mongo_collection, fileId, max_entities=25000, min_entities=8):
+def query_collection_to_dataframe(mongo_collection=None, fileId=None, max_entities=25000, min_entities=8):
     '''
     Queries mongo collection to dataframe.
     Expands certain columns, like StartPoint to StartPoint.X, StartPoint.Y
     Scales each sample
-    Returns pandas dataframe with given columns
+    Returns pandas dataframe with given columns.
+
+    If mongo_collection is None, connects new client to collection
     '''
+
+    # If collection is not specified
+    if mongo_collection is None:
+        client = MongoClient('mongodb://192.168.0.100:27017')
+        db = client.geometry2
+        mongo_collection = db.objects
+
+    # Just arbitrary drawing
+    if fileId is None:
+        fileId = '1317d221-8d9e-4e2e-b290-3be2a0aa67fb'
+
     # first we query mongo collection for lines, texts and dimensions
     query = {
         '$or':[

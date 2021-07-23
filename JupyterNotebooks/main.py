@@ -1,6 +1,7 @@
 # https://towardsdatascience.com/training-yolo-for-object-detection-in-pytorch-with-your-custom-dataset-the-simple-way-1aa6f56cf7d9
 
 from __future__ import division
+from tkinter import image_names
 
 from models import *
 from utils.utils import *
@@ -19,6 +20,8 @@ from torchvision import datasets
 from torchvision import transforms
 from torch.autograd import Variable
 import torch.optim as optim
+
+from IPython import display
 
 def run(
         use_cuda=False,
@@ -61,7 +64,7 @@ def run(
 
     # Get dataloader
     dataloader = torch.utils.data.DataLoader(
-        ListDataset(train_path), batch_size=batch_size, shuffle=False, num_workers=n_cpu
+        ListDataset(train_path, max_objects=87), batch_size=batch_size, shuffle=False, num_workers=n_cpu
     )
 
     Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
@@ -103,3 +106,5 @@ def run(
 
         if epoch % checkpoint_interval == 0:
             model.save_weights("%s/%d.weights" % (checkpoint_dir, epoch))
+        
+        

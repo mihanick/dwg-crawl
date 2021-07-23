@@ -48,12 +48,12 @@ class ImageFolder(Dataset):
 
 
 class ListDataset(Dataset):
-    def __init__(self, list_path, img_size=512):
+    def __init__(self, list_path, img_size=512, max_objects=1):
         with open(list_path, 'r') as file:
             self.img_files = file.readlines()
         self.label_files = [path.replace('images', 'labels').replace('.png', '.txt') for path in self.img_files]
         self.img_shape = (img_size, img_size)
-        self.max_objects = 1
+        self.max_objects = max_objects
 
     def __getitem__(self, index):
 
@@ -68,7 +68,7 @@ class ListDataset(Dataset):
         while len(img.shape) != 3:
             index += 1
             img_path = self.img_files[index % len(self.img_files)].rstrip()
-            img = np.array(Image.open(img_path))
+            img = np.array(Image.open(img_path).convert('RGB'))
 
         h, w, _ = img.shape
         dim_diff = np.abs(h - w)
