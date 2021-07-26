@@ -56,7 +56,7 @@ def query_collection_to_dataframe(mongo_collection=None, fileId=None, max_entiti
 
     # If collection is not specified
     if mongo_collection is None:
-        client = MongoClient('mongodb://192.168.0.100:27017')
+        client = MongoClient('mongodb://192.168.1.49:27017')
         db = client.geometry2
         mongo_collection = db.objects
 

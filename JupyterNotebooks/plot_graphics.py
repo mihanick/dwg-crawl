@@ -11,9 +11,6 @@ import torch
 import imageio
 import glob
 import math
-
-from processing import query_collection_to_dataframe
-
 from processing import query_collection_to_dataframe, expand_columns, normalize
 
 # https://pypi.org/project/drawSvg/

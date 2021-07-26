@@ -283,7 +283,6 @@ def PlotImageAndPrediction(image, target, detections):
     im_size = img.shape[0]
     # Get bounding-box colors
     cmap = plt.get_cmap('tab20b')
-    colors = [cmap(i) for i in np.linspace(0, 1, 20)]
 
     if detections is not None:
         if len(detections.shape) > 1:
@@ -292,6 +291,7 @@ def PlotImageAndPrediction(image, target, detections):
             unique_labels = [detections[-1]]
 
         n_cls_preds = len(unique_labels)
+        colors = [cmap(i) for i in np.linspace(0, 1, 20)]
         bbox_colors = random.sample(colors, n_cls_preds)
         # browse detections and draw bounding boxes
         for x1, y1, x2, y2, conf, cls_conf, cls_pred in detections:
@@ -308,12 +308,12 @@ def PlotImageAndPrediction(image, target, detections):
             box_w = tt[3] * im_size
 
             x1 = tt[1] * im_size #- box_w / 2
-            y1 = im_size * (1 - tt[2])# - box_h/2
+            y1 = (1 - tt[2] )* im_size # - box_h/2
             # print(x1,y1,box_w,box_h)
-            color = bbox_colors[int(np.where(unique_labels == int(cls))[0])]
-            bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=3, edgecolor=color, facecolor='none')
+            color = 'red' #bbox_colors[int(np.where(unique_labels == int(cls))[0])]
+            bbox = patches.Rectangle((x1, y1), box_w, - box_h, linewidth=3, edgecolor=color, facecolor='none')
             ax.add_patch(bbox)
-            plt.text(x1, y1, s="dim", color=color, verticalalignment='top')
+            #plt.text(x1, y1, s="dim", color=color, verticalalignment='top')
 
     # ax.invert_yaxis()
     # plt.axis('off')
