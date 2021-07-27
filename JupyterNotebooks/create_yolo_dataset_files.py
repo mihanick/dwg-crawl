@@ -3,9 +3,8 @@ from sys import path
 import numpy as np
 
 from processing import  build_data
-# from plot_graphics import generate_file
+from plot_graphics import generate_file
 import pandas as pd
-
 
 import os
 
@@ -45,14 +44,14 @@ with open(train_desc_file_path, "w") as train_desc_file:
                         label_file_name = "{}/{}.txt".format(label_folder, id)
                         
                         
-                        #generate_file(
-                        #        df[df['GroupId'] == id], 
-                        #        path=image_file_name,
-                        #        verbose=False, 
-                        #        draw_dimensions=False, 
-                        #        draw_texts=False, 
-                        #        save_file=True,
-                        #        main_stroke='1')
+                        generate_file(
+                                df[df['GroupId'] == id], 
+                                path=image_file_name,
+                                verbose=False, 
+                                draw_dimensions=False, 
+                                draw_texts=False, 
+                                save_file=True,
+                                main_stroke='1')
 
                         desc_file.write("{}\n".format(image_file_name))
 
