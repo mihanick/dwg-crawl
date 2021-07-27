@@ -324,8 +324,8 @@ def PlotImageAndPrediction(image, target, detections):
             box_h = tt[4] * im_size
             box_w = tt[3] * im_size
 
-            x1 = tt[1] * im_size #- box_w / 2
-            y1 = (1 - tt[2] )* im_size # - box_h/2
+            x1 =  tt[1] * im_size - box_w / 2 
+            y1 = (1 - tt[2] )* im_size - box_h / 2
             # print(x1,y1,box_w,box_h)
             color = 'red' #bbox_colors[int(np.where(unique_labels == int(cls))[0])]
             bbox = patches.Rectangle((x1, y1), box_w,  box_h, linewidth=3, edgecolor=color, facecolor='none')

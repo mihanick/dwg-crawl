@@ -3,9 +3,13 @@ from sys import path
 import numpy as np
 
 from processing import  build_data
-from plot_graphics import generate_file
+# from plot_graphics import generate_file
 import pandas as pd
 
+
+import os
+
+#################################################################
 df, ids = build_data(rebuild=False)
 test_fraction = 0.1
 test_split_index = round(test_fraction * len(ids))
@@ -39,14 +43,16 @@ with open(train_desc_file_path, "w") as train_desc_file:
 
                         image_file_name = "{}/{}.png".format(image_folder, id)
                         label_file_name = "{}/{}.txt".format(label_folder, id)
-                        generate_file(
-                                df[df['GroupId'] == id], 
-                                path=image_file_name,
-                                verbose=False, 
-                                draw_dimensions=False, 
-                                draw_texts=False, 
-                                save_file=True,
-                                main_stroke='1')
+                        
+                        
+                        #generate_file(
+                        #        df[df['GroupId'] == id], 
+                        #        path=image_file_name,
+                        #        verbose=False, 
+                        #        draw_dimensions=False, 
+                        #        draw_texts=False, 
+                        #        save_file=True,
+                        #        main_stroke='1')
 
                         desc_file.write("{}\n".format(image_file_name))
 
@@ -66,8 +72,8 @@ with open(train_desc_file_path, "w") as train_desc_file:
                                         bb_width = max(dim_x_coords) - x
                                         bb_height = max(dim_y_coords) - y
 
-                                        bb_center_x = x# + (bb_width / 2)
-                                        bb_center_y = y# + (bb_height / 2)
+                                        bb_center_x = x + (bb_width / 2)
+                                        bb_center_y = y + (bb_height / 2)
 
                                         label_file.write("{} {} {} {} {} \n".format(
                                                 category,
