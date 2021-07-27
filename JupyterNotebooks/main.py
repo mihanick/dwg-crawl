@@ -23,6 +23,9 @@ import torch.optim as optim
 
 from IPython import display
 
+from models import CalculatePrediction
+from utils.utils import PlotImageAndPrediction
+
 def run(
         use_cuda=False,
         class_path="config/dwg.names",
@@ -103,6 +106,17 @@ def run(
             )
 
             model.seen += imgs.size(0)
+            
+        file_names, imgs, targets = next(iter(dataloader))
+        if cuda:
+            imgs = imgs.cuda()
+            targets = targets.cuda()
+            
+        dets = CalculatePrediction(model=model, batch_of_images=imgs)
+        for i, _img in enumerate(imgs):
+            det = dets[i]
+            trg = targets[i]
+            display.display(PlotImageAndPrediction(image=_img, target=trg, detections=det))
 
         if epoch % checkpoint_interval == 0:
             model.save_weights("%s/%d.weights" % (checkpoint_dir, epoch))

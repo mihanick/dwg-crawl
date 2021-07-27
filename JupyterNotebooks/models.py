@@ -366,7 +366,7 @@ def CalculatePrediction(batch_of_images, model=None):
     model.eval()
 
     conf_thres = 0.9
-    nms_thres = 0.6
+    nms_thres = 0.5
 
     detections = model(batch_of_images)
     detections_suppressed = non_max_suppression(detections, 87, conf_thres, nms_thres)

@@ -272,10 +272,13 @@ def PlotImageAndPrediction(image, target, detections):
     detections shape detected_number_of_bboxes * ["x", "y", "w", "h", "conf", "cls", "recall", "precision"]
     '''
     # we need image to be h*w*channels
-    img = np.transpose(image.numpy(), axes=[1, 2, 0])
+    img = np.transpose(image.cpu().numpy(), axes=[1, 2, 0])
 
     plt.figure()
     fig, ax = plt.subplots(1, figsize=(12, 9))
+    
+    # inverse colors
+    img = 1 - img
     
     # TODO: Show white image
     ax.imshow(img)
@@ -283,13 +286,21 @@ def PlotImageAndPrediction(image, target, detections):
     im_size = img.shape[0]
     # Get bounding-box colors
     cmap = plt.get_cmap('tab20b')
-
+    def clip(x, ims):
+        if x < 0:
+            x = 0
+        if x > ims:
+            x = ims
+        return x
+        
     if detections is not None:
+        # print(detections)
         if len(detections.shape) > 1:
             unique_labels = detections[:, -1].unique()
         else:
             unique_labels = [detections[-1]]
-
+        unique_labels = unique_labels.detach().cpu()
+        
         n_cls_preds = len(unique_labels)
         colors = [cmap(i) for i in np.linspace(0, 1, 20)]
         bbox_colors = random.sample(colors, n_cls_preds)
@@ -298,6 +309,12 @@ def PlotImageAndPrediction(image, target, detections):
             box_h = (y2 - y1)
             box_w = (x2 - x1)
             color = bbox_colors[int(np.where(unique_labels == int(cls_pred))[0])]
+            
+            x1 = clip(x1, im_size)
+            y1 = clip(y1, im_size)
+            box_h = clip(box_h, im_size)
+            box_w = clip(box_w, im_size)
+            
             bbox = patches.Rectangle((x1, y1), box_w, box_h, linewidth=1, edgecolor=color, facecolor='none')
             ax.add_patch(bbox)
             plt.text(x1, y1, s="{0:.0%}".format(conf.item()), color=color, verticalalignment='top')
@@ -311,7 +328,7 @@ def PlotImageAndPrediction(image, target, detections):
             y1 = (1 - tt[2] )* im_size # - box_h/2
             # print(x1,y1,box_w,box_h)
             color = 'red' #bbox_colors[int(np.where(unique_labels == int(cls))[0])]
-            bbox = patches.Rectangle((x1, y1), box_w, - box_h, linewidth=3, edgecolor=color, facecolor='none')
+            bbox = patches.Rectangle((x1, y1), box_w,  box_h, linewidth=3, edgecolor=color, facecolor='none')
             ax.add_patch(bbox)
             #plt.text(x1, y1, s="dim", color=color, verticalalignment='top')
 
