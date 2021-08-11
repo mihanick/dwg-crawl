@@ -1,11 +1,12 @@
 ﻿using DwgDump.Data;
 using DwgDump.Enitites;
 using Multicad;
+using Multicad.AplicationServices;
 using Multicad.DatabaseServices;
+using Multicad.Geometry;
 using Multicad.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 
 namespace DwgDump
@@ -93,5 +94,7 @@ namespace DwgDump
 				doc.Close();
 			}
 		}
+
+
 	}
 }
