@@ -228,3 +228,4 @@ JupyterNotebooks/.vscode/.ropeproject/config.py
 JupyterNotebooks/tests/.ipynb_checkpoints/*
 JupyterNotebooks/.vs/*
 *.pyperf
+/JupyterNotebooks/img_g/*.png

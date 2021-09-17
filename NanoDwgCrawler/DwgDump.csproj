@@ -39,41 +39,43 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="hostdbmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\bin\hostdbmgd.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="hostmgd, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\bin\hostmgd.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data.SqlServerCe, Version=3.5.1.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel.Web" />
-    <Reference Include="System.Web.Services" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
+    <Compile Include="multiContent\CrawlFragment.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="multiContent\BmpFromDwg.cs" />
+    <Compile Include="multiContent\Converters.cs" />
     <Compile Include="multiContent\CrawlDebug.cs" />
-    <Compile Include="multiContent\cJson.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="multiContent\CrawlAcDbDocument.cs" />
     <Compile Include="multiContent\CrawlPont3d.cs" />
     <Compile Include="multiContent\Wrappers.cs" />
+    <Compile Include="Prediction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mapibasetypes">
+      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\NanoSPDS\bin\mapibasetypes.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="mapimgd">
+      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\NanoSPDS\bin\mapimgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="mapinet">
+      <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\NanoSPDS\bin\mapinet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DatabaseMongo\Data.csproj">

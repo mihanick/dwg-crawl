@@ -7,6 +7,6 @@
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\nCadS.exe</StartProgram>
     <StartArguments>-b nSPDSComp -r SPDS -a nanoCAD_x64_SPDS_20.0</StartArguments>
-    <StartWorkingDirectory>D:\py\dwg-crawl\NanoDwgCrawler\bin\Debug\</StartWorkingDirectory>
+    <StartWorkingDirectory>C:\Temp\</StartWorkingDirectory>
   </PropertyGroup>
 </Project>

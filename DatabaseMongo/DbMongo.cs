@@ -17,11 +17,11 @@ namespace DwgDump.Data
 		// Папка куда сохраняются все dwg
 		public string DataDir = @"C:\git\dwg-crawl\Data";
 
-		private string server = "mihanick.mcad.local";
+		private string server = "localhost";
 		private int port = 27017;
 		private string user = "admin";
 		private string securityDbName = "admin";
-		private string dbName = "geometry";
+		private string dbName = "geometry3";
 
 		private static DbMongo instance;
 		public static DbMongo Instance
@@ -40,6 +40,7 @@ namespace DwgDump.Data
 
 		private IMongoCollection<BsonDocument> files;
 		private IMongoCollection<BsonDocument> objects;
+		private IMongoCollection<BsonDocument> fragments;
 
 		public DbMongo()
 		{
@@ -50,24 +51,105 @@ namespace DwgDump.Data
 
 		private void Connect()
 		{
-			string password = System.IO.File.ReadAllText(@"C:\git\dwg-crawl\DatabaseMongo\DbCredentials.txt");
+			// Try to connect to external server with password
+			try
+			{
+				string password = System.IO.File.ReadAllText(@"C:\git\dwg-crawl\DatabaseMongo\DbCredentials.txt");
 
-			// https://stackoverflow.com/questions/44513786/error-on-mongodb-authentication
-			MongoClientSettings settings = new MongoClientSettings();
-			settings.Server = new MongoServerAddress(this.server, this.port);
+				// https://stackoverflow.com/questions/44513786/error-on-mongodb-authentication
+				MongoClientSettings settings = new MongoClientSettings();
+				settings.Server = new MongoServerAddress(this.server, this.port);
 
-			settings.UseTls = false;
-			settings.SslSettings = new SslSettings();
-			settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
+				settings.UseTls = false;
+				settings.SslSettings = new SslSettings();
+				settings.SslSettings.EnabledSslProtocols = SslProtocols.Tls12;
 
-			MongoIdentity identity = new MongoInternalIdentity(this.securityDbName, this.user);
-			MongoIdentityEvidence evidence = new PasswordEvidence(password);
+				MongoIdentity identity = new MongoInternalIdentity(this.securityDbName, this.user);
+				MongoIdentityEvidence evidence = new PasswordEvidence(password);
 
-			settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
+				settings.Credential = new MongoCredential("SCRAM-SHA-1", identity, evidence);
 
-			client = new MongoClient(settings);
+				client = new MongoClient(settings);
+			}
+			catch (Exception e)
+			{
+				// Unable to connect
+			}
+
+			// otherwise try to connect to localhost
+			if (client == null)
+				client = new MongoClient();
 
 			db = client.GetDatabase(this.dbName);
+		}
+
+		public IEnumerable<long> GetHandlesFromDoc(string fileId)
+		{
+			QueryDocument filter = new QueryDocument
+			{
+				{ "FileId", fileId }
+			};
+
+			var res = objects.Find(filter);
+
+			return res
+				.ToList()
+				.Select(ob => ob.ToBsonDocument())
+				.Select(bd => bd.GetValue("Handle", 0).ToInt64());
+		}
+
+		public IEnumerable<CrawlDocument> GetAllScannedDocuments()
+		{
+			List<CrawlDocument> result = new List<CrawlDocument>();
+
+			QueryDocument filter = new QueryDocument
+			{
+				{ "Scanned", true },
+				{ "ClassName", "File" }
+			};
+
+			var res = this.files.Find(filter);
+			foreach (var found in res.ToList())
+			{
+				var ff = found.ToBsonDocument();
+
+				result.Add(
+					new CrawlDocument
+					{
+						ClassName = "File",
+						FileId = ff["FileId"].ToString(),
+						Hash = ff["Hash"].ToString(),
+						Path = ff["Path"].ToString(),
+						Scanned = ff["Scanned"].ToBoolean()
+					}
+				);
+			}
+
+			return result;
+		}
+
+		public void UpdateObject(long handle, string objectJson)
+		{
+			try
+			{
+				var newObjJson = BsonDocument.Parse(objectJson);
+
+				QueryDocument filter = new QueryDocument
+				{
+					{ "Handle", handle }
+				};
+				var d = objects.Find(filter).FirstOrDefault();
+				newObjJson["FileId"] = d["FileId"];
+				newObjJson["BlockId"] = d["BlockId"];
+				newObjJson["GroupId"] = d["GroupId"];
+
+				objects.ReplaceOne(filter, newObjJson);
+				// objects.UpdateOne(filter, newObjJson);
+			}
+			catch (Exception e)
+			{
+				Debug.WriteLine(e);
+			}
 		}
 
 		// StackOverflow
@@ -105,7 +187,11 @@ namespace DwgDump.Data
 			//objects.CreateIndex("ClassName");
 			//objects.CreateIndex("ObjectId");
 			//objects.CreateIndex("FileId");
-		
+
+			if (!CollectionExists(db, "fragments"))
+				db.CreateCollection("fragments");
+			fragments = db.GetCollection<BsonDocument>("fragments");
+
 		}
 
 		private void Clear()
@@ -154,22 +240,38 @@ namespace DwgDump.Data
 				files.InsertOne(doc);
 		}
 
-		public void SaveObjectData(string objJson, string fileId)
+		public void SaveFragmentData(string fragment)
 		{
-			try
+			BsonDocument doc = BsonDocument.Parse(fragment);
+			fragments.InsertOne(doc);
+		}
+
+		public void SaveObjectData(List<string> objJsons)
+		{
+			List<BsonDocument> all = new List<BsonDocument>();
+
+			foreach (var jsn in objJsons)
 			{
-				if (string.IsNullOrEmpty(objJson))
+				if (string.IsNullOrEmpty(jsn))
 					return;
 
-				BsonDocument doc = BsonDocument.Parse(objJson);
-				doc["FileId"] = fileId;
-				//doc.Add("FileId", fileId);
-				objects.InsertOne(doc);
+				BsonDocument doc = BsonDocument.Parse(jsn);
+
+				all.Add(doc);
 			}
-			catch (System.Exception e)
-			{
-				Debug.WriteLine(e.Message);
-			}
+
+			objects.InsertMany(all);
+		}
+
+		public void UpdateFileLayers(List<string> layerJson, string fileId)
+		{
+			var layers = new BsonArray();
+			foreach (var jL in layerJson)
+				layers.Add(BsonDocument.Parse(jL));
+
+			var filter = new QueryDocument("FileId", fileId);
+			var update = Builders<BsonDocument>.Update.Set("Layers", layers);
+			files.UpdateOne(filter, update);
 		}
 
 		public CrawlDocument GetNewRandomUnscannedDocument()
@@ -179,6 +281,12 @@ namespace DwgDump.Data
 				{ "Scanned", false },
 				{ "ClassName", "File" }
 			};
+#if DEBUG
+			//filter = new QueryDocument
+			//{
+			//	{ "ClassName", "File" }
+			//};
+#endif
 
 			// Not efficient to obtain all collection, but 'files' cooolection shouldn't bee too large
 			// http://stackoverflow.com/questions/3975290/produce-a-random-number-in-a-range-using-c-sharp
@@ -199,12 +307,6 @@ namespace DwgDump.Data
 				Path = file["Path"].ToString(),
 				Scanned = file["Scanned"].ToBoolean()
 			};
-
-			// Check db size is close to maximum
-			// FileInfo Fi = new FileInfo(dbPath);
-			// long maxsize = 2000*1024*1024;
-			// if (Fi.Length > maxsize)
-			// return null;
 
 			return result;
 		}
