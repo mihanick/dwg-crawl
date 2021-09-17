@@ -2,9 +2,11 @@
 using DwgDump.Enitites;
 using Multicad;
 using Multicad.DatabaseServices;
+using Multicad.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 
 namespace DwgDump
@@ -100,7 +102,7 @@ namespace DwgDump
 
 					layersJsons.Add(Converters.Serialize(cltr));
 				}
-				
+
 				this.Db.UpdateFileLayers(layersJsons, this.FileId);
 
 				// Run all xrefs
@@ -138,14 +140,28 @@ namespace DwgDump
 		{
 			var scanData = Converters.ConvertEntities2json(entityIds, fileId, groupId);
 			DbMongo.Instance.SaveObjectData(scanData);
+		}
 
-			foreach (var id in entityIds)
+		public static void DumpFragmentDescription(string fileId, string groupId, Bitmap annotated, BoundBlock bound, Bitmap stripped)
+		{
+			var folder = Path.Combine(DbMongo.Instance.DataDir, "images");
+			var annotatatedFileName = Path.Combine(folder, "annotated_" + groupId + ".png");
+			var strippedFileName = Path.Combine(folder, "stripped_" + groupId + ".png");
+
+			annotated.Save(annotatatedFileName, ImageFormat.Png);
+			stripped.Save(strippedFileName, ImageFormat.Png);
+
+			var crawlFragment = new CrawlFragment()
 			{
-				var dbo = id.GetObject()?.Cast<McEntity>()?.DbEntity;
-				// Visualise processed entities with color on the drawing
-				if (dbo != null)
-					dbo.Color = Color.DarkSeaGreen;
-			}
+				FileId = fileId,
+				GroupId = groupId,
+				AnnotatedFileName = annotatatedFileName,
+				StrippedFileName = strippedFileName,
+				MaxBoundPoint = Converters.Pt(bound.MinPoint),
+				MinBoundPoint = Converters.Pt(bound.MaxPoint)
+			};
+
+			DbMongo.Instance.SaveFragmentData(Converters.Serialize(crawlFragment));
 		}
 	}
 }

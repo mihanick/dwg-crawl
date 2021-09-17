@@ -21,7 +21,7 @@ namespace DwgDump.Data
 		private int port = 27017;
 		private string user = "admin";
 		private string securityDbName = "admin";
-		private string dbName = "geometry2";
+		private string dbName = "geometry3";
 
 		private static DbMongo instance;
 		public static DbMongo Instance
@@ -40,6 +40,7 @@ namespace DwgDump.Data
 
 		private IMongoCollection<BsonDocument> files;
 		private IMongoCollection<BsonDocument> objects;
+		private IMongoCollection<BsonDocument> fragments;
 
 		public DbMongo()
 		{
@@ -187,6 +188,10 @@ namespace DwgDump.Data
 			//objects.CreateIndex("ObjectId");
 			//objects.CreateIndex("FileId");
 
+			if (!CollectionExists(db, "fragments"))
+				db.CreateCollection("fragments");
+			fragments = db.GetCollection<BsonDocument>("fragments");
+
 		}
 
 		private void Clear()
@@ -233,6 +238,12 @@ namespace DwgDump.Data
 			if (files.Find(filter).CountDocuments() == 0)
 				// Check hash already exists, if no - insert
 				files.InsertOne(doc);
+		}
+
+		public void SaveFragmentData(string fragment)
+		{
+			BsonDocument doc = BsonDocument.Parse(fragment);
+			fragments.InsertOne(doc);
 		}
 
 		public void SaveObjectData(List<string> objJsons)

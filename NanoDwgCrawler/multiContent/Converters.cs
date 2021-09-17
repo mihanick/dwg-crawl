@@ -553,6 +553,47 @@ namespace DwgDump.Enitites
 			return result;
 		}
 
+		public static bool IsAnnotation(McObjectId id)
+		{
+			var obj = id.GetObject();
+			if (obj == null)
+				return false;
+
+			if (obj.Cast<McDimension>() != null)
+				return true;
+			if (obj.Cast<DbText>() != null)
+				return true;
+			if (obj.Cast<McNote>() != null)
+				return true;
+			if (obj.Cast<McNotePosition>() != null)
+				return true;
+			if (obj.Cast<McNoteComb>() != null)
+				return true;
+			if (obj.Cast<McNoteChain>() != null)
+				return true;
+			if (obj.Cast<McNoteKnot>() != null)
+				return true;
+			if (obj.Cast<McNoteLinearMark>() != null)
+				return true;
+			if (obj.Cast<McConnectionFix>() != null)
+				return true;
+
+			if (obj.Cast<McRange>() != null)
+				return true;
+
+			if (obj.Cast<McConnectionBreak>() != null)
+				return true;
+			if (obj.Cast<McAxisEntity>() != null)
+				return true;
+
+			if (obj.Cast<McSectionVS>() != null)
+				return true;
+			if (obj.Cast<McSymbolVS>() != null)
+				return true;
+
+			return false;
+		}
+
 		[DebuggerStepThrough]
 		public static string Serialize(object o)
 		{
@@ -564,7 +605,7 @@ namespace DwgDump.Enitites
 		/// </summary>
 		/// <param name=""></param>
 		[DebuggerStepThrough]
-		private static CrawlPoint3d Pt(Point3d mpt)
+		public static CrawlPoint3d Pt(Point3d mpt)
 		{
 			if (mpt == null)
 				return new CrawlPoint3d();

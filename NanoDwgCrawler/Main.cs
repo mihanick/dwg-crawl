@@ -1,5 +1,6 @@
 ﻿using DwgDump.Data;
 using DwgDump.Enitites;
+using DwgDump.MultiContent;
 using Multicad;
 using Multicad.AplicationServices;
 using Multicad.DatabaseServices;
@@ -7,6 +8,7 @@ using Multicad.Geometry;
 using Multicad.Runtime;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 namespace DwgDump
@@ -44,8 +46,19 @@ namespace DwgDump
 		/// <summary>
 		/// Writes selection as a fragment to database
 		/// </summary>
-		[CommandMethod("fra", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Redraw)]
-		public static void WriteFragment()
+		[CommandMethod("fr", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Redraw)]
+		public static void WriteAndHighligt()
+		{
+			WriteFragment(method: "highlight");
+		}
+
+		[CommandMethod("frd", CommandFlags.NoCheck | CommandFlags.NoPrefix | CommandFlags.Redraw)]
+		public static void WriteAndDelete()
+		{
+			WriteFragment(method: "delete");
+		}
+
+		public static void WriteFragment(string method = "highlight")
 		{
 			List<McObjectId> currentSelection = new List<McObjectId>(McObjectManager.SelectionSet.CurrentSelection);
 			if (currentSelection.Count == 0)
@@ -53,7 +66,40 @@ namespace DwgDump
 
 			// каждый набор объектов со своим Guid группы
 			var groupId = Guid.NewGuid().ToString();
-			CrawlAcDbDocument.DumpFragment(currentSelection, currentDocument?.FileId, groupId);
+			var fileId = currentDocument?.FileId;
+			CrawlAcDbDocument.DumpFragment(currentSelection, fileId, groupId);
+
+			// Отфильтровываем объекты аннотации
+			var annotationIds = new List<McObjectId>();
+			var graphicsIds = new List<McObjectId>();
+			foreach (var id in currentSelection)
+				if (Converters.IsAnnotation(id))
+					annotationIds.Add(id);
+				else
+					graphicsIds.Add(id);
+
+			// Create preview from everything to get bound
+			(Bitmap imageAnnotated, BoundBlock boundAnnotated) = BmpFromDwg.CreatePreview(selectedIds: currentSelection);
+
+			// Create preview from grapics only
+			(Bitmap strippedImage, BoundBlock boundStripped) = BmpFromDwg.CreatePreview(selectedIds: graphicsIds, bound: boundAnnotated);
+
+			McContext.ShowNotification(string.Format("graphic entries: {0} annotation entries {1}", graphicsIds.Count, annotationIds.Count));
+
+			CrawlAcDbDocument.DumpFragmentDescription(fileId, groupId, imageAnnotated, boundAnnotated, strippedImage);
+
+			foreach (var id in currentSelection)
+			{
+				var dbo = id.GetObject()?.Cast<McEntity>()?.DbEntity;
+				// Visualise processed entities with color on the drawing
+				if (dbo != null)
+				{
+					if (method == "highlight")
+						dbo.Color = Color.DarkSeaGreen;
+					if (method == "delete")
+						dbo.Erase();
+				}
+			}
 		}
 
 		/// <summary>

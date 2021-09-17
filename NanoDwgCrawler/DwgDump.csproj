@@ -39,7 +39,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="multiContent\CrawlFragment.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="multiContent\BmpFromDwg.cs" />
     <Compile Include="multiContent\Converters.cs" />
     <Compile Include="multiContent\CrawlDebug.cs" />
     <Compile Include="Main.cs" />
@@ -56,12 +58,15 @@
   <ItemGroup>
     <Reference Include="mapibasetypes">
       <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\NanoSPDS\bin\mapibasetypes.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="mapimgd">
       <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\NanoSPDS\bin\mapimgd.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="mapinet">
       <HintPath>..\..\..\Program Files\Nanosoft\nanoCAD x64 Plus 20.1\NanoSPDS\bin\mapinet.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
