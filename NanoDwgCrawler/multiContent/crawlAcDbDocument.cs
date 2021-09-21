@@ -157,8 +157,8 @@ namespace DwgDump
 				GroupId = groupId,
 				AnnotatedFileName = annotatatedFileName,
 				StrippedFileName = strippedFileName,
-				MaxBoundPoint = Converters.Pt(bound.MinPoint),
-				MinBoundPoint = Converters.Pt(bound.MaxPoint)
+				MaxBoundPoint = Converters.Pt(bound.MaxPoint),
+				MinBoundPoint = Converters.Pt(bound.MinPoint)
 			};
 
 			DbMongo.Instance.SaveFragmentData(Converters.Serialize(crawlFragment));
